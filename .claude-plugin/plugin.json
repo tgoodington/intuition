@@ -1,0 +1,20 @@
+{
+  "name": "intuition",
+  "version": "1.0.0",
+  "description": "A multi-agent architecture for planning and execution. Features Waldo (thought partner/planner) and The Architect (execution orchestrator) with specialized sub-agents for code writing, testing, documentation, research, code review, and security.",
+  "author": {
+    "name": "Taylor Goodington"
+  },
+  "keywords": [
+    "agents",
+    "planning",
+    "orchestration",
+    "multi-agent",
+    "security",
+    "code-review",
+    "project-memory"
+  ],
+  "license": "MIT",
+  "agents": "./agents/",
+  "skills": "./skills/"
+}

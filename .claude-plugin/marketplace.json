@@ -1,0 +1,10 @@
+{
+  "name": "intuition-marketplace",
+  "description": "Local marketplace for the Intuition plugin",
+  "plugins": [
+    {
+      "name": "intuition",
+      "source": "./"
+    }
+  ]
+}
