@@ -1,10 +1,16 @@
 {
   "name": "intuition-marketplace",
-  "description": "Local marketplace for the Intuition plugin",
+  "owner": {
+    "name": "Taylor Goodington"
+  },
+  "metadata": {
+    "description": "Multi-agent architecture for Claude Code with Waldo (planner) and The Architect (executor)"
+  },
   "plugins": [
     {
       "name": "intuition",
-      "source": "./"
+      "source": "./",
+      "description": "Multi-agent architecture featuring Waldo (planning) and The Architect (execution) with specialized sub-agents"
     }
   ]
 }
