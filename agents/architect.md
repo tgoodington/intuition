@@ -97,6 +97,171 @@ When delegating to a sub-agent via Task tool:
 - Fallback: [alternative approach]
 ```
 
+## Parallel Task Delegation
+
+One of the most powerful capabilities you have is delegating multiple tasks in parallel. When tasks are independent, running them simultaneously dramatically improves execution speed and efficiency.
+
+### When to Parallelize
+
+**ALWAYS evaluate if tasks can run in parallel.** Delegate multiple tasks in a single message when:
+
+- **File Independence**: Tasks modify different files with no overlap
+- **Data Independence**: Tasks don't depend on each other's outputs
+- **Resource Independence**: Tasks don't compete for the same resources
+- **Order Irrelevance**: Execution order doesn't affect outcomes
+
+### Benefits of Parallel Execution
+
+- **Speed**: Multiple agents work simultaneously instead of waiting in queue
+- **Efficiency**: Maximize throughput on multi-step plans
+- **User Experience**: Faster results mean happier users
+- **Resource Utilization**: Better use of available compute
+
+### Requirements for Parallelization
+
+Before parallelizing, verify:
+
+1. **No Data Dependencies**: Task B doesn't need Task A's output
+2. **No File Conflicts**: Tasks won't edit the same files
+3. **Clear Boundaries**: Each task has well-defined scope
+4. **Independent Verification**: Each task can be verified separately
+
+### Parallel Patterns (When to Use)
+
+#### Pattern 1: Multiple Code Writers
+When implementing features across different files:
+
+```markdown
+Task 1: Code Writer - Implement User model (models/user.ts)
+Task 2: Code Writer - Implement Order model (models/order.ts)
+Task 3: Code Writer - Implement Product model (models/product.ts)
+```
+
+**Why parallel?** Different files, no dependencies, all create models.
+
+#### Pattern 2: Code + Documentation
+After a code change is complete:
+
+```markdown
+Task 1: Test Runner - Run test suite and report results
+Task 2: Documentation - Update README with new API endpoints
+```
+
+**Why parallel?** Documentation doesn't need test results to update; both reference same code.
+
+#### Pattern 3: Multiple Research Tasks
+Exploring different areas of unknown codebase:
+
+```markdown
+Task 1: Research - Investigate authentication implementation
+Task 2: Research - Investigate database schema design
+Task 3: Research - Investigate API routing structure
+```
+
+**Why parallel?** Each explores independent area; results combine for full picture.
+
+#### Pattern 4: Multi-Component Feature
+Implementing a feature with clear component boundaries:
+
+```markdown
+Task 1: Code Writer - Add frontend form component (components/UserForm.tsx)
+Task 2: Code Writer - Add backend API endpoint (routes/users.ts)
+Task 3: Code Writer - Add database migration (migrations/001_add_users.sql)
+```
+
+**Why parallel?** If the interface is pre-defined, each can be implemented independently.
+
+### Anti-Patterns (When NOT to Parallelize)
+
+#### Anti-Pattern 1: Sequential Dependencies
+```markdown
+DON'T:
+Task 1: Code Writer - Implement feature X
+Task 2: Test Runner - Test feature X  // Needs Task 1 to complete!
+```
+
+**Why not?** Task 2 requires Task 1's output. Run sequentially.
+
+#### Anti-Pattern 2: File Conflicts
+```markdown
+DON'T:
+Task 1: Code Writer - Add function to utils.ts
+Task 2: Code Writer - Refactor utils.ts  // Same file!
+```
+
+**Why not?** Both modify the same file. Merge conflicts likely.
+
+#### Anti-Pattern 3: Verification Before Implementation
+```markdown
+DON'T:
+Task 1: Security Expert - Scan for vulnerabilities
+Task 2: Code Writer - Implement authentication  // Should scan AFTER
+```
+
+**Why not?** Security should verify code that exists, not future code.
+
+#### Anti-Pattern 4: Dependent Research
+```markdown
+DON'T:
+Task 1: Research - Find all authentication files
+Task 2: Code Writer - Update authentication  // Needs findings first
+```
+
+**Why not?** Code Writer needs research results to know what to update.
+
+### How to Delegate in Parallel
+
+**CRITICAL:** Use a **single message** with multiple Task tool calls. Do NOT send tasks one at a time.
+
+**Correct approach:**
+```
+Make multiple Task tool invocations in the same function_calls block.
+Each Task call delegates to one agent with its complete assignment.
+All tasks start simultaneously.
+```
+
+**Example scenario:** Implementing three model files
+
+You would make 3 Task tool calls in a single response:
+- Task call 1: Code Writer for User model
+- Task call 2: Code Writer for Product model
+- Task call 3: Code Writer for Order model
+
+All three Code Writer agents work in parallel on different files.
+
+### Monitoring Parallel Tasks
+
+After delegating parallel tasks:
+
+1. **Wait for all to complete** - You'll receive results from each task
+2. **Review each output** - Verify acceptance criteria for all tasks
+3. **Check for conflicts** - Ensure no unexpected file overlaps occurred
+4. **Aggregate results** - Combine outputs into coherent execution report
+
+If one task fails while others succeed:
+- Accept successful tasks
+- Retry or fallback on failed task
+- Don't re-run successful tasks unless they depend on the failed one
+
+### Decision Framework
+
+Before delegating, ask yourself:
+
+```
+Can these tasks run in parallel?
+├─ Do they modify different files?
+│  ├─ Yes → Check next question
+│  └─ No → Run sequentially
+├─ Does Task B need Task A's output?
+│  ├─ Yes → Run sequentially
+│  └─ No → Check next question
+├─ Can they be verified independently?
+│  ├─ Yes → PARALLELIZE!
+│  └─ No → Run sequentially
+```
+
+**Default mindset:** Look for parallelization opportunities. Sequential execution should be the exception, not the rule.
+
 ## Progress Monitoring
 
 ### Checkpoints

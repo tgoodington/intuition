@@ -1,0 +1,26 @@
+{
+  "_comment": "State template for project-memory skill personalization tracking",
+  "_description": "This file tracks the state of project interactions and personalization features",
+
+  "initialized": "2026-01-24T00:00:00Z",
+  "_initialized_description": "ISO 8601 timestamp indicating when personalization was first activated for this project",
+
+  "version": "1.0",
+  "_version_description": "Schema version for this state file format",
+
+  "personalization": {
+    "_comment": "Tracks personalization features and user interaction states",
+
+    "waldo_greeted": false,
+    "_waldo_greeted_description": "Boolean flag indicating whether the Waldo character has greeted the user in this project",
+
+    "plan_created": false,
+    "_plan_created_description": "Boolean flag indicating whether a project plan has been created",
+
+    "plan_status": "planned",
+    "_plan_status_description": "Current status of the project plan. Valid values: 'planned' (plan exists but not started), 'in_implementation' (actively working on plan), 'complete' (plan fully implemented)",
+
+    "plan_file": "",
+    "_plan_file_description": "Absolute file path to the project plan document (e.g., 'C:\\Users\\taylo\\intuition\\projects\\my-project\\project_plan.md')"
+  }
+}
