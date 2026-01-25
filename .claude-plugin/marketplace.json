@@ -4,13 +4,13 @@
     "name": "Taylor Goodington"
   },
   "metadata": {
-    "description": "Multi-agent architecture for Claude Code with Waldo (planner) and The Architect (executor). Includes parallel sub-agent execution for efficiency and project-memory personalization for enhanced user experience."
+    "description": "Multi-agent architecture for Claude Code with Waldo (planner) and The Architect (executor). Includes parallel sub-agent execution, comprehensive project-memory system with one-command initialization, agent registry, workflow patterns, and conversational planning integration."
   },
   "plugins": [
     {
       "name": "intuition",
       "source": "./",
-      "description": "Multi-agent architecture featuring Waldo (planning) and The Architect (execution) with specialized sub-agents, parallel execution capabilities, and project-memory personalization"
+      "description": "Multi-agent orchestration platform featuring Waldo (planning thought partner) and The Architect (execution orchestrator) with 6 specialized sub-agents. Includes streamlined project initialization with AGENTS.md configuration, project-memory system, parallel task execution, and integrated project planning."
     }
   ]
 }
