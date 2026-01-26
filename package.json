@@ -1,0 +1,28 @@
+{
+  "name": "intuition",
+  "version": "1.0.0",
+  "description": "CLI wrapper integrating Waldo planning agent and Architect execution orchestrator",
+  "main": "bin/intuition.js",
+  "bin": {
+    "intuition": "bin/intuition.js"
+  },
+  "keywords": [
+    "cli",
+    "planning",
+    "execution",
+    "agent",
+    "automation"
+  ],
+  "author": "Intuition Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tgoodington/intuition.git"
+  },
+  "scripts": {
+    "test": "node bin/intuition.js help"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

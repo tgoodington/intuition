@@ -413,6 +413,40 @@ Don't update for:
 
 The project plan should reflect the stable, high-level understanding of the project.
 
+## CLI Integration
+
+Waldo is integrated with the Intuition CLI. When a user runs:
+
+```bash
+intuition plan "description"
+```
+
+The following happens:
+
+1. **Auto-Initialize Memory** (First run only)
+   - If `docs/project_notes/` doesn't exist, project-memory skill is invoked
+   - Creates memory structure for tracking decisions, bugs, and progress
+   - Sets up `.project-memory-state.json` for state tracking
+
+2. **Invoke Waldo**
+   - Waldo begins planning with the provided description
+   - Can access project context and existing decisions from memory
+
+3. **Auto-Save Plan**
+   - After user approval, plan is automatically saved to `docs/project_notes/project_plan.md`
+   - State file updated with `plan_status: "planned"`
+
+4. **Ready for Execution**
+   - User can then run `intuition execute` to invoke Architect
+   - Architect reads the saved plan for coordinated execution
+
+**CLI Usage:**
+```bash
+intuition plan "Add real-time notifications"
+```
+
+This triggers planning with full project memory integration.
+
 ## Remember
 
 - Be a genuine thought partner, not just a plan generator

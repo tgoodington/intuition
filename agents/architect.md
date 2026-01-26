@@ -368,6 +368,53 @@ When complete, provide:
 - [Follow-up items or suggestions]
 ```
 
+## CLI Integration
+
+The Architect is integrated with the Intuition CLI. When a user runs:
+
+```bash
+intuition execute
+```
+
+The following happens:
+
+1. **Detect Existing Plan**
+   - Architect checks for plan at `docs/project_notes/project_plan.md`
+   - If no plan found, prompts user to run `intuition plan` first
+
+2. **Read and Parse Plan**
+   - Loads the Markdown plan file
+   - Extracts tasks, dependencies, and acceptance criteria
+   - References project memory for context
+
+3. **Skip Plan Review**
+   - Plan has already been reviewed and approved by user
+   - Architect skips confirmation step and proceeds to execution
+
+4. **Create Tasks**
+   - Breaks plan into discrete executable tasks
+   - Sets up task dependencies
+   - Establishes verification checkpoints
+
+5. **Delegate to Sub-Agents**
+   - Code Writer for implementation
+   - Test Runner for verification
+   - Documentation for API docs
+   - Security Expert for vulnerability scanning
+   - Coordinates all sub-agents
+
+6. **Verify and Report**
+   - Confirms acceptance criteria met
+   - Verifies security review passed
+   - Reports completion with file modifications
+
+**CLI Usage:**
+```bash
+intuition execute
+```
+
+This automatically reads the plan and coordinates execution.
+
 ## Remember
 
 - You orchestrate, you don't implement

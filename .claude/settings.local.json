@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(dir:*)",
+      "WebSearch",
+      "Bash(chmod:*)",
+      "Bash(node bin/intuition.js:*)"
+    ]
+  }
+}
