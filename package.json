@@ -1,5 +1,5 @@
 {
-  "name": "intuition",
+  "name": "@tgoodington/intuition",
   "version": "1.0.0",
   "description": "Four Claude Code skills for project initialization, planning, execution, and compliance enforcement",
   "keywords": [
