@@ -1,0 +1,26 @@
+{
+  "_comment": "State template for project-memory skill personalization tracking",
+  "_description": "This file tracks the state of project interactions and personalization features",
+
+  "initialized": true,
+  "_initialized_description": "Boolean indicating whether project-memory personalization has been initialized for this project",
+
+  "version": "1.0",
+  "_version_description": "Schema version for this state file format",
+
+  "personalization": {
+    "_comment": "Tracks personalization features and user interaction states",
+
+    "waldo_greeted": false,
+    "_waldo_greeted_description": "Boolean flag indicating whether Waldo has greeted the user in this project (first-time setup)",
+
+    "plan_created": false,
+    "_plan_created_description": "Boolean flag indicating whether a project plan has been created",
+
+    "plan_status": "none",
+    "_plan_status_description": "Current status of the project plan. Valid values: 'none' (no plan yet), 'planned' (plan created, not started), 'implementing' (actively working on plan tasks), 'complete' (plan completed)",
+
+    "plan_file": "docs/project_notes/project_plan.md",
+    "_plan_file_description": "Relative path to the project plan document (relative to project root)"
+  }
+}

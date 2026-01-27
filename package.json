@@ -1,17 +1,15 @@
 {
   "name": "intuition",
   "version": "1.0.0",
-  "description": "CLI wrapper integrating Waldo planning agent and Architect execution orchestrator",
-  "main": "bin/intuition.js",
-  "bin": {
-    "intuition": "bin/intuition.js"
-  },
+  "description": "Three Claude Code skills for structured planning, execution orchestration, and project initialization",
   "keywords": [
-    "cli",
+    "claude-code",
+    "skills",
     "planning",
     "execution",
     "agent",
-    "automation"
+    "automation",
+    "project-memory"
   ],
   "author": "Intuition Contributors",
   "license": "MIT",

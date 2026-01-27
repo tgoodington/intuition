@@ -1,11 +1,12 @@
 # Intuition
 
-A planning and execution CLI that orchestrates AI agents for structured software development.
+Four Claude Code skills for structured planning, execution orchestration, project initialization, and compliance enforcement.
 
-Intuition provides a simple command-line interface that routes between:
-- **Waldo**: Planning agent for thoughtful architecture and feature planning
-- **Architect**: Execution orchestrator for implementing approved plans
-- **Project Memory**: Structured knowledge system tracking decisions, bugs, and progress
+Intuition provides:
+- **`/intuition-start`**: Load project context and enforce compliance with documented protocols
+- **`/intuition-plan`**: Waldo planning agent for thoughtful architecture and feature planning
+- **`/intuition-execute`**: Architect execution orchestrator for implementing approved plans
+- **`/intuition-initialize`**: Project initialization for structured knowledge system tracking decisions, bugs, and progress
 
 ## Quick Start
 
@@ -13,37 +14,57 @@ Intuition provides a simple command-line interface that routes between:
 # Install globally
 npm install -g .
 
-# Initialize project memory
-intuition memory setup
-
-# Create a plan
-intuition plan "Add user authentication system"
-
-# Execute the plan
-intuition execute
+# In Claude Code, typical workflow:
+/intuition-initialize      # Set up project memory (once per project)
+/intuition-start           # Load context at start of session
+/intuition-plan "..."      # Plan new features
+/intuition-execute         # Execute the plan
 ```
 
-## Commands
+## Skills
 
-### `intuition plan <description>`
+### `/intuition-start` Skill
+
+Load your project context and enforce compliance with documented protocols.
+
+**Usage:**
+```
+/intuition-start
+```
+
+**What happens:**
+1. Reads project memory files (bugs.md, decisions.md, key_facts.md, issues.md)
+2. Reads protocol documents (CLAUDE.md, AGENTS.md)
+3. Summarizes project status, decisions, and constraints
+4. Primes Waldo and Architect to follow project patterns
+5. Offers next steps (plan, execute, or continue work)
+
+**When to use:** Start of every session to load full project context.
+
+### `/intuition-plan` Skill
 
 Start a planning session with Waldo, your planning thought partner.
 
+**Usage:**
+```
+/intuition-plan "Implement real-time notifications with WebSockets"
+```
+
 **What happens:**
 1. Auto-initializes project memory on first run (creates `docs/project_notes/`)
-2. Invokes Waldo planning agent with your description
-3. Waldo develops a detailed plan through reflection and refinement
+2. Waldo engages in dialogue to understand your goals
+3. Waldo researches your codebase and develops a detailed plan through reflection and refinement
 4. Plan is saved to `docs/project_notes/project_plan.md`
 5. You can review and approve before execution
 
-**Example:**
-```bash
-intuition plan "Implement real-time notifications with WebSockets"
-```
-
-### `intuition execute`
+### `/intuition-execute` Skill
 
 Execute an existing plan with Architect, the execution orchestrator.
+
+**Usage:**
+```
+/intuition-execute
+```
 
 **What happens:**
 1. Architect reads your plan from `docs/project_notes/project_plan.md`
@@ -52,17 +73,16 @@ Execute an existing plan with Architect, the execution orchestrator.
 4. Delegates implementation to specialized sub-agents
 5. Verifies outputs and reports completion
 
-**Prerequisites:**
-- A plan must exist from a previous `intuition plan` command
+**Prerequisite:** A plan must exist from a previous `/intuition-plan` session
 
-**Example:**
-```bash
-intuition execute
+### `/intuition-initialize` Skill
+
+Initialize the project memory system.
+
+**Usage:**
 ```
-
-### `intuition memory setup`
-
-Initialize the project memory system explicitly.
+/intuition-initialize
+```
 
 **What happens:**
 1. Creates `docs/project_notes/` directory structure
@@ -72,66 +92,64 @@ Initialize the project memory system explicitly.
    - `key_facts.md` - Project configuration
    - `issues.md` - Work log
 3. Configures project memory tracking
-
-**Example:**
-```bash
-intuition memory setup
-```
-
-### `intuition help`
-
-Show help information.
-
-```bash
-intuition help
-intuition -h
-intuition --help
-```
-
-### `intuition version`
-
-Show version information.
-
-```bash
-intuition version
-intuition -v
-intuition --version
-```
+4. Sets up CLAUDE.md and AGENTS.md with memory-aware protocols
 
 ## Workflow
 
-A typical Intuition workflow:
+A typical Intuition workflow in Claude Code:
 
 ```
-1. intuition memory setup
-   └─ Initialize project memory system
+1. /intuition-initialize
+   └─ Initialize project memory system in docs/project_notes/
 
-2. intuition plan "Feature description"
+2. /intuition-start (at beginning of each session)
+   └─ Load project context and enforce protocol compliance
+   └─ Understand project decisions, constraints, and status
+
+3. /intuition-plan "Feature description"
    └─ Work with Waldo to develop a comprehensive plan
    └─ Plan saved to docs/project_notes/project_plan.md
-   └─ You review and approve
+   └─ Review and approve plan
 
-3. intuition execute
-   └─ Architect reads the plan
+4. /intuition-execute
+   └─ Architect reads the plan and enforces compliance
    └─ Delegates work to specialized sub-agents
    └─ Executes plan tasks with verification
    └─ Reports completion
 
-4. (Iterate as needed)
-   └─ intuition plan "Next phase"
-   └─ intuition execute
+5. (Iterate as needed)
+   └─ /intuition-start (reload context for new session)
+   └─ /intuition-plan "Next phase"
+   └─ /intuition-execute
 ```
 
-## Using Intuition Skills in Claude Code
+## Using Intuition Skills
 
-After installation (via any method), the `/plan` and `/execute` skills are available globally:
+After installation via npm, the four Intuition skills are available globally in Claude Code:
 
-### `/plan` Skill
+### `/intuition-initialize` Skill
+
+Set up project memory and structured knowledge system.
+
+```
+/intuition-initialize
+```
+
+This creates:
+- `docs/project_notes/bugs.md` - Bug log with solutions
+- `docs/project_notes/decisions.md` - Architectural decisions
+- `docs/project_notes/key_facts.md` - Project configuration
+- `docs/project_notes/issues.md` - Work log
+- Configures CLAUDE.md and AGENTS.md with memory protocols
+
+**Run this first** when starting a new project.
+
+### `/intuition-plan` Skill
 
 Start a planning session with Waldo:
 
 ```
-/plan "Add user authentication to the app"
+/intuition-plan "Add user authentication to the app"
 ```
 
 Waldo will:
@@ -141,12 +159,12 @@ Waldo will:
 4. Reflect and refine before finalizing
 5. Save the plan to `docs/project_notes/project_plan.md`
 
-### `/execute` Skill
+### `/intuition-execute` Skill
 
 Execute an existing plan with Architect:
 
 ```
-/execute
+/intuition-execute
 ```
 
 Architect will:
@@ -156,18 +174,18 @@ Architect will:
 4. Delegate to specialized sub-agents
 5. Verify outputs and report completion
 
-**Prerequisite:** A plan must exist from a previous `/plan` command.
+**Prerequisite:** A plan must exist from a previous `/intuition-plan` session.
 
 ### Verification
 
 To verify installation in Claude Code:
 
 1. Open any project in Claude Code
-2. Type `/plan` and press Enter
-3. Waldo should greet you and begin the planning dialogue
+2. Type `/` to see available skills
+3. You should see `/intuition-start`, `/intuition-plan`, `/intuition-execute`, and `/intuition-initialize`
 
-If `/plan` is not available:
-- Ensure installation completed (check `~/.claude/skills/plan` exists)
+If skills are not available:
+- Ensure installation completed (check `~/.claude/skills/` contains the skill directories)
 - Restart Claude Code if just installed
 - See [INSTALLATION.md](./INSTALLATION.md) for troubleshooting
 
@@ -175,14 +193,17 @@ If `/plan` is not available:
 
 ```
 intuition/
-├── bin/
-│   └── intuition.js          # Main CLI entry point
+├── skills/
+│   ├── intuition-start/      # Context loading and compliance enforcement
+│   ├── intuition-plan/       # Planning with Waldo
+│   ├── intuition-execute/    # Execution with Architect
+│   └── intuition-initialize/ # Project memory setup
 ├── agents/
 │   ├── waldo.md              # Planning agent definition
 │   ├── architect.md          # Execution orchestrator
-│   └── [other agents]
-├── skills/
-│   └── project-memory/       # Project memory skill
+│   └── [other sub-agents]
+├── scripts/
+│   └── install-skills.js     # Installation script
 ├── package.json              # npm package config
 └── README.md                 # This file
 ```
@@ -223,44 +244,35 @@ Intuition includes a project memory system that maintains institutional knowledg
 
 Memory is automatically referenced by Waldo and Architect to maintain consistency and avoid repeating past mistakes.
 
-See `skills/project-memory/SKILL.md` for full details.
+See `skills/intuition-initialize/SKILL.md` for full details.
 
 ## Installation
 
-### Option 1: Install Globally via npm (Recommended)
+### Install Globally via npm (Recommended)
 
 ```bash
 npm install -g intuition
 ```
 
-This automatically installs the `/plan` and `/execute` skills to `~/.claude/skills/` for use across all projects.
+This automatically installs the four Intuition skills to `~/.claude/skills/` for use across all projects with Claude Code:
+- `/intuition-start` - Load project context
+- `/intuition-plan` - Planning with Waldo
+- `/intuition-execute` - Execution with Architect
+- `/intuition-initialize` - Project initialization
 
 **Verification:**
 ```bash
-ls ~/.claude/skills/plan
-ls ~/.claude/skills/execute
+ls ~/.claude/skills/intuition-*
 ```
 
-### Option 2: Install via Claude Code Plugin Marketplace
-
-```bash
-/plugin marketplace add tgoodington/intuition
-/plugin install intuition-skills@intuition
-```
-
-### Option 3: Install from Source (Development)
+### Install from Source (Development)
 
 ```bash
 cd intuition
 npm install -g .
 ```
 
-### Option 4: Local Development
-
-```bash
-cd intuition
-node bin/intuition.js help
-```
+After installation, restart Claude Code and the skills will be available globally.
 
 ## Requirements
 
@@ -269,15 +281,24 @@ node bin/intuition.js help
 
 ## Architecture
 
-Intuition is built on a multi-agent architecture:
+Intuition provides four integrated skills for Claude Code:
 
-1. **CLI Layer** (`bin/intuition.js`) - Command routing and user interaction
-2. **Planning Layer** (Waldo agent) - Structured planning with reflection
-3. **Execution Layer** (Architect agent) - Orchestration and verification
-4. **Memory Layer** (project-memory skill) - Institutional knowledge
-5. **Implementation Layer** (sub-agents) - Actual code changes, tests, etc.
+1. **Context Loading** (`/intuition-start`) - Loads project memory and enforces protocol compliance
+2. **Initialization** (`/intuition-initialize`) - Sets up project memory and knowledge system
+3. **Planning** (`/intuition-plan` with Waldo agent) - Structured planning with reflection and dialogue
+4. **Execution** (`/intuition-execute` with Architect agent) - Orchestration and verification through sub-agents
 
-Each layer is independent but coordinates through the CLI and shared memory system.
+All skills coordinate through the project memory system (`docs/project_notes/`) for consistency and context across sessions. `/intuition-start` ensures every session begins with full project context and compliance enforcement.
+
+### Sub-Agent System
+
+When `/execute` runs, Architect delegates to specialized sub-agents:
+- Code Writer - Implementation
+- Test Runner - Verification
+- Code Reviewer - Quality assurance
+- Documentation - Knowledge updates
+- Research - Investigation and exploration
+- Security Expert - Vulnerability detection
 
 ## Contributing
 
@@ -300,6 +321,9 @@ For issues or questions:
 
 ## See Also
 
+- Intuition Start Skill: `skills/intuition-start/SKILL.md`
+- Intuition Plan Skill: `skills/intuition-plan/SKILL.md`
+- Intuition Execute Skill: `skills/intuition-execute/SKILL.md`
+- Intuition Initialize Skill: `skills/intuition-initialize/SKILL.md`
 - Waldo Agent: `agents/waldo.md`
 - Architect Agent: `agents/architect.md`
-- Project Memory Skill: `skills/project-memory/SKILL.md`

@@ -161,4 +161,4 @@ When updating `docs/project_notes/`:
 - Be concise but complete
 - Reference ticket IDs where applicable
 
-See the project-memory skill for detailed formats.
+See the intuition-initialize skill for detailed formats.

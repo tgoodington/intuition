@@ -58,36 +58,62 @@ try {
     log(`Created ${claudeSkillsDir}`);
   }
 
-  // Copy /plan skill
-  const planSrc = path.join(packageRoot, 'skills', 'plan');
-  const planDest = path.join(claudeSkillsDir, 'plan');
+  // Copy /intuition-start skill
+  const startSrc = path.join(packageRoot, 'skills', 'intuition-start');
+  const startDest = path.join(claudeSkillsDir, 'intuition-start');
 
-  if (fs.existsSync(planSrc)) {
-    copyDirRecursive(planSrc, planDest);
-    log(`✓ Installed /plan skill to ${planDest}`);
+  if (fs.existsSync(startSrc)) {
+    copyDirRecursive(startSrc, startDest);
+    log(`✓ Installed /intuition-start skill to ${startDest}`);
   } else {
-    error(`plan skill not found at ${planSrc}`);
+    error(`intuition-start skill not found at ${startSrc}`);
     process.exit(1);
   }
 
-  // Copy /execute skill
-  const executeSrc = path.join(packageRoot, 'skills', 'execute');
-  const executeDest = path.join(claudeSkillsDir, 'execute');
+  // Copy /intuition-plan skill
+  const planSrc = path.join(packageRoot, 'skills', 'intuition-plan');
+  const planDest = path.join(claudeSkillsDir, 'intuition-plan');
+
+  if (fs.existsSync(planSrc)) {
+    copyDirRecursive(planSrc, planDest);
+    log(`✓ Installed /intuition-plan skill to ${planDest}`);
+  } else {
+    error(`intuition-plan skill not found at ${planSrc}`);
+    process.exit(1);
+  }
+
+  // Copy /intuition-execute skill
+  const executeSrc = path.join(packageRoot, 'skills', 'intuition-execute');
+  const executeDest = path.join(claudeSkillsDir, 'intuition-execute');
 
   if (fs.existsSync(executeSrc)) {
     copyDirRecursive(executeSrc, executeDest);
-    log(`✓ Installed /execute skill to ${executeDest}`);
+    log(`✓ Installed /intuition-execute skill to ${executeDest}`);
   } else {
-    error(`execute skill not found at ${executeSrc}`);
+    error(`intuition-execute skill not found at ${executeSrc}`);
+    process.exit(1);
+  }
+
+  // Copy /intuition-initialize skill
+  const initializeSrc = path.join(packageRoot, 'skills', 'intuition-initialize');
+  const initializeDest = path.join(claudeSkillsDir, 'intuition-initialize');
+
+  if (fs.existsSync(initializeSrc)) {
+    copyDirRecursive(initializeSrc, initializeDest);
+    log(`✓ Installed /intuition-initialize skill to ${initializeDest}`);
+  } else {
+    error(`intuition-initialize skill not found at ${initializeSrc}`);
     process.exit(1);
   }
 
   // Verify installation
-  if (fs.existsSync(planDest) && fs.existsSync(executeDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
-    log(`  /plan   - Planning skill`);
-    log(`  /execute - Execution skill`);
+    log(`  /intuition-start       - Load project context and enforce compliance`);
+    log(`  /intuition-plan        - Planning skill (develop structured plans)`);
+    log(`  /intuition-execute     - Execution skill (orchestrate implementation)`);
+    log(`  /intuition-initialize  - Project initialization (set up project memory)`);
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {
     error(`Verification failed - skills not properly installed`);

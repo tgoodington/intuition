@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 
+/**
+ * Development utility for testing Intuition skills locally
+ *
+ * This script is NOT distributed to users. Users install the skills directly
+ * via npm, which copies them to ~/.claude/skills/ for use in Claude Code.
+ *
+ * For local development testing only:
+ *   node bin/intuition.js plan "your description"
+ *   node bin/intuition.js execute
+ *   node bin/intuition.js memory setup
+ */
+
 const path = require('path');
 const fs = require('fs');
 
@@ -7,6 +19,31 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const command = args[0];
 const commandArg = args.slice(1).join(' ');
+
+// Helper function to extract markdown content from files with YAML frontmatter
+function extractMarkdownContent(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // Split by frontmatter delimiters (---)
+    const parts = content.split('---');
+
+    if (parts.length < 3) {
+      // No frontmatter found, return full content
+      return content;
+    }
+
+    // parts[0] is empty or whitespace before first ---
+    // parts[1] is the YAML frontmatter
+    // parts[2] onwards is the markdown content
+    const markdown = parts.slice(2).join('---').trim();
+
+    return markdown;
+  } catch (error) {
+    console.error(`Error reading file ${filePath}: ${error.message}`);
+    return '';
+  }
+}
 
 // Helper functions
 function showHelp() {
@@ -55,6 +92,14 @@ function invokeAgent(agentName, description = '') {
     process.exit(1);
   }
 
+  // Extract markdown content (removing YAML frontmatter)
+  const agentDefinition = extractMarkdownContent(agentPath);
+
+  if (!agentDefinition.trim()) {
+    console.error(`Error: Agent definition for '${agentName}' is empty`);
+    process.exit(1);
+  }
+
   console.log(`\nInvoking ${agentName === 'waldo' ? 'Waldo' : 'Architect'}...`);
   console.log('========================================\n');
 
@@ -62,15 +107,17 @@ function invokeAgent(agentName, description = '') {
   // For now, show what would happen
   if (agentName === 'waldo') {
     console.log(`Planning Task: ${description || 'General planning'}`);
-    console.log(`Agent Path: ${agentPath}`);
+    console.log(`\nAgent Definition Loaded (${agentDefinition.length} characters)`);
     console.log('\nInvoking Waldo agent for planning...\n');
     console.log('(In actual usage, this invokes the Waldo planning agent)');
+    console.log('(Waldo now has full context of the agent definition)');
     console.log('(Check docs/project_notes/ after Waldo completes for the plan)\n');
   } else if (agentName === 'architect') {
     console.log('Execution Task: Read plan and execute');
-    console.log(`Agent Path: ${agentPath}`);
+    console.log(`\nAgent Definition Loaded (${agentDefinition.length} characters)`);
     console.log('\nInvoking Architect agent for execution...\n');
     console.log('(In actual usage, this invokes the Architect execution agent)');
+    console.log('(Architect has full context of the agent definition)');
     console.log('(Architect reads the plan from docs/project_notes/)\n');
   }
 }
@@ -79,7 +126,9 @@ function initializeMemory() {
   console.log('Initializing project memory system...\n');
 
   const memoryDir = path.join(process.cwd(), 'docs', 'project_notes');
+  const skillPath = path.join(__dirname, '../skills/intuition-initialize/SKILL.md');
 
+  // Check if memory already exists
   if (fs.existsSync(memoryDir)) {
     console.log('Project memory already initialized at:', memoryDir);
     console.log('Memory files:');
@@ -92,9 +141,26 @@ function initializeMemory() {
     return;
   }
 
+  // Check if skill file exists and read it
+  if (!fs.existsSync(skillPath)) {
+    console.error(`Error: Project memory skill not found at ${skillPath}`);
+    process.exit(1);
+  }
+
+  // Extract markdown content (removing YAML frontmatter)
+  const skillDefinition = extractMarkdownContent(skillPath);
+
+  if (!skillDefinition.trim()) {
+    console.error('Error: Project memory skill definition is empty');
+    process.exit(1);
+  }
+
   console.log('Setting up project memory structure...');
-  console.log('(In actual usage, this invokes the project-memory skill)');
-  console.log('(This creates: docs/project_notes/ with bugs.md, decisions.md, key_facts.md, issues.md)\n');
+  console.log(`\nSkill Definition Loaded (${skillDefinition.length} characters)`);
+  console.log('\nInvoking intuition-initialize skill...\n');
+  console.log('(In actual usage, this invokes the intuition-initialize skill)');
+  console.log('(This creates: docs/project_notes/ with bugs.md, decisions.md, key_facts.md, issues.md)');
+  console.log('(Skill has full context of setup procedures)\n');
   console.log('Memory system ready! You can now use:');
   console.log('  intuition plan "your description"');
   console.log('  intuition execute\n');
