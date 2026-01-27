@@ -1,7 +1,7 @@
 {
   "name": "intuition",
   "version": "1.0.0",
-  "description": "Three Claude Code skills for structured planning, execution orchestration, and project initialization",
+  "description": "Four Claude Code skills for project initialization, planning, execution, and compliance enforcement",
   "keywords": [
     "claude-code",
     "skills",
