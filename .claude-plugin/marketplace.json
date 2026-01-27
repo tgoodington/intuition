@@ -1,16 +1,26 @@
 {
-  "name": "intuition-marketplace",
+  "name": "intuition",
   "owner": {
-    "name": "Taylor Goodington"
+    "name": "Intuition Contributors",
+    "email": "tgoodington@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Multi-agent architecture for Claude Code with Waldo (planner) and The Architect (executor). Includes parallel sub-agent execution, comprehensive project-memory system with one-command initialization, agent registry, workflow patterns, and conversational planning integration."
+    "description": "Planning and execution skills for structured software development",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "intuition",
-      "source": "./",
-      "description": "Multi-agent orchestration platform featuring Waldo (planning thought partner) and The Architect (execution orchestrator) with 6 specialized sub-agents. Includes streamlined project initialization with AGENTS.md configuration, project-memory system, parallel task execution, and integrated project planning."
+      "name": "intuition-skills",
+      "source": ".",
+      "description": "Waldo (planning) and Architect (execution) skills for Claude Code",
+      "version": "1.0.0",
+      "author": {
+        "name": "Intuition Contributors"
+      },
+      "license": "MIT",
+      "keywords": ["planning", "execution", "architecture", "orchestration"],
+      "category": "productivity",
+      "strict": false
     }
   ]
 }

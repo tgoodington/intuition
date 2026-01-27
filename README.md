@@ -122,6 +122,55 @@ A typical Intuition workflow:
    └─ intuition execute
 ```
 
+## Using Intuition Skills in Claude Code
+
+After installation (via any method), the `/plan` and `/execute` skills are available globally:
+
+### `/plan` Skill
+
+Start a planning session with Waldo:
+
+```
+/plan "Add user authentication to the app"
+```
+
+Waldo will:
+1. Engage in dialogue to understand your goals
+2. Research your codebase for context
+3. Develop a structured plan with confidence scoring
+4. Reflect and refine before finalizing
+5. Save the plan to `docs/project_notes/project_plan.md`
+
+### `/execute` Skill
+
+Execute an existing plan with Architect:
+
+```
+/execute
+```
+
+Architect will:
+1. Read your plan from `docs/project_notes/project_plan.md`
+2. Review for feasibility and gaps
+3. Create tasks with dependencies
+4. Delegate to specialized sub-agents
+5. Verify outputs and report completion
+
+**Prerequisite:** A plan must exist from a previous `/plan` command.
+
+### Verification
+
+To verify installation in Claude Code:
+
+1. Open any project in Claude Code
+2. Type `/plan` and press Enter
+3. Waldo should greet you and begin the planning dialogue
+
+If `/plan` is not available:
+- Ensure installation completed (check `~/.claude/skills/plan` exists)
+- Restart Claude Code if just installed
+- See [INSTALLATION.md](./INSTALLATION.md) for troubleshooting
+
 ## Project Structure
 
 ```
@@ -178,20 +227,35 @@ See `skills/project-memory/SKILL.md` for full details.
 
 ## Installation
 
-### From Source
+### Option 1: Install Globally via npm (Recommended)
+
+```bash
+npm install -g intuition
+```
+
+This automatically installs the `/plan` and `/execute` skills to `~/.claude/skills/` for use across all projects.
+
+**Verification:**
+```bash
+ls ~/.claude/skills/plan
+ls ~/.claude/skills/execute
+```
+
+### Option 2: Install via Claude Code Plugin Marketplace
+
+```bash
+/plugin marketplace add tgoodington/intuition
+/plugin install intuition-skills@intuition
+```
+
+### Option 3: Install from Source (Development)
 
 ```bash
 cd intuition
 npm install -g .
 ```
 
-### From npm (when published)
-
-```bash
-npm install -g intuition
-```
-
-### Development
+### Option 4: Local Development
 
 ```bash
 cd intuition

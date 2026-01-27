@@ -20,8 +20,18 @@
     "url": "https://github.com/tgoodington/intuition.git"
   },
   "scripts": {
+    "postinstall": "node scripts/install-skills.js",
+    "preuninstall": "node scripts/uninstall-skills.js",
     "test": "node bin/intuition.js help"
   },
+  "files": [
+    "bin/",
+    "skills/",
+    "scripts/",
+    "agents/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=14.0.0"
   }

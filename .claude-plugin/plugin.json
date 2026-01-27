@@ -1,24 +1,9 @@
 {
-  "name": "intuition",
-  "version": "1.1.0",
-  "description": "A multi-agent architecture for planning and execution. Features Waldo (thought partner/planner) and The Architect (execution orchestrator) with specialized sub-agents. Includes parallel sub-agent execution, project-memory system with one-command initialization, comprehensive agent registry, and conversational planning integration.",
+  "name": "intuition-skills",
+  "description": "Waldo (planning) and Architect (execution) skills for Claude Code",
+  "version": "1.0.0",
   "author": {
-    "name": "Taylor Goodington"
+    "name": "Intuition Contributors"
   },
-  "keywords": [
-    "agents",
-    "planning",
-    "orchestration",
-    "multi-agent",
-    "security",
-    "code-review",
-    "project-memory",
-    "parallel-execution",
-    "personalization",
-    "waldo",
-    "architect",
-    "initialization-workflow",
-    "project-planning"
-  ],
   "license": "MIT"
 }
