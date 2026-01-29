@@ -52,10 +52,11 @@ When invoked for the first time in a project, create the following structure:
 ```
 docs/
 └── project_notes/
-    ├── bugs.md         # Bug log with solutions
-    ├── decisions.md    # Architectural Decision Records
-    ├── key_facts.md    # Project configuration and constants
-    └── issues.md       # Work log with ticket references
+    ├── bugs.md              # Bug log with solutions
+    ├── decisions.md         # Architectural Decision Records
+    ├── key_facts.md         # Project configuration and constants
+    ├── issues.md            # Work log with ticket references
+    └── project_plan.md      # Project plan (created by Waldo planning agent)
 ```
 
 **Directory naming rationale:** Using `docs/project_notes/` instead of `memory/` makes it look like standard engineering organization, not AI-specific tooling. This increases adoption and maintenance by human developers.
@@ -83,6 +84,24 @@ This project maintains institutional knowledge in `docs/project_notes/` for cons
 - **decisions.md** - Architectural Decision Records (ADRs) with context and trade-offs
 - **key_facts.md** - Project configuration, credentials, ports, important URLs
 - **issues.md** - Work log with ticket IDs, descriptions, and URLs
+- **project_plan.md** - Structured project plan with objectives, tasks, dependencies (created by Waldo planning agent)
+
+### Documentation Flagging
+
+This project uses a documentation flagging system where specialized agents (Waldo for planning, Architect for execution) emit flags when they complete work. The base Claude agent processes these flags and routes documentation to the appropriate memory file.
+
+**Flag format**: `[DOCUMENT: type] "content"`
+
+**Supported types**:
+- `plan` → `project_plan.md` (project structure and task list)
+- `decision` → `decisions.md` (architectural decisions and ADRs)
+- `work` → `issues.md` (completed work and task progress)
+- `bug` → `bugs.md` (bug solutions and prevention notes)
+- `key_fact` → `key_facts.md` (project configuration and important info)
+
+**How it works**: After agents complete planning or execution, they emit flags like `[DOCUMENT: decision] "Chose async pattern..."`. Claude processes these flags, routes them to the right file, applies proper formatting (dates, structure, linking), and updates project memory.
+
+This keeps documentation authority centralized with Claude while agents focus on their core work.
 
 ### Memory-Aware Protocols
 
@@ -107,6 +126,21 @@ This project maintains institutional knowledge in `docs/project_notes/` for cons
 **When user requests memory updates:**
 - Update the appropriate memory file (bugs, decisions, key_facts, or issues)
 - Follow the established format and style (bullet lists, dates, concise entries)
+
+**Documentation Flagging System:**
+
+When agents complete work, they emit documentation flags that Claude (the base agent) processes:
+- **Flag format**: `[DOCUMENT: type] "content - context"`
+- **Supported types**: `plan`, `decision`, `work`, `bug`, `key_fact`
+- **Processing**: Claude checks agent output for flags after they complete
+- **Routing**: Claude routes each type to the appropriate memory file with correct formatting
+- **Error handling**: If a flag is unrecognized:
+  1. Claude searches recent agent output for context
+  2. If resolvable, routes it correctly and moves on
+  3. If unclear, creates `docs/intuition-framework-improvements.md` entry documenting the issue
+  4. Entry includes: flag type, context, suggested framework update
+
+This system keeps documentation authority centralized with Claude while agents focus on planning and execution.
 
 ### Style Guidelines for Memory Files
 

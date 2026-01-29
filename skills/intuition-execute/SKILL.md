@@ -147,7 +147,13 @@ When complete, I provide:
 
 **Recommendations:**
 - Follow-up items
+
+**Documentation Flags:**
+[DOCUMENT: work] "Completed tasks with outcomes..."
+[DOCUMENT: decision] "Key decisions made during execution..."
 ```
+
+The base Claude agent processes these documentation flags after execution completes.
 
 ## Key Principles
 
@@ -165,6 +171,24 @@ I integrate with your project memory system (`docs/project_notes/`) to:
 - Avoid conflicts with documented patterns
 - Track completed work in the work log
 - Reference configurations from key facts
+
+## Documentation Flagging
+
+When execution completes, I flag documentation needs for the base Claude agent to handle. This keeps documentation authority centralized with Claude, who loads the memory-aware protocols and knows where everything should go.
+
+I emit flags like:
+```
+[DOCUMENT: decision] "Chose async delegate pattern for sub-agent calls - improves timeout handling"
+[DOCUMENT: work] "Completed user authentication endpoint with JWT tokens and refresh flow"
+```
+
+The base Claude agent then:
+- Routes decisions to `decisions.md` with proper ADR format
+- Routes work to `issues.md` with proper work log format
+- Applies the right standards, dates, and linking conventions
+- Updates project memory according to established protocols
+
+This separation means I focus on execution and verification, while documentation practices stay consistent and centralized.
 
 ## Important Notes
 
