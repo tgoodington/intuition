@@ -242,6 +242,49 @@ This project uses a multi-agent system coordinated by Intuition (Claude Code plu
 - Uses OWASP guidelines for comprehensive analysis
 - Mandatory review before commits and deployments
 
+**Technical Spec Writer** - Specification & Documentation
+- Creates comprehensive technical specifications for features
+- Documents APIs, data models, integration points
+- Specifies error handling and performance requirements
+- Produces human-facing technical documentation in docs/specs/
+
+**Communications Specialist** - Audience-Focused Communication
+- Transforms technical specs into audience-specific documents
+- Creates getting-started guides, user tutorials, executive summaries
+- Creates NEW human-centric documents (not modifications)
+- Emits documentation flags for routing by base Claude
+
+## Agent Categories
+
+The 10-agent system is organized into three functional categories:
+
+### Core Execution Agents (3)
+- **Code Writer** - Implements features and fixes
+- **Test Runner** - Verifies with automated tests
+- **Research** - Explores and investigates
+
+### Document Creators (4)
+- **Documentation** - General documentation (README, API docs, comments)
+- **Technical Spec Writer** - Technical specifications (pre-implementation planning)
+- **Communications Specialist** - Audience-specific documents (user guides, executive summaries)
+- **Code Reviewer** - Code quality documentation and feedback
+
+### Support Agents (3)
+- **Security Expert** - Security scanning and vulnerability detection
+- **Waldo** - Planning thought partner (coordinates plans)
+- **Architect** - Execution orchestrator (coordinates implementation)
+
+## Extensibility via Dynamic Discovery
+
+The system can discover new agent archetypes based on emerging needs:
+
+1. Both Waldo (planning) and Architect (execution) can identify unknown agent types
+2. They request Research agent to find best practices for that archetype
+3. Findings are documented in `docs/intuition-framework-improvements.md`
+4. Patterns are available for current session and documented for future framework-wide adoption
+
+**Example**: If a feature requires specialized deployment expertise, delegate to Research to investigate deployment patterns. Document findings for future adoption consideration.
+
 ## Workflow Patterns
 
 ### Pattern 1: Feature Development (Recommended)

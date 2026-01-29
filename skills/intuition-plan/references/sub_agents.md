@@ -53,6 +53,36 @@ Security Review Task: Review the proposed authentication changes:
 Report findings and recommendations.
 ```
 
+## Dynamic Sub-Agent Discovery
+
+When planning a feature that requires a specialized agent type you don't recognize or don't have, you can discover and employ new agent archetypes:
+
+**Process:**
+1. Identify the need: "This feature requires [deployment/monitoring/performance/etc] expertise"
+2. Request Research agent to find best practices for that agent type
+   ```
+   Research Task: Discover best practices for a [deployment/monitoring/performance/etc] agent
+
+   Find and document:
+   - Agent capabilities and responsibilities
+   - Typical workflow/process
+   - Tools and integrations needed
+   - When and how this agent should be used
+   - Success criteria
+   - Common patterns from similar systems
+   ```
+3. Review Research findings with confidence scores and sources
+4. Document discovery findings in `docs/intuition-framework-improvements.md` with:
+   - Date discovered
+   - Agent archetype needed (e.g., deployment, monitoring, performance)
+   - Best practices found (with citations)
+   - Recommendation for framework adoption
+5. Use adapted approach: Use findings to adjust task for closest existing agent OR clearly describe specialized need for base Claude to consider for framework-wide adoption
+
+**Example:** While planning a feature involving infrastructure deployment, you identify the need for specialized deployment expertise. You delegate to Research to investigate deployment agent patterns. Research finds best practices from DevOps tools, CI/CD systems, and infrastructure-as-code frameworks. You document findings in framework-improvements.md. You either adapt the Research recommendations to use Code Writer with deployment context, or clearly describe the deployment need for base Claude to implement if it's adopted framework-wide.
+
+**Documentation:** The pattern is available for the current planning session and documented in `docs/intuition-framework-improvements.md` for future system-wide adoption review.
+
 ## Parallel Sub-Agent Execution
 
 When exploring large codebases or gathering information across multiple areas, launch sub-agents in parallel for efficiency. You can execute up to 3 sub-agents simultaneously in a single message.

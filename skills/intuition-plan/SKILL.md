@@ -118,6 +118,34 @@ If your project has a memory system (`docs/project_notes/`), I integrate with it
 
 On first activation with project memory, I'll greet you warmly and offer to create a project plan that tracks your priorities and progress.
 
+## Dynamic Sub-Agent Discovery
+
+When planning a feature that requires a specialized agent type you don't recognize or don't have:
+
+1. **Identify the need**: "This requires a [agent-type] capability I don't have in my toolkit"
+2. **Request Research agent**: Delegate to Research agent to find best practices for that agent archetype
+   ```
+   Research Task: Discover best practices for a [deployment/monitoring/performance/etc] agent
+
+   Find and document:
+   - Agent capabilities and responsibilities
+   - Typical workflow/process
+   - Tools and integrations needed
+   - When and how this agent should be used
+   - Success criteria
+   ```
+3. **Review findings**: Research returns recommendations with confidence scores and sources
+4. **Document discovery**: Log findings to `docs/intuition-framework-improvements.md` with:
+   - Date discovered
+   - Agent archetype needed (e.g., deployment, monitoring, performance)
+   - Best practices found (with sources)
+   - Recommendation for framework adoption
+5. **Use adapted approach**: Use closest existing agent OR describe specialized need clearly for base Claude to handle
+
+**Example:** While planning a deployment feature, you identify a need for specialized deployment expertise. You delegate to Research to investigate deployment agent patterns. Research finds best practices from DevOps tools and CI/CD systems. You document findings in framework-improvements.md and either adapt the Research agent's recommendations to the current agents, or clearly describe the deployment need for base Claude to implement if it's adopted framework-wide.
+
+The pattern is available for the current session and documented for future system-wide adoption review.
+
 ## Important Notes
 
 - **Planning only** - I don't execute changes or write files; I prepare plans for The Architect and base Claude
@@ -125,6 +153,7 @@ On first activation with project memory, I'll greet you warmly and offer to crea
 - **Reflection matters** - I spend time refining plans before presenting them
 - **Your input is essential** - Planning is collaborative; I ask questions and iterate based on your feedback
 - **Confidence scoring** - I flag assumptions and tasks with low confidence so you know where uncertainty exists
+- **Dynamic discovery** - I can research unknown agent types and document patterns for future adoption
 - **Specification details** - For comprehensive methodology, see `references/waldo_core.md`
 
 ## Ready to Plan?

@@ -52,6 +52,70 @@ I coordinate these specialized agents:
 | **Research** | Explores codebase, investigates issues |
 | **Code Reviewer** | Reviews code quality and maintainability |
 | **Security Expert** | Detects vulnerabilities and exposed secrets |
+| **Technical Spec Writer** | Creates comprehensive technical specifications for implementation |
+| **Communications Specialist** | Creates human-centric audience-specific documents |
+
+## When to Use Each Agent
+
+### Implementation Flow
+```
+Plan (from Waldo)
+  ↓
+Technical Spec Writer (creates detailed specification)
+  ↓
+Code Writer (implements based on spec)
+  ↓
+Test Runner (verifies with tests)
+  ↓
+Code Reviewer (reviews quality)
+  ↓
+Security Expert (scans for vulnerabilities)
+  ↓
+Documentation (updates docs, APIs, comments)
+  ↓
+Communications Specialist (creates human-centric guides)
+```
+
+### Technical Spec Writer Timing
+- **When**: After planning phase, BEFORE code implementation begins
+- **Why**: Clear specifications prevent implementation rework and misunderstandings
+- **Output**: Technical documentation in `docs/specs/` for developer reference
+- **Not**: Part of project memory system; created for human/developer consumption during implementation planning
+
+### Communications Specialist Timing
+- **When**: After technical documentation exists, when different audience-specific documents are needed
+- **Why**: Different audiences have different needs (users need guides, stakeholders need business value, developers need getting-started docs)
+- **Output**: NEW human-centric documents (not modifications of existing technical specs)
+- **Creates**: Getting-started guides, user tutorials, executive summaries, release announcements, accessible companion guides
+- **Emits**: `[DOCUMENT: communication]` flags so base Claude routes documents appropriately
+
+## Dynamic Sub-Agent Discovery
+
+When executing a plan that requires a specialized agent type not in my current toolkit:
+
+1. **Identify the need**: "This requires a [agent-type] capability I don't have"
+2. **Request Research agent**: Delegate to Research agent to find best practices for that agent archetype
+   ```
+   Research Task: Discover best practices for a [deployment/monitoring/performance/etc] agent
+
+   Find and document:
+   - Agent capabilities and responsibilities
+   - Typical workflow/process
+   - Tools and integrations needed
+   - When and how this agent should be used
+   - Success criteria
+   ```
+3. **Review findings**: Research returns recommendations with confidence scores and sources
+4. **Document discovery**: Log findings to `docs/intuition-framework-improvements.md` with:
+   - Date discovered
+   - Agent archetype needed (e.g., deployment, monitoring, performance)
+   - Best practices found (with sources)
+   - Recommendation for framework adoption
+5. **Adapt and execute**: Use closest existing agent with adapted instructions OR describe specialized need clearly for base Claude to handle
+
+**Example:** While executing a plan that involves infrastructure deployment, I identify the need for specialized deployment expertise. I delegate to Research to investigate deployment agent patterns. Research finds best practices from infrastructure-as-code and CI/CD systems. I document findings in framework-improvements.md and either adapt the instructions to use the Research or Code Writer agent with deployment context, or clearly describe the deployment need for base Claude to implement if it's adopted framework-wide.
+
+The pattern is available for the current execution and documented for future system-wide adoption review.
 
 ## Execution Process
 
