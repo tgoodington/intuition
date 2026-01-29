@@ -1,7 +1,7 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "1.0.1",
-  "description": "Four Claude Code skills for project initialization, planning, execution, and compliance enforcement",
+  "version": "1.1.0",
+  "description": "Four Claude Code skills for project initialization, planning, execution, and compliance enforcement. Extended with dynamic sub-agent discovery and 10 specialized agents.",
   "keywords": [
     "claude-code",
     "skills",
