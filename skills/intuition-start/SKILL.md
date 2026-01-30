@@ -1,23 +1,23 @@
 ---
 name: intuition-start
-description: Load project context, memory files, and enforce compliance with project protocols. Reads CLAUDE.md, AGENTS.md, and project memory files to prime the session.
+description: Load project context, memory files, workflow status, and suggest next steps. Reads project memory and protocols to prime the session.
 model: haiku
 tools: Read, Glob, Grep, AskUserQuestion
 ---
 
 # Intuition Start - Project Context Loader
 
-Welcome! I'm the project context loader. I read your project's memory system and documented protocols to ensure you and I stay aligned with your project's established patterns and decisions.
+Welcome! I'm the project context loader. I read your project's memory system, workflow status, and documented protocols to ensure you start each session with full context.
 
 ## What I Do
 
-Before using `/intuition-plan` or `/intuition-execute`, I help you by:
+At the start of your session, I help you by:
 
 - **Loading project memory** - Reading bugs.md, decisions.md, key_facts.md, issues.md
+- **Checking workflow status** - Where are you in discovery → planning → execution?
 - **Reading protocols** - Checking CLAUDE.md and AGENTS.md for established guidelines
 - **Summarizing context** - Explaining your project's status, decisions, and constraints
-- **Enforcing compliance** - Ensuring Waldo and Architect follow documented patterns
-- **Priming the session** - Setting up all context so `/intuition-plan` and `/intuition-execute` work effectively
+- **Suggesting next steps** - Based on workflow status, recommend the right skill
 
 ## How to Use This Skill
 
@@ -29,25 +29,62 @@ Run this at the start of your session:
 
 I will:
 1. Check if project memory exists (created by `/intuition-initialize`)
-2. Read all memory files and protocol documents
-3. Summarize what I found
-4. Prime your session for planning and execution
-5. Offer to start planning or continue work
+2. Read workflow status from state.json
+3. Load all memory files and protocol documents
+4. Summarize what I found
+5. Suggest the appropriate next skill based on workflow status
+
+## The Three-Phase Workflow
+
+Intuition uses three focused agents:
+
+```
+/intuition-discovery (Waldo)
+    │
+    └── discovery_brief.md
+           │
+           ↓
+/intuition-plan (Magellan)
+    │
+    └── plan.md
+           │
+           ↓
+/intuition-execute (Faraday)
+    │
+    └── Implementation + project memory updates
+```
+
+I check where you are in this workflow and guide you to the right next step.
+
+## Workflow Status Detection
+
+Based on state.json, I'll tell you:
+
+**If workflow.status = "none":**
+- "No active work in progress. Ready to start discovery with `/intuition-discovery`."
+
+**If workflow.status = "discovery":**
+- If discovery.completed: "Discovery complete! Ready for planning with `/intuition-plan`."
+- If not completed: "Discovery in progress. Resume with `/intuition-discovery`."
+
+**If workflow.status = "planning":**
+- If planning.approved: "Plan approved! Ready for execution with `/intuition-execute`."
+- If planning.completed but not approved: "Plan ready for review. Check docs/project_notes/plan.md."
+- If not completed: "Planning in progress. Resume with `/intuition-plan`."
+
+**If workflow.status = "executing":**
+- "Execution in progress. Resume with `/intuition-execute`."
+
+**If workflow.status = "complete":**
+- "Previous workflow complete! Ready to start new discovery with `/intuition-discovery`."
 
 ## Key Capabilities
 
 - **Memory Integration**: Read and summarize bugs, decisions, facts, work log
+- **Workflow Awareness**: Know where you are in discovery → planning → execution
 - **Protocol Compliance**: Load CLAUDE.md and AGENTS.md guidelines
 - **Context Awareness**: Understand project maturity, constraints, and style
-- **Session Priming**: Ensure Waldo and Architect follow project patterns
-- **Decision Reference**: Know what's been decided so we don't repeat discussions
-
-## Important Notes
-
-- **Run first**: Use `/intuition-start` before `/intuition-plan` or `/intuition-execute`
-- **Compliance enforcement**: I'll remind Waldo and Architect of documented decisions
-- **Memory is truth**: Project decisions in memory files override generic suggestions
-- **Smart prompting**: If you mention planning or execution, I'll suggest using the right skill
+- **Smart Suggestions**: Recommend the right next skill based on status
 
 ## Session Flow
 
@@ -55,17 +92,19 @@ I will:
 
 ```
 1. /intuition-start
+   ├─ Reads docs/project_notes/.project-memory-state.json
    ├─ Reads docs/project_notes/bugs.md
    ├─ Reads docs/project_notes/decisions.md
    ├─ Reads docs/project_notes/key_facts.md
    ├─ Reads docs/project_notes/issues.md
    ├─ Reads CLAUDE.md (if exists)
    ├─ Reads AGENTS.md (if exists)
-   └─ Summarizes: "Your project is [status]. Key decisions: [list]. Next steps: [from plan]"
+   └─ Summarizes status and suggests next skill
 
-2. Your options:
-   ├─ /intuition-plan "New feature"      (start planning)
-   ├─ /intuition-execute                 (execute existing plan)
+2. Your options (based on workflow status):
+   ├─ /intuition-discovery   (start or resume discovery with Waldo)
+   ├─ /intuition-plan        (create plan with Magellan)
+   ├─ /intuition-execute     (execute plan with Faraday)
    └─ Continue with your work
 ```
 
@@ -84,76 +123,65 @@ I will:
 User: /intuition-start
 
 I: Reading project context...
-   - docs/project_notes/bugs.md
-   - docs/project_notes/decisions.md
-   - docs/project_notes/key_facts.md
-   - docs/project_notes/issues.md
-   - CLAUDE.md
-   - AGENTS.md
 
-I: Great! Your project context is loaded:
+**Project Status**: Active development
+**Tech Stack**: TypeScript, Node.js, React
 
-   **Project Status**: Active development
-   **Tech Stack**: TypeScript, Node.js, React
-   **Key Architectural Decisions**:
-   - Use Postgres + TypeORM for data layer (ADR-001)
-   - API-first architecture (ADR-002)
-   - Authentication via JWT (ADR-003)
+**Workflow Status**: Planning complete, awaiting execution
+- Discovery: ✓ Complete (discovery_brief.md exists)
+- Planning: ✓ Complete and approved (plan.md exists)
+- Execution: Not started
 
-   **Known Issues Being Tracked**:
-   - Connection pooling timeout on high load
-   - Memory leak in WebSocket handler
+**Key Architectural Decisions**:
+- Use Postgres + TypeORM for data layer (ADR-001)
+- API-first architecture (ADR-002)
 
-   **Currently Working On**:
-   - User dashboard implementation
-   - Real-time notifications
+**Current Plan**: "Add user authentication"
+- 8 tasks defined
+- Ready for execution
 
-   **Compliance Protocols**:
-   - All code changes require code review
-   - Security Expert review mandatory before deployment
-   - Documentation updates required for API changes
-
-   Ready to plan new features or continue current work?
+**Suggested Next Step**: Run `/intuition-execute` to have Faraday begin implementation.
 ```
 
-## Enforcement
+## Agent Reference
 
-When you use `/intuition-plan` or `/intuition-execute`, I prime them with:
+When you use the Intuition skills, you'll work with these agents:
 
-**For Waldo (Planning):**
-- "These are our documented architectural decisions, check them before proposing changes"
-- "This is our current work status and priorities"
-- "These are our code style and patterns - follow them"
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| `/intuition-discovery` | **Waldo** | Discovery through GAPP dialogue |
+| `/intuition-plan` | **Magellan** | Strategic planning from discovery |
+| `/intuition-execute` | **Faraday** | Methodical execution of plans |
 
-**For Architect (Execution):**
-- "These are our project constraints and decisions"
-- "Security review and code review are mandatory steps"
-- "These are our quality standards and testing patterns"
+Each agent has a focused role, keeping context clean and improving success rate.
 
 ## Smart Prompting
 
-If you mention planning or execution, I'll suggest the right skill:
+If you mention work without running a skill, I'll suggest the right one:
 
 ```
-You: "I'm thinking about adding a caching layer"
-I: "This sounds like planning work! Want to use /intuition-plan to develop a structured approach?"
+You: "I want to add a caching layer"
+I: "This sounds like new work! Start with /intuition-discovery to explore the problem with Waldo."
 
-You: "Looks good, let's implement it"
-I: "Great, the plan is ready! Use /intuition-execute to kick off coordinated implementation."
+You: "Discovery is done, what's next?"
+I: "Great! Run /intuition-plan to have Magellan create a structured plan."
+
+You: "Plan looks good, let's build it"
+I: "Perfect! Run /intuition-execute to have Faraday coordinate implementation."
 ```
 
 ## Important Notes
 
-- **First run**: Set up memory with `/intuition-initialize` if you haven't already
-- **Respect memory**: Documented decisions are the source of truth
-- **Compliance is key**: I'll enforce that Waldo and Architect follow project protocols
-- **Smart defaults**: I suggest the right next steps based on your context
+- **Run first**: Use `/intuition-start` at the beginning of each session
+- **Workflow awareness**: I'll tell you exactly where you are and what to do next
+- **Memory is truth**: Documented decisions in project memory override generic suggestions
+- **Agent specialization**: Each agent (Waldo, Magellan, Faraday) has a focused role
 - **Session priming**: Running me at the start makes everything else better
 
-Ready? Run me at the start of your session with:
+Ready? Run me at the start of your session:
 
 ```
 /intuition-start
 ```
 
-I'll load your project's knowledge and get everything ready for planning and execution!
+I'll load your project's knowledge, check workflow status, and suggest the best next step!

@@ -1,26 +1,92 @@
 {
-  "_comment": "State template for project-memory skill personalization tracking",
-  "_description": "This file tracks the state of project interactions and personalization features",
+  "_comment": "State template for Intuition workflow and project memory tracking",
+  "_description": "Tracks workflow progression (discovery → planning → execution) and project interactions",
 
   "initialized": true,
-  "_initialized_description": "Boolean indicating whether project-memory personalization has been initialized for this project",
+  "_initialized_description": "Boolean indicating whether project memory has been initialized",
 
-  "version": "1.0",
+  "version": "2.0",
   "_version_description": "Schema version for this state file format",
 
-  "personalization": {
-    "_comment": "Tracks personalization features and user interaction states",
+  "workflow": {
+    "_comment": "Tracks the three-phase Intuition workflow: discovery → planning → executing",
 
-    "waldo_greeted": false,
-    "_waldo_greeted_description": "Boolean flag indicating whether Waldo has greeted the user in this project (first-time setup)",
+    "status": "none",
+    "_status_description": "Current workflow phase. Valid values: 'none' (not started), 'discovery' (discovery in progress or complete), 'planning' (planning in progress or complete), 'executing' (execution in progress), 'complete' (workflow finished)",
 
-    "plan_created": false,
-    "_plan_created_description": "Boolean flag indicating whether a project plan has been created",
+    "discovery": {
+      "completed": false,
+      "_completed_description": "Whether discovery phase has been completed",
+      "completed_at": null,
+      "_completed_at_description": "ISO timestamp when discovery was completed",
+      "brief_file": "docs/project_notes/discovery_brief.md",
+      "_brief_file_description": "Path to discovery brief output",
+      "resume_data": null,
+      "_resume_data_description": "Data for resuming interrupted discovery (conversation state, current phase)"
+    },
 
-    "plan_status": "none",
-    "_plan_status_description": "Current status of the project plan. Valid values: 'none' (no plan yet), 'planned' (plan created, not started), 'implementing' (actively working on plan tasks), 'complete' (plan completed)",
+    "planning": {
+      "completed": false,
+      "_completed_description": "Whether planning phase has been completed",
+      "completed_at": null,
+      "_completed_at_description": "ISO timestamp when planning was completed",
+      "plan_file": "docs/project_notes/plan.md",
+      "_plan_file_description": "Path to plan output",
+      "approved": false,
+      "_approved_description": "Whether user has approved the plan for execution",
+      "approved_at": null,
+      "_approved_at_description": "ISO timestamp when plan was approved",
+      "resume_data": null,
+      "_resume_data_description": "Data for resuming interrupted planning (research state, draft progress)"
+    },
 
-    "plan_file": "docs/project_notes/project_plan.md",
-    "_plan_file_description": "Relative path to the project plan document (relative to project root)"
+    "execution": {
+      "started": false,
+      "_started_description": "Whether execution has begun",
+      "started_at": null,
+      "_started_at_description": "ISO timestamp when execution started",
+      "completed": false,
+      "_completed_description": "Whether execution phase has been completed",
+      "completed_at": null,
+      "_completed_at_description": "ISO timestamp when execution was completed",
+      "tasks_completed": 0,
+      "_tasks_completed_description": "Number of tasks completed",
+      "tasks_total": 0,
+      "_tasks_total_description": "Total number of tasks in the plan",
+      "resume_data": null,
+      "_resume_data_description": "Data for resuming interrupted execution (current task, completed tasks)"
+    }
+  },
+
+  "agents": {
+    "_comment": "Tracks agent-specific state and interactions",
+
+    "waldo": {
+      "greeted": false,
+      "_greeted_description": "Whether Waldo has introduced himself in this project"
+    },
+
+    "magellan": {
+      "greeted": false,
+      "_greeted_description": "Whether Magellan has introduced himself in this project"
+    },
+
+    "faraday": {
+      "greeted": false,
+      "_greeted_description": "Whether Faraday has introduced himself in this project"
+    }
+  },
+
+  "history": {
+    "_comment": "Tracks workflow history for revision support",
+
+    "discovery_revisions": 0,
+    "_discovery_revisions_description": "Number of times discovery has been revised",
+
+    "planning_revisions": 0,
+    "_planning_revisions_description": "Number of times planning has been revised",
+
+    "last_activity": null,
+    "_last_activity_description": "ISO timestamp of last workflow activity"
   }
 }
