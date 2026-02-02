@@ -52,11 +52,12 @@ When invoked for the first time in a project, create the following structure:
 ```
 docs/
 └── project_notes/
-    ├── bugs.md              # Bug log with solutions
-    ├── decisions.md         # Architectural Decision Records
-    ├── key_facts.md         # Project configuration and constants
-    ├── issues.md            # Work log with ticket references
-    └── project_plan.md      # Project plan (created by Waldo planning agent)
+    ├── bugs.md                        # Bug log with solutions
+    ├── decisions.md                   # Architectural Decision Records
+    ├── key_facts.md                   # Project configuration and constants
+    ├── issues.md                      # Work log with ticket references
+    ├── project_plan.md                # Structured project plan with milestones and tasks
+    └── .project-memory-state.json     # Workflow state and resume data
 ```
 
 **Directory naming rationale:** Using `docs/project_notes/` instead of `memory/` makes it look like standard engineering organization, not AI-specific tooling. This increases adoption and maintenance by human developers.
@@ -66,17 +67,46 @@ docs/
 - Use `references/decisions_template.md` for initial `decisions.md`
 - Use `references/key_facts_template.md` for initial `key_facts.md`
 - Use `references/issues_template.md` for initial `issues.md`
+- Use `references/project_plan_template.md` for initial `project_plan.md`
+- Use `references/state_template.json` for initial `.project-memory-state.json`
 
-Each template includes format examples and usage tips.
+Each template includes format examples and usage tips. The project plan can be left as a template until the user creates an actual plan with Waldo.
 
 ### 2. Configure CLAUDE.md - Memory-Aware Behavior
 
 Add or update the following section in the project's `CLAUDE.md` file:
 
 ```markdown
-## Project Memory System
+## Project Workflow and Memory System
 
-This project maintains institutional knowledge in `docs/project_notes/` for consistency across sessions.
+This project uses a three-phase workflow coordinated by the Intuition system, with institutional knowledge maintained in `docs/project_notes/` for consistency across sessions.
+
+### Workflow Phases
+
+The project follows a structured three-phase workflow:
+
+**Phase 1: Discovery (Waldo)**
+- Purpose: Deep understanding of the problem through collaborative dialogue
+- Framework: GAPP (Problem → Goals → UX Context → Personalization)
+- Output: `discovery_brief.md` with comprehensive context
+- When: Starting new features or investigating complex problems
+- Skill: `/intuition-discovery`
+
+**Phase 2: Planning (Magellan)**
+- Purpose: Strategic synthesis and structured execution planning
+- Process: Research codebase, identify patterns, create detailed plan
+- Output: `project_plan.md` or `plan.md` with tasks, dependencies, risks
+- When: After discovery phase, ready to design approach
+- Skill: `/intuition-plan`
+
+**Phase 3: Execution (Faraday)**
+- Purpose: Methodical implementation with verification and quality checks
+- Process: Delegate to specialized sub-agents, coordinate work, verify outputs
+- Output: Implemented features, updated memory, completion report
+- When: Plan is approved and ready to implement
+- Skill: `/intuition-execute`
+
+**Recommended Workflow**: Discovery → Planning → Execution (→ Repeat for next feature)
 
 ### Memory Files
 
@@ -88,7 +118,7 @@ This project maintains institutional knowledge in `docs/project_notes/` for cons
 
 ### Documentation Flagging
 
-This project uses a documentation flagging system where specialized agents (Waldo for planning, Architect for execution) emit flags when they complete work. The base Claude agent processes these flags and routes documentation to the appropriate memory file.
+This project uses a documentation flagging system where specialized agents (Waldo for discovery, Magellan for planning, Faraday for execution) emit flags when they complete work. The base Claude agent processes these flags and routes documentation to the appropriate memory file.
 
 **Flag format**: `[DOCUMENT: type] "content"`
 
@@ -195,19 +225,29 @@ This project uses a multi-agent system coordinated by Intuition (Claude Code plu
 
 ### Primary Coordination Agents
 
-**Waldo** - Planning & Thought Partnership
-- Role: Conversational planning partner for feature development and architecture decisions
-- Activation: Invoked at project start or when planning complex features
-- Behavior: Collaborative dialogue, refinement, reflection before finalizing plans
-- Output: Markdown plans submitted for user approval
-- Key: Never executes changes - strictly planning-focused
+**Waldo** - Discovery & Thought Partnership (Skill: `/intuition-discovery`)
+- Role: Conversational discovery partner for understanding problems deeply
+- Framework: GAPP (Problem → Goals → UX Context → Personalization)
+- Activation: Invoked at project start or when exploring complex problems
+- Behavior: Collaborative dialogue, Socratic questioning, systems thinking
+- Output: `discovery_brief.md` with comprehensive context for planning
+- Key: Never executes changes - strictly discovery-focused
 
-**The Architect** - Execution Orchestrator
-- Role: Executes approved plans by delegating to specialized sub-agents
-- Activation: After user approves plan from Waldo
+**Magellan** - Planning & Strategic Synthesis (Skill: `/intuition-plan`)
+- Role: Synthesizes discovery into structured, executable plans
+- Activation: After discovery phase or when planning new features
+- Behavior: Researches codebase, identifies patterns, creates detailed strategy
+- Output: `plan.md` with tasks, dependencies, risks, confidence scores
+- Coordination: Prepares context for Faraday execution, seeks user approval
+- Integration: Works with project memory system, references past decisions
+
+**Faraday** - Execution & Implementation (Skill: `/intuition-execute`)
+- Role: Executes approved plans by orchestrating specialized sub-agents
+- Activation: After user approves plan from Magellan
 - Behavior: Breaks down plans into concrete tasks, ensures quality, monitors progress
 - Coordination: Manages parallel execution, handles failures with retry strategies
 - Integration: Works with project memory system, Security Expert review before commits
+- Output: Implemented features, updated memory, completion report
 
 ### Specialized Sub-Agents
 
@@ -269,16 +309,16 @@ The 10-agent system is organized into three functional categories:
 - **Communications Specialist** - Audience-specific documents (user guides, executive summaries)
 - **Code Reviewer** - Code quality documentation and feedback
 
-### Support Agents (3)
-- **Security Expert** - Security scanning and vulnerability detection
-- **Waldo** - Planning thought partner (coordinates plans)
-- **Architect** - Execution orchestrator (coordinates implementation)
+### Coordination Agents (3)
+- **Waldo** - Discovery & thought partner (coordinates discovery)
+- **Magellan** - Planning & synthesis (coordinates planning)
+- **Faraday** - Execution & implementation (coordinates execution)
 
 ## Extensibility via Dynamic Discovery
 
 The system can discover new agent archetypes based on emerging needs:
 
-1. Both Waldo (planning) and Architect (execution) can identify unknown agent types
+1. Both Magellan (planning) and Faraday (execution) can identify unknown agent types
 2. They request Research agent to find best practices for that archetype
 3. Findings are documented in `docs/intuition-framework-improvements.md`
 4. Patterns are available for current session and documented for future framework-wide adoption
@@ -291,47 +331,56 @@ The system can discover new agent archetypes based on emerging needs:
 **When**: Planning new features or significant changes
 **Flow**:
 1. User → Waldo (describe what you want to build)
-2. Waldo asks clarifying questions, explores codebase, creates plan
-3. User approves or provides feedback
-4. Waldo hands off to Architect
-5. Architect → Sub-agents (parallel delegation for efficiency)
+2. Waldo asks clarifying questions through GAPP, explores codebase, creates discovery brief
+3. Waldo hands off to Magellan
+4. Magellan researches, synthesizes strategy, creates detailed plan
+5. User approves or provides feedback
+6. Magellan hands off to Faraday
+7. Faraday → Sub-agents (parallel delegation for efficiency)
    - Code Writer writes implementation
    - Test Runner verifies with tests
    - Code Reviewer checks quality
    - Security Expert reviews before commit
    - Documentation updates relevant files
 
-**Benefits**: Clear understanding, architectural alignment, team knowledge captured in plan
+**Benefits**: Deep understanding, clear strategy, architectural alignment, team knowledge captured
 
-### Pattern 2: Direct Execution
+### Pattern 2: Direct Execution (Simple Tasks)
 **When**: Simple tasks with clear requirements (bug fixes, small features)
 **Flow**:
-1. User → Architect (describe what to do)
-2. Architect breaks into tasks
-3. Architect → Sub-agents (delegated work)
+1. User → Faraday (describe what to do)
+2. Faraday breaks into tasks
+3. Faraday → Sub-agents (delegated work)
 4. Parallel execution of independent tasks
 5. Results verified and consolidated
 
 **Benefits**: Faster for straightforward work, skips planning overhead
 
-### Pattern 3: Exploration & Research
-**When**: Understanding codebase, investigating issues, evaluating approaches
+### Pattern 3: Discovery & Investigation
+**When**: Understanding codebase, investigating complex issues, evaluating approaches
 **Flow**:
-1. User → Research agent (ask your question)
-2. Research explores, investigates, gathers information
-3. Research provides findings with confidence scores and citations
+1. User → Waldo (ask questions or describe unclear problem)
+2. Waldo guides through GAPP dialogue, explores codebase, creates discovery brief with findings
+3. Waldo provides findings with confidence scores and citations for next steps
 
-**Benefits**: Factual information grounded in codebase analysis
+**Benefits**: Deep understanding, confidence-scored insights, foundation for planning or direct implementation
 
 ## Agent Coordination Protocols
 
-### Handoff Protocol: Waldo → Architect
-When Waldo completes planning and user approves:
-- Waldo creates markdown plan with all necessary details
-- Plan includes tasks, dependencies, confidence scores, and risk assessment
-- Waldo explicitly hands off to Architect with context
-- Architect reads plan, validates understanding, asks clarifying questions if needed
-- Architect never modifies plan without user approval
+### Handoff Protocol: Waldo → Magellan → Faraday
+
+**Discovery to Planning (Waldo → Magellan):**
+- Waldo completes discovery brief with comprehensive context
+- Waldo explicitly hands off to Magellan with discovery findings
+- Magellan reads discovery brief, validates understanding, asks clarifying questions if needed
+- Magellan never modifies discovery findings - uses them to inform strategy
+
+**Planning to Execution (Magellan → Faraday):**
+- Magellan creates detailed markdown plan with all necessary details
+- Plan includes tasks, dependencies, confidence scores, risk assessment, and approach rationale
+- Magellan explicitly hands off to Faraday with context and plan
+- Faraday reads plan, validates understanding, confirms approach with user
+- Faraday never modifies plan without user approval - executes according to specifications
 
 ### Parallel Execution
 The Architect can delegate multiple sub-agents to run in parallel when:

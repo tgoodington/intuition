@@ -92,13 +92,14 @@ Based on state.json, I'll tell you:
 
 ```
 1. /intuition-start
-   ├─ Reads docs/project_notes/.project-memory-state.json
-   ├─ Reads docs/project_notes/bugs.md
-   ├─ Reads docs/project_notes/decisions.md
-   ├─ Reads docs/project_notes/key_facts.md
-   ├─ Reads docs/project_notes/issues.md
-   ├─ Reads CLAUDE.md (if exists)
-   ├─ Reads AGENTS.md (if exists)
+   ├─ Reads docs/project_notes/.project-memory-state.json (workflow status)
+   ├─ Reads docs/project_notes/bugs.md (known issues and solutions)
+   ├─ Reads docs/project_notes/decisions.md (architectural decisions)
+   ├─ Reads docs/project_notes/key_facts.md (project configuration)
+   ├─ Reads docs/project_notes/issues.md (work log)
+   ├─ Reads docs/project_notes/project_plan.md (if exists - current plan)
+   ├─ Reads CLAUDE.md (if exists - established guidelines)
+   ├─ Reads AGENTS.md (if exists - multi-agent protocols)
    └─ Summarizes status and suggests next skill
 
 2. Your options (based on workflow status):
