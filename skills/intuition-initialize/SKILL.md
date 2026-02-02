@@ -15,9 +15,10 @@ tools: Read, Write, Glob, Grep, AskUserQuestion
   - [1. Initial Setup - Create Memory Infrastructure](#1-initial-setup---create-memory-infrastructure)
   - [2. Configure CLAUDE.md - Memory-Aware Behavior](#2-configure-claudemd---memory-aware-behavior)
   - [3. Configure AGENTS.md - Multi-Tool Support](#3-configure-agentsmd---multi-tool-support)
-  - [4. Searching Memory Files](#4-searching-memory-files)
-  - [5. Updating Memory Files](#5-updating-memory-files)
-  - [6. Memory File Maintenance](#6-memory-file-maintenance)
+  - [4. Configure Claude Code Settings - Agent Permissions](#4-configure-claude-code-settings---agent-permissions)
+  - [5. Searching Memory Files](#5-searching-memory-files)
+  - [6. Updating Memory Files](#6-updating-memory-files)
+  - [7. Memory File Maintenance](#7-memory-file-maintenance)
 - [Templates and References](#templates-and-references)
 - [Example Workflows](#example-workflows)
 - [Integration with Other Skills](#integration-with-other-skills)
@@ -26,7 +27,7 @@ tools: Read, Write, Glob, Grep, AskUserQuestion
 
 ## Overview
 
-Maintain institutional knowledge for projects by establishing a structured memory system in `docs/project_notes/`. This skill sets up four key memory files (bugs, decisions, key facts, issues) and configures CLAUDE.md and AGENTS.md to automatically reference and maintain them. The result is a project that remembers past decisions, solutions to problems, and important configuration details across coding sessions and across different AI tools.
+Maintain institutional knowledge for projects by establishing a structured memory system in `docs/project_notes/`. This skill sets up memory files (bugs, decisions, key facts, issues, project plan), configures CLAUDE.md and AGENTS.md with memory-aware protocols, and pre-authorizes essential tools in Claude Code settings so agents work autonomously. The result is a project that remembers past decisions, solutions to problems, and important configuration details across coding sessions and across different AI tools, with agents empowered to work efficiently without permission interruptions.
 
 **Optional Personalization:** This skill can optionally integrate with the Waldo agent to provide a conversational, plan-oriented experience with project planning and progress tracking. The personalization layer is completely optional and the core memory functionality works identically with or without it.
 
@@ -71,6 +72,12 @@ docs/
 - Use `references/state_template.json` for initial `.project-memory-state.json`
 
 Each template includes format examples and usage tips. The project plan can be left as a template until the user creates an actual plan with Waldo.
+
+**Claude Code Settings:** Also create or update `.claude/settings.local.json`:
+- Use `references/settings_template.json` to create `.claude/settings.local.json`
+- Pre-authorizes essential tools (Read, Glob, Grep, WebSearch, WebFetch, Task) so agents work autonomously
+- Includes common git operations for version control workflows
+- Users can customize this file if they want different permission levels
 
 ### 2. Configure CLAUDE.md - Memory-Aware Behavior
 
@@ -584,7 +591,31 @@ Architect: "On it. That's straightforward."
 - If exists: Update that section with new template
 - If not exists: Append new section (preserve existing content)
 
-### 4. Searching Memory Files
+### 4. Configure Claude Code Settings - Agent Permissions
+
+Set up `.claude/settings.local.json` to pre-authorize essential tools so agents can work autonomously without interrupting the user for permission on common operations.
+
+**File location:** `.claude/settings.local.json`
+
+**Initial content:** Copy from `references/settings_template.json`
+
+**What it does:**
+- Pre-authorizes Read, Glob, Grep for fast codebase exploration
+- Pre-authorizes WebSearch and WebFetch for research
+- Pre-authorizes Task for delegating to sub-agents
+- Pre-authorizes common git operations for version control
+- Prevents permission prompts for routine agent operations
+
+**Why this matters:**
+- **Agents move faster** - No interruptions asking for permission to read files or search the web
+- **Research is autonomous** - Research agents can explore without stopping
+- **Planning is efficient** - Magellan can research the codebase while planning
+- **Execution is coordinated** - Faraday can delegate to sub-agents seamlessly
+
+**Customization:**
+Users can customize `.claude/settings.local.json` to add or remove permissions based on their security preferences. The template provides sensible defaults for most workflows.
+
+### 5. Searching Memory Files
 
 When encountering problems or making decisions, proactively search memory files:
 
