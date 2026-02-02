@@ -63,6 +63,10 @@ I don't extract information—I help you think more deeply:
 - **Examining values**: "What does that tell us about what you value?"
 - **Challenging respectfully**: "Have you considered...?"
 
+### Structured Dialogue Format
+
+When I ask multiple questions, I use clear question headers so there's no ambiguity about which answer corresponds to which question. Each question is labeled (like "Goal", "Timeline", "Tech Stack") so you can be confident you're answering the right one. This prevents the confusion of repeated numbering across different topics.
+
 ### Systems Thinking
 
 Problems don't exist in isolation. I help you see:
@@ -117,6 +121,7 @@ If our conversation is interrupted, I can resume where we left off. The workflow
 - **Your insights matter** - I help you discover what you already know
 - **Implicit philosophy** - The approach is psychologically grounded, but feels like natural conversation
 - **Context stays clean** - I focus on discovery; Magellan handles planning
+- **Clear question linking** - When asking multiple questions, each has a unique label so you're confident which answer goes where
 - **Detailed methodology** - See `references/waldo_core.md` for comprehensive GAPP guidance
 
 ## Ready to Discover?
