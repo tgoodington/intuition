@@ -106,13 +106,26 @@ try {
     process.exit(1);
   }
 
+  // Copy /intuition-discovery skill
+  const discoverySrc = path.join(packageRoot, 'skills', 'intuition-discovery');
+  const discoveryDest = path.join(claudeSkillsDir, 'intuition-discovery');
+
+  if (fs.existsSync(discoverySrc)) {
+    copyDirRecursive(discoverySrc, discoveryDest);
+    log(`✓ Installed /intuition-discovery skill to ${discoveryDest}`);
+  } else {
+    error(`intuition-discovery skill not found at ${discoverySrc}`);
+    process.exit(1);
+  }
+
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start       - Load project context and enforce compliance`);
-    log(`  /intuition-plan        - Planning skill (develop structured plans)`);
-    log(`  /intuition-execute     - Execution skill (orchestrate implementation)`);
+    log(`  /intuition-discovery   - Discovery with Waldo (GAPP dialogue)`);
+    log(`  /intuition-plan        - Planning with Magellan (strategic planning)`);
+    log(`  /intuition-execute     - Execution with Faraday (methodical implementation)`);
     log(`  /intuition-initialize  - Project initialization (set up project memory)`);
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {

@@ -40,17 +40,21 @@ try {
     process.exit(0);
   }
 
-  // Remove /plan skill
-  const planDest = path.join(claudeSkillsDir, 'plan');
-  if (removeDir(planDest)) {
-    log(`✓ Removed /plan skill from ${planDest}`);
-  }
+  // Remove all Intuition skills
+  const skillsToRemove = [
+    'intuition-start',
+    'intuition-initialize',
+    'intuition-discovery',
+    'intuition-plan',
+    'intuition-execute'
+  ];
 
-  // Remove /execute skill
-  const executeDest = path.join(claudeSkillsDir, 'execute');
-  if (removeDir(executeDest)) {
-    log(`✓ Removed /execute skill from ${executeDest}`);
-  }
+  skillsToRemove.forEach(skillName => {
+    const skillDest = path.join(claudeSkillsDir, skillName);
+    if (removeDir(skillDest)) {
+      log(`✓ Removed /${skillName} skill from ${skillDest}`);
+    }
+  });
 
   // Clean up empty .claude/skills directory if it's empty
   if (fs.existsSync(claudeSkillsDir)) {
