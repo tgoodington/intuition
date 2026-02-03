@@ -5,15 +5,15 @@
     "email": "tgoodington@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Planning and execution skills for structured software development",
-    "version": "1.0.0"
+    "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "intuition-skills",
       "source": ".",
-      "description": "Waldo (planning) and Architect (execution) skills for Claude Code",
-      "version": "1.0.0",
+      "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
+      "version": "2.0.0",
       "author": {
         "name": "Intuition Contributors"
       },

@@ -118,12 +118,25 @@ try {
     process.exit(1);
   }
 
+  // Copy /intuition-handoff skill
+  const handoffSrc = path.join(packageRoot, 'skills', 'intuition-handoff');
+  const handoffDest = path.join(claudeSkillsDir, 'intuition-handoff');
+
+  if (fs.existsSync(handoffSrc)) {
+    copyDirRecursive(handoffSrc, handoffDest);
+    log(`✓ Installed /intuition-handoff skill to ${handoffDest}`);
+  } else {
+    error(`intuition-handoff skill not found at ${handoffSrc}`);
+    process.exit(1);
+  }
+
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start       - Load project context and enforce compliance`);
     log(`  /intuition-discovery   - Discovery with Waldo (GAPP dialogue)`);
+    log(`  /intuition-handoff     - Handoff orchestrator (discovery→planning→execution)`);
     log(`  /intuition-plan        - Planning with Magellan (strategic planning)`);
     log(`  /intuition-execute     - Execution with Faraday (methodical implementation)`);
     log(`  /intuition-initialize  - Project initialization (set up project memory)`);

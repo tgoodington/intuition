@@ -1,46 +1,54 @@
-# Intuition
+# Intuition v2
 
-A three-agent system for software project planning and execution. Intuition splits complex work into focused phases with clean context boundaries, dramatically improving success rates.
+A five-skill orchestration system for software development. Intuition coordinates discovery, planning, and execution through a symphony of specialized agents, with explicit handoff phases maintaining clean context and memory consistency.
 
-**The Three Agents:**
-- **Waldo** (`/intuition-discovery`) - Explores problems through GAPP discovery and Socratic dialogue
-- **Magellan** (`/intuition-plan`) - Synthesizes discovery into structured, executable plans
-- **Faraday** (`/intuition-execute`) - Orchestrates implementation with methodical precision
+**The Five Skills:**
+1. **`/intuition-start`** - Session primer (load context, detect phase, suggest next step)
+2. **`/intuition-discovery`** - Waldo (explore problems through GAPP and Socratic dialogue)
+3. **`/intuition-handoff`** - Orchestrator (extract insights, update memory, brief next agent)
+4. **`/intuition-plan`** - Magellan (synthesize discovery into structured executable plans)
+5. **`/intuition-execute`** - Faraday (orchestrate implementation with methodical precision)
 
-**Supporting Skills:**
-- `/intuition-start` - Load project context and workflow status
+**Also includes:**
 - `/intuition-initialize` - Setup project memory system
 
 ## Quick Start
 
 ```bash
 # Install globally
-npm install -g @tgoodington/intuition
+npm install -g intuition
 
 # In Claude Code, typical workflow:
-/intuition-start           # Load context and check workflow status
-/intuition-discovery       # Waldo guides you through GAPP discovery
-/intuition-plan            # Magellan creates a structured plan
-/intuition-execute         # Faraday orchestrates implementation
+/intuition-start            # Load context and check workflow status
+/intuition-discovery        # Waldo guides discovery (GAPP dialogue)
+/intuition-handoff          # Extract insights, brief planner
+/intuition-plan             # Magellan creates structured plan
+/intuition-handoff          # Prepare execution context
+/intuition-execute          # Faraday orchestrates implementation
 ```
 
-## Why Three Agents?
+**Key Point:** Always start with `/intuition-start` — it will tell you which step to take next.
 
-Each agent has a focused responsibility:
+## Why Five Skills?
 
-| Agent | Skill | Phase | Input | Output | Focus |
-|-------|-------|-------|-------|--------|-------|
-| **Waldo** | `/intuition-discovery` | Discovery | Problem description | `discovery_brief.md` | Understanding & dialogue |
-| **Magellan** | `/intuition-plan` | Planning | `discovery_brief.md` | `plan.md` | Strategy & synthesis |
-| **Faraday** | `/intuition-execute` | Execution | `plan.md` | Code + memory updates | Implementation & verification |
+Each skill has a focused responsibility:
 
-By splitting into three phases:
-- **Clean context** - Each agent starts fresh, focused on one job
-- **Reusable outputs** - Discovery briefs and plans are stored in project memory
-- **Higher success rate** - Less context bloat = fewer dropped threads
+| Skill | Role | Phase | Input | Output | Focus |
+|-------|------|-------|-------|--------|-------|
+| `/intuition-start` | Primer | Any | State file | Context brief + suggestion | Navigation |
+| `/intuition-discovery` | Waldo | Discovery | Problem description | `discovery_brief.md`, `discovery_output.json` | Understanding & dialogue |
+| `/intuition-handoff` | Orchestrator | Transition | Phase output | Updated memory + brief | Context bridging |
+| `/intuition-plan` | Magellan | Planning | `planning_brief.md` | `plan.md` | Strategy & synthesis |
+| `/intuition-execute` | Faraday | Execution | `execution_brief.md` | Code + memory | Implementation |
+
+By splitting into five phases with explicit handoffs:
+- **Clean context** - Each skill gets exactly what it needs, nothing more
+- **Memory consistency** - Handoff maintains project memory across phases
+- **Higher success rate** - Less context bloat, better focus
 - **Resume support** - Interrupted work picks up from last checkpoint
+- **Transparency** - Every phase produces readable, auditable outputs
 
-## The Three-Phase Workflow
+## The Five-Phase Workflow
 
 ### Phase 1: Discovery with Waldo
 
@@ -50,15 +58,32 @@ Explore your problem deeply using the GAPP framework:
 /intuition-discovery
 ```
 
-Waldo guides you through:
+Waldo guides you through genuine dialogue covering:
 - **Problem** - What's the core challenge?
 - **Goals** - What does success look like?
 - **UX Context** - Who will use this and how?
 - **Personalization** - What drives this work for you?
 
-**Output:** `docs/project_notes/discovery_brief.md`
+**Output:** `docs/project_notes/discovery_brief.md` + `discovery_output.json`
 
-Uses Socratic questioning and systems thinking to surface authentic intentions before planning begins.
+Uses Socratic questioning and systems thinking to surface authentic intentions.
+
+### Phase 1.5: Discovery → Planning Handoff
+
+Process discovery and prepare for planning:
+
+```
+/intuition-handoff
+```
+
+The orchestrator:
+1. Reads your discovery output
+2. Extracts key facts, decisions, constraints
+3. Updates project memory files
+4. Generates `planning_brief.md` for Magellan
+5. Updates workflow state
+
+**Output:** Updated memory + fresh planning context
 
 ### Phase 2: Planning with Magellan
 
@@ -69,15 +94,32 @@ Create a structured plan from discovery:
 ```
 
 Magellan:
-1. Reads your discovery brief
-2. Researches your codebase (parallel agents)
+1. Reads your planning brief and memory
+2. Researches your codebase
 3. Synthesizes insights into a strategic plan
-4. Auto-detects planning depth (simple vs. complex)
+4. Detects planning depth (simple vs. complex)
 5. Presents plan for your approval
 
 **Output:** `docs/project_notes/plan.md`
 
 Includes tasks with acceptance criteria, dependencies, risks, and execution notes.
+
+### Phase 2.5: Planning → Execution Handoff
+
+Process plan and prepare for execution:
+
+```
+/intuition-handoff
+```
+
+The orchestrator:
+1. Reads your plan
+2. Extracts task structure and risks
+3. Updates project memory with planning outcomes
+4. Generates `execution_brief.md` for Faraday
+5. Updates workflow state
+
+**Output:** Updated memory + fresh execution context
 
 ### Phase 3: Execution with Faraday
 
@@ -88,9 +130,9 @@ Execute the approved plan:
 ```
 
 Faraday:
-1. Reads plan and discovery context
+1. Reads execution brief and memory
 2. Confirms approach with you
-3. Delegates to specialized sub-agents (parallel when possible)
+3. Delegates to specialized sub-agents
 4. Verifies outputs against acceptance criteria
 5. Updates project memory
 6. Reports completion
@@ -357,7 +399,6 @@ intuition/
 │   ├── intuition-discovery/    # Waldo - discovery & GAPP
 │   ├── intuition-plan/         # Magellan - strategic planning
 │   └── intuition-execute/      # Faraday - orchestrated execution
-├── agents/                     # Agent definitions
 ├── docs/                       # Documentation
 │   ├── intuition-workflow.md   # User guide
 │   └── intuition-architecture.md # Technical details

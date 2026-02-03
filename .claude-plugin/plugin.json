@@ -1,7 +1,7 @@
 {
   "name": "intuition-skills",
-  "description": "Waldo (planning) and Architect (execution) skills for Claude Code",
-  "version": "1.0.0",
+  "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
+  "version": "2.0.0",
   "author": {
     "name": "Intuition Contributors"
   },

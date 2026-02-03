@@ -45,6 +45,7 @@ try {
     'intuition-start',
     'intuition-initialize',
     'intuition-discovery',
+    'intuition-handoff',
     'intuition-plan',
     'intuition-execute'
   ];

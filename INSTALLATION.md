@@ -378,16 +378,17 @@ If you encounter issues not covered here:
 
 ### npm Installation Includes
 
-- **CLI wrapper:** `bin/intuition.js` (node global bin)
-- **Waldo agent:** `agents/waldo.md`
-- **Architect agent:** `agents/architect.md`
-- **Project-memory skill:** `skills/project-memory/`
-- **Plan skill:** `skills/plan/` → copied to `~/.claude/skills/plan/`
-- **Execute skill:** `skills/execute/` → copied to `~/.claude/skills/execute/`
+- **CLI wrapper:** `bin/intuition.js` (node global bin, dev-only)
+- **Five skills:** `skills/intuition-*/` → copied to `~/.claude/skills/`
+  - intuition-start (session primer)
+  - intuition-discovery (Waldo)
+  - intuition-handoff (orchestrator)
+  - intuition-plan (Magellan)
+  - intuition-execute (Faraday)
 
 ### Plugin Marketplace Installation Includes
 
-- Both Waldo and Architect agents
+- All five Intuition skills
 - All referenced skills and supporting files
 - Full skill definitions with SKILL.md
 
