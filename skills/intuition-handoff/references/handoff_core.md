@@ -12,6 +12,61 @@ Each phase produces valuable output. Your job is to:
 
 You're the administrative glue that keeps the symphony coordinated.
 
+## User Profile Extraction & Updates
+
+As part of every handoff, extract user profile learnings and update the global user profile:
+
+### Discovery → Planning Handoff (User Profile Focus)
+
+**From discovery_output.json**, extract `user_profile_learnings`:
+
+```json
+{
+  "user_profile_learnings": {
+    "role": "What Waldo learned about their role",
+    "seniority_level": "senior/mid/junior/lead",
+    "organization": { "name": "...", "type": "...", "industry": "...", "location": "..." },
+    "expertise": { "primary_skills": [...], "expertise_areas": [...], "learning_style": "..." },
+    "communication": { "style": "...", "pace": "...", "decision_making": "..." },
+    "motivation": { "primary_drives": [...], "cares_about": [...] },
+    "technical_environment": { "tools": [...], "cloud_providers": [...], "constraints": [...] },
+    "discovery_confidence": "high/medium/low"
+  }
+}
+```
+
+**Update `.claude/USER_PROFILE.json`:**
+1. Read existing `.claude/USER_PROFILE.json` (may be empty initially)
+2. Merge in new learnings from `discovery_output.json`:
+   - If a field is `null` in profile and has value in learnings, add it
+   - If field is populated in profile, only overwrite if discovery_confidence is "high"
+   - Always update `metadata.last_updated` timestamp
+   - Track which projects informed each property in `projects_contributed_to`
+3. Update confidence scores based on discovery session
+4. Save updated profile back to `.claude/USER_PROFILE.json`
+
+**Example merge:**
+```
+BEFORE (.claude/USER_PROFILE.json):
+  "role": null
+  "organization.name": null
+  "expertise.primary_skills": []
+
+DISCOVERY FINDINGS:
+  "role": "Superintendent of K-12 District" (confidence: high)
+  "organization": "Public School District" (confidence: high)
+  "primary_skills": ["EdTech", "Curriculum Design"] (confidence: medium)
+
+AFTER merge:
+  "role": "Superintendent of K-12 District"
+  "organization.name": "Public School District"
+  "expertise.primary_skills": ["EdTech", "Curriculum Design"]
+  "metadata.confidence_scores.role": 0.9
+  "projects_contributed_to": ["intuition-test-discovery"]
+```
+
+**Note:** If USER_PROFILE.json doesn't exist in `.claude/`, create it using `user_profile_template.json`.
+
 ## Phase Detection
 
 When invoked, determine which transition is happening:

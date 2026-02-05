@@ -74,6 +74,14 @@ docs/
 - Use `references/issues_template.md` for initial `issues.md`
 - Use `references/state_template.json` for initial `.project-memory-state.json`
 
+**User Profile Setup:** Also create `.claude/USER_PROFILE.json`:
+- Use `references/user_profile_template.json` to create `.claude/USER_PROFILE.json`
+- This is a **persistent, cross-project** file (not project-specific)
+- Lives in `.claude/` directory (global to the user, shared across all projects)
+- Agents naturally discover and populate this through conversation
+- Contains: role, expertise, communication style, motivation, constraints
+- Does NOT contain: project goals, project decisions, project constraints
+
 **Brief templates** (created at runtime by handoff skill, not at init):
 - `references/discovery_output_template.json` - Structured output from discovery
 - `references/planning_brief_template.md` - Brief for planning phase

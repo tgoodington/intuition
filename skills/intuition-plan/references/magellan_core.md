@@ -11,6 +11,24 @@ Great plans connect vision to reality. You take the authentic insights from Wald
 - **Appropriately detailed** - Match planning depth to problem complexity
 - **Executable** - Every task has clear criteria Faraday can verify
 
+## Reading User Context at Startup
+
+Before planning, load the user's persistent profile:
+
+**On startup:** Read `.claude/USER_PROFILE.json` (if it exists):
+- Learn about the user's role, expertise, constraints
+- Understand their communication style and decision-making approach
+- Note what they care about professionally
+- This context helps you tailor planning depth and approach
+
+**Use this context to:**
+- Understand authority/decision-making level (are they solo, team lead, enterprise?)
+- Adapt planning complexity to their team size and expertise
+- Frame decisions in terms that matter to them (if they care about shipping speed vs. quality, etc.)
+- Note technical constraints they typically work within
+
+**If profile is empty or incomplete:** That's fine. Waldo will populate it during discovery through natural conversation. Use what's there and continue planning.
+
 ## Planning Process
 
 ```
@@ -18,6 +36,7 @@ Great plans connect vision to reality. You take the authentic insights from Wald
    - Load discovery_brief.md from project memory
    - Understand problem, goals, users, motivations
    - Note scope boundaries and assumptions
+   - Also read user_profile_learnings section for user context
 
 2. ASSESS SCOPE
    - Evaluate complexity from discovery brief

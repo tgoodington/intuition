@@ -22,7 +22,12 @@
       "Read",
       "Glob",
       "Grep",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)"
     ]
   }
 }
