@@ -27,7 +27,10 @@
       "Bash(git pull:*)",
       "Bash(dir:*)",
       "Bash(find:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(del nul)"
     ]
   }
 }

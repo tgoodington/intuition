@@ -1,0 +1,405 @@
+================================================================================
+                     WALDO v3 ARCHITECTURE OVERVIEW
+                  Intuition v3.0.0 - February 5, 2026
+================================================================================
+
+PROJECT STATUS: Production Ready - Ready for Testing
+
+VERSION: 3.0.0
+LATEST COMMIT: bbfa9ff - "feat: Waldo v3 - Research-informed thinking partnership..."
+STATUS: All v3 features implemented and documented
+
+================================================================================
+                            THE FIVE SKILLS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     /intuition-start (Session Primer)                        │
+│                                                                              │
+│ Role: Load context, detect workflow phase, suggest next step               │
+│ Creates: Nothing                                                            │
+│ Updates: .project-memory-state.json (minimal updates)                      │
+│ Reads: All memory files for status detection                               │
+│ When: First command at session start                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             /intuition-discovery (Waldo - Thinking Partner)               │
+│                                                                              │
+│ Role: Research-informed dialogue for deep problem understanding            │
+│                                                                              │
+│ DUAL MODES:                                                                 │
+│   • Guided: Structured options (AskUserQuestion) - user selects answers   │
+│   • Open-Ended: Natural conversational flow - user answers freely         │
+│   → Both modes produce identical discovery outcomes                        │
+│   → Dialogue style differs, substance and depth are same                  │
+│                                                                              │
+│ RESEARCH LAUNCH (v3 NEW):                                                   │
+│   • Immediate parallel launch of 3 research agents                         │
+│   • Agent 1: Best practices & standards in user's domain                  │
+│   • Agent 2: Common pitfalls & inefficiencies                             │
+│   • Agent 3: Emerging patterns & alternatives                             │
+│   → All run simultaneously while dialogue continues                        │
+│                                                                              │
+│ DIALOGUE APPROACH (v3 REDESIGN):                                           │
+│   • Wise confidant model (brings knowledge, not neutral)                  │
+│   • "Yes, and..." building (expands ideas, never negates)                 │
+│   • 1-2 focused questions per turn (never overwhelming)                   │
+│   • Gentle steering when heading down inefficient paths                   │
+│   • Gleaning user profile information naturally                           │
+│                                                                              │
+│ Creates: discovery_brief.md, discovery_output.json                         │
+│ Updates: .project-memory-state.json                                        │
+│ Outputs:                                                                    │
+│   - discovery_brief.md: Narrative summary (Problem/Goals/Context)         │
+│   - discovery_output.json: Structured findings + user_profile_learnings  │
+│   - State: dialogue_mode, research_performed, conversation_history       │
+│                                                                              │
+│ Routes to: /intuition-handoff (NOT directly to plan)                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│           /intuition-handoff (Orchestrator - Phase Coordinator)            │
+│                                                                              │
+│ Role: Extract insights, update memory, merge profile, prepare next agent  │
+│                                                                              │
+│ TWO TRANSITIONS:                                                            │
+│                                                                              │
+│ ┌─ DISCOVERY → PLANNING ────────────────────────────────────────────────┐  │
+│ │                                                                         │  │
+│ │ Step 1: Extract insights from discovery_output.json                  │  │
+│ │ Step 2: Extract user_profile_learnings (v3 NEW)                      │  │
+│ │ Step 3: Merge into .claude/USER_PROFILE.json (v3 NEW)               │  │
+│ │   • Null fields in profile ← add discovered values                   │  │
+│ │   • Existing fields ← only overwrite if high confidence              │  │
+│ │   • Track projects_contributed_to                                     │  │
+│ │   • Update confidence_scores                                          │  │
+│ │ Step 4: Update key_facts.md, decisions.md, issues.md                │  │
+│ │ Step 5: Generate planning_brief.md for Magellan                      │  │
+│ │ Step 6: Update workflow state                                         │  │
+│ │ Step 7: Route to /intuition-plan                                     │  │
+│ │                                                                         │  │
+│ └─────────────────────────────────────────────────────────────────────────┘  │
+│                                    ↓                                         │
+│ ┌─ PLANNING → EXECUTION ────────────────────────────────────────────────┐   │
+│ │                                                                         │   │
+│ │ Step 1: Extract task structure from plan.md                          │   │
+│ │ Step 2: Update issues.md with planning completion                    │   │
+│ │ Step 3: Generate execution_brief.md for Faraday                      │   │
+│ │ Step 4: Update workflow state                                         │   │
+│ │ Step 5: Route to /intuition-execute                                  │   │
+│ │                                                                         │   │
+│ └─────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ Key: Handoff is NOT evaluating. It's extracting, documenting, preparing.  │
+│      Administrative glue that keeps the symphony coordinated.             │
+│                                                                              │
+│ Creates: planning_brief.md, execution_brief.md                            │
+│ Updates: key_facts.md, decisions.md, issues.md, USER_PROFILE.json,       │
+│          .project-memory-state.json                                        │
+│ Reads: discovery_brief.md, discovery_output.json, plan.md                │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│           /intuition-plan (Magellan - Strategist & Planner)                │
+│                                                                              │
+│ Role: Synthesize discovery into structured, executable plan               │
+│                                                                              │
+│ PERSONALIZATION (v3 NEW):                                                  │
+│   • Reads .claude/USER_PROFILE.json at startup                            │
+│   • Adjusts plan depth based on user's seniority                          │
+│   • Matches communication style to user preference                        │
+│   • Factors in user's authority level and constraints                    │
+│   • Tailors complexity to expertise areas                                │
+│                                                                              │
+│ Creates: plan.md                                                           │
+│ Updates: .project-memory-state.json                                        │
+│ Reads: planning_brief.md, existing memory, USER_PROFILE.json, codebase   │
+│                                                                              │
+│ Output: Structured plan with:                                             │
+│   - Objective and approach                                                │
+│   - Task breakdown with dependencies                                      │
+│   - Acceptance criteria per task                                          │
+│   - Identified risks and mitigations                                      │
+│   - Confidence in approach                                                │
+│                                                                              │
+│ Routes to: User approval required before handoff                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│       /intuition-execute (Faraday - Implementer & Orchestrator)            │
+│                                                                              │
+│ Role: Coordinate implementation with precision                            │
+│                                                                              │
+│ PERSONALIZATION (v3 NEW):                                                  │
+│   • Reads .claude/USER_PROFILE.json at startup                            │
+│   • Adjusts communication level (detailed vs. summary)                    │
+│   • Matches delegation to team size                                       │
+│   • Respects authority level in decision-making                          │
+│   • Adapts to learning style when explaining                             │
+│                                                                              │
+│ EXECUTION PATTERN:                                                         │
+│   • Parse plan into concrete tasks                                        │
+│   • Delegate to sub-agents in parallel (where possible)                  │
+│   • Verify outputs against acceptance criteria                           │
+│   • SECURITY REVIEW IS MANDATORY (no skipping)                           │
+│   • Update project memory with completion and findings                   │
+│                                                                              │
+│ Creates: Implemented code changes                                         │
+│ Updates: bugs.md, decisions.md, issues.md, .project-memory-state.json   │
+│ Reads: execution_brief.md, plan.md, memory, USER_PROFILE.json, codebase │
+│                                                                              │
+│ Sub-agents: Code Writer, Test Runner, Code Reviewer, Security Expert,    │
+│             Documentation, Research, Specification Writer                 │
+│                                                                              │
+│ Routes to: /intuition-discovery (new feature iteration)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                       PERSISTENT USER PROFILE (v3 NEW)
+================================================================================
+
+Location: .claude/USER_PROFILE.json (Global, cross-project)
+
+What It Stores:
+  • User: name, role, seniority_level, years_experience, organization, reports_to
+  • Expertise: primary_skills, expertise_areas, learning_style, learning_goals
+  • Communication: style, pace, detail_level, decision_making
+  • Constraints: authority_level, availability, team_size, time_zone, tech_environment
+  • Motivation: primary_drives, cares_about, professional_goals
+  • Preferences: tools_and_frameworks, methodologies, collaboration_tools
+  • Metadata: created_at, last_updated, profile_completeness, projects_contributed_to,
+             confidence_scores
+
+How It Gets Built:
+  1. Waldo discovers during dialogue (naturally, not questionnaire)
+  2. Stores findings in discovery_output.json > user_profile_learnings
+  3. Handoff extracts and merges into .claude/USER_PROFILE.json
+  4. Includes confidence scores for each property
+  5. Tracks which projects informed profile
+  6. Profile builds incrementally across projects and iterations
+
+How It's Used:
+  • Magellan reads at planning startup → personalizes plan
+  • Faraday reads at execution startup → personalizes execution
+  • Start skill (future) can reference for session context
+
+Key Property: PERSISTENT & CROSS-PROJECT
+  - Built once, used forever
+  - Builds on itself with each discovery
+  - Never loses information (append-only, confidence-based merge)
+  - Clearly distinct from project-specific memory
+
+================================================================================
+                         MEMORY FILE OWNERSHIP
+================================================================================
+
+| File | Owner | Created By | Updated By | Purpose |
+|------|-------|-----------|-----------|---------|
+| .project-memory-state.json | Start/Handoff | Initialize | All skills | Workflow state |
+| discovery_brief.md | Waldo | Waldo | Only Waldo | Discovery narrative |
+| discovery_output.json | Waldo | Waldo | Only Waldo | Structured findings |
+| planning_brief.md | Handoff | Handoff | Only Handoff | Context for planning |
+| plan.md | Magellan | Magellan | Only Magellan | Structured plan |
+| execution_brief.md | Handoff | Handoff | Only Handoff | Context for execution |
+| key_facts.md | Initialize | Initialize | Handoff | Project facts |
+| decisions.md | Initialize | Initialize | Handoff, Faraday | Architectural decisions |
+| issues.md | Initialize | Initialize | Handoff, Faraday | Work history |
+| bugs.md | Initialize | Initialize | Faraday | Problems & solutions |
+| .claude/USER_PROFILE.json | Initialize | Initialize | Handoff | User profile |
+
+Golden Rule: Each file has one owner. Only that skill creates/updates it.
+Exception: Handoff coordinates transitions and updates multiple files.
+
+================================================================================
+                         DUAL DIALOGUE MODES (v3 NEW)
+================================================================================
+
+GUIDED MODE:
+  • AskUserQuestion with 2-4 focused options
+  • "Other" always available for custom input
+  • Structured but fully flexible
+  • User feels guided and supported
+  • Good for: Users who like structure and clarity
+
+OPEN-ENDED MODE:
+  • Conversational questions (no options)
+  • User answers however they want
+  • Natural rhythm and flow
+  • Just as deep and thorough
+  • Good for: Users who prefer freedom and spontaneity
+
+EQUIVALENCE:
+  • Both explore same GAPP dimensions (Problem, Goals, Context, Motivation)
+  • Both integrate research insights
+  • Both glean user profile information
+  • Both achieve same discovery depth
+  • ONLY difference: Dialogue style, not substance
+
+User Choice: Selected at start of discovery, stored in state, can be changed.
+
+================================================================================
+                      RESEARCH-INFORMED THINKING (v3 NEW)
+================================================================================
+
+IMMEDIATE RESEARCH LAUNCH:
+  • User describes context
+  • Waldo identifies domain
+  • Waldo launches 3 research agents in PARALLEL (single message)
+  • All agents run simultaneously (not sequentially)
+
+RESEARCH AGENTS:
+  Agent 1: Best Practices & Standards
+    → Industry standards, proven patterns, best practices
+    → Top 5-10 key practices and why they matter
+
+  Agent 2: Common Pitfalls & Inefficiencies
+    → What catches teams off-guard
+    → Failure patterns and how to avoid them
+
+  Agent 3: Emerging Patterns (Optional)
+    → Innovations and new approaches
+    → Trends and cutting-edge practices
+
+INTEGRATION INTO DIALOGUE:
+  • Research happens while Waldo greets and continues dialogue
+  • Research findings inform every follow-up question
+  • Insights are natural, not forced
+  • Waldo brings perspective without being obvious
+
+WISE CONFIDANT MODEL:
+  • Waldo isn't neutral - brings relevant knowledge
+  • Every question informed by research
+  • Never a deluge of facts
+  • Collaborative "what do you think about this?" approach
+
+================================================================================
+                         ARCHITECTURE PRINCIPLES
+================================================================================
+
+1. SYMPHONY MODEL
+   Five distinct roles, each focused on one phase. Clean separation of concerns.
+   Waldo doesn't plan. Magellan doesn't execute. Faraday doesn't discover.
+
+2. FILE-BASED HANDOFFS
+   No APIs. All communication through files.
+   Resumable, auditable, tool-agnostic, transparent.
+
+3. MEMORY AUTHORITY
+   Each file has one owner. Clear responsibility, no conflicts.
+   Handoff is exception - coordinates transitions.
+
+4. PERSISTENT USER PROFILE
+   Global, cross-project, naturally discovered.
+   Builds incrementally. Personalizes all subsequent work.
+
+5. RESUME SUPPORT
+   All skills can resume interrupted work from state.
+   Stop anytime. Resume anytime. Files persist.
+
+6. STATE-DRIVEN ORCHESTRATION
+   .project-memory-state.json is source of truth.
+   Each skill reads state before proceeding.
+   Handoff updates state during transitions.
+
+7. SECURITY GATES
+   Faraday's security review is MANDATORY.
+   No execution completion without passing security.
+
+================================================================================
+                            TESTING DOCUMENTS
+================================================================================
+
+FOUR NEW TESTING DOCUMENTS CREATED:
+
+1. TESTING_SUMMARY.md (781 lines)
+   • Complete project context and state
+   • Major architectural changes explained
+   • Testing scope and recommendations
+   • Known issues and technical debt
+   • Comprehensive foundation for understanding
+
+2. SKILL_INTERACTION_GUIDE.md (993 lines)
+   • Detailed spec for each of 5 skills
+   • Memory ownership chart
+   • Data flow diagrams
+   • Common workflows
+   • Troubleshooting guide
+   • File sizes and performance
+
+3. QUICK_TEST_CHECKLIST.md (467 lines)
+   • Pre-testing validation
+   • 11 focused test sessions
+   • Edge case testing
+   • Success criteria
+   • Test report template
+   • Tester notes and guidance
+
+4. TESTING_README.md (215 lines)
+   • Quick navigation guide
+   • Testing path (4 phases)
+   • Success criteria summary
+   • Important notes for testers
+   • Document overview table
+
+PLUS: ARCHITECTURE_OVERVIEW.txt (this file)
+   • Visual ASCII diagrams
+   • Quick reference for all systems
+
+================================================================================
+                         READY FOR PRODUCTION TESTING
+================================================================================
+
+Version: 3.0.0 (Latest)
+Status: Production Ready
+Last Commit: bbfa9ff (Waldo v3 complete)
+
+What's Implemented:
+  ✅ Waldo v3 redesign (thinking partner model)
+  ✅ Dual dialogue modes (Guided + Open-Ended)
+  ✅ Research agent launch (immediate, parallel)
+  ✅ Persistent user profile system (global)
+  ✅ Handoff orchestration (explicit phase coordinator)
+  ✅ Five-skill integration
+  ✅ Profile reading in Magellan and Faraday
+  ✅ All memory file updates
+  ✅ State management with v3 schema
+  ✅ Resume capability across all phases
+
+What to Test:
+  • Waldo core features (modes, research, dialogue)
+  • Handoff orchestration (transitions, memory updates, profile merge)
+  • User profile system (discovery, persistence, merging)
+  • Five-skill coordination (full workflows)
+  • Resume capability (interrupt and continue)
+  • Edge cases (missing files, poor quality, conflicts)
+  • Cross-sector testing (different domains)
+  • Personalization (Magellan and Faraday reading profile)
+
+Documentation Quality:
+  • 2,450+ lines of testing documentation created
+  • Complete architectural overview
+  • Detailed skill specifications
+  • Actionable test checklists
+  • Troubleshooting guides
+  • Reference materials
+
+Next Steps:
+  1. Read TESTING_SUMMARY.md (start here)
+  2. Read SKILL_INTERACTION_GUIDE.md (understand interactions)
+  3. Use QUICK_TEST_CHECKLIST.md (execute tests)
+  4. Document findings in test report
+  5. Make go/no-go decision
+
+================================================================================
+
+This architecture represents a significant upgrade from v2. All major components
+are implemented and documented. The system is ready for production testing.
+
+Ready to test? Start with TESTING_SUMMARY.md.
+Questions? Check SKILL_INTERACTION_GUIDE.md.
+Testing? Use QUICK_TEST_CHECKLIST.md.
+
+Let's ship it!
+
+================================================================================
