@@ -30,7 +30,10 @@
       "Bash(xargs:*)",
       "Bash(ls:*)",
       "Bash(wc:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(npm update:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm version:*)"
     ]
   }
 }
