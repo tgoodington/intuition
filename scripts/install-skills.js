@@ -130,16 +130,42 @@ try {
     process.exit(1);
   }
 
+  // Copy /intuition-agent-advisor skill
+  const agentAdvisorSrc = path.join(packageRoot, 'skills', 'intuition-agent-advisor');
+  const agentAdvisorDest = path.join(claudeSkillsDir, 'intuition-agent-advisor');
+
+  if (fs.existsSync(agentAdvisorSrc)) {
+    copyDirRecursive(agentAdvisorSrc, agentAdvisorDest);
+    log(`✓ Installed /intuition-agent-advisor skill to ${agentAdvisorDest}`);
+  } else {
+    error(`intuition-agent-advisor skill not found at ${agentAdvisorSrc}`);
+    process.exit(1);
+  }
+
+  // Copy /intuition-skill-guide skill
+  const skillGuideSrc = path.join(packageRoot, 'skills', 'intuition-skill-guide');
+  const skillGuideDest = path.join(claudeSkillsDir, 'intuition-skill-guide');
+
+  if (fs.existsSync(skillGuideSrc)) {
+    copyDirRecursive(skillGuideSrc, skillGuideDest);
+    log(`✓ Installed /intuition-skill-guide skill to ${skillGuideDest}`);
+  } else {
+    error(`intuition-skill-guide skill not found at ${skillGuideSrc}`);
+    process.exit(1);
+  }
+
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
-    log(`  /intuition-start       - Load project context and enforce compliance`);
-    log(`  /intuition-discovery   - Discovery with Waldo (GAPP dialogue)`);
-    log(`  /intuition-handoff     - Handoff orchestrator (discovery→planning→execution)`);
-    log(`  /intuition-plan        - Planning with Magellan (strategic planning)`);
-    log(`  /intuition-execute     - Execution with Faraday (methodical implementation)`);
-    log(`  /intuition-initialize  - Project initialization (set up project memory)`);
+    log(`  /intuition-start          - Load project context and enforce compliance`);
+    log(`  /intuition-discovery      - Discovery with Waldo (GAPP dialogue)`);
+    log(`  /intuition-handoff        - Handoff orchestrator (discovery→planning→execution)`);
+    log(`  /intuition-plan           - Planning with Magellan (strategic planning)`);
+    log(`  /intuition-execute        - Execution with Faraday (methodical implementation)`);
+    log(`  /intuition-initialize     - Project initialization (set up project memory)`);
+    log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
+    log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {
     error(`Verification failed - skills not properly installed`);
