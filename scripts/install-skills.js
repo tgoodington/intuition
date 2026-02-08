@@ -154,8 +154,20 @@ try {
     process.exit(1);
   }
 
+  // Copy /intuition-update skill
+  const updateSrc = path.join(packageRoot, 'skills', 'intuition-update');
+  const updateDest = path.join(claudeSkillsDir, 'intuition-update');
+
+  if (fs.existsSync(updateSrc)) {
+    copyDirRecursive(updateSrc, updateDest);
+    log(`✓ Installed /intuition-update skill to ${updateDest}`);
+  } else {
+    error(`intuition-update skill not found at ${updateSrc}`);
+    process.exit(1);
+  }
+
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest) && fs.existsSync(updateDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start          - Load project context and enforce compliance`);
@@ -166,6 +178,7 @@ try {
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
     log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);
+    log(`  /intuition-update         - Check for and install package updates`);
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {
     error(`Verification failed - skills not properly installed`);

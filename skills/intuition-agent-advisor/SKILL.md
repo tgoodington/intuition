@@ -1,7 +1,7 @@
 ---
 name: intuition-agent-advisor
 description: Expert advisor on building custom Claude Code agents (subagents). Use when designing, creating, or troubleshooting custom agents, understanding agent frontmatter fields, delegation patterns, or agent architecture decisions.
-model: sonnet
+model: opus
 tools: Read, Glob, Grep, AskUserQuestion
 ---
 

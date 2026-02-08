@@ -1,7 +1,7 @@
 ---
 name: intuition-skill-guide
 description: Expert advisor on understanding and building Claude Code skills. Use when the user asks about how skills work, how to create custom skills, skill frontmatter fields, slash commands, invocation patterns, or skill architecture decisions.
-model: sonnet
+model: opus
 tools: Read, Glob, Grep, AskUserQuestion
 ---
 
@@ -118,18 +118,15 @@ Example: `/fix-issue 42` with `Fix issue $ARGUMENTS` → `Fix issue 42`
 
 ## REFERENCE: DYNAMIC CONTEXT INJECTION
 
-Run shell commands BEFORE Claude sees the skill content with `` !`command` ``:
+Run shell commands BEFORE Claude sees the skill content. Syntax: exclamation mark, then command wrapped in backticks.
 
-```markdown
-## Current state
-- Branch: !`git branch --show-current`
-- Changed files: !`git diff --name-only`
+Format: `[exclamation][backtick]command[backtick]`
 
-## Your task
-Review the changes on the current branch.
-```
+Example of the pattern in practice:
+- To show current branch: use the pattern with `git branch --show-current`
+- To show changed files: use the pattern with `git diff --name-only`
 
-Commands run as preprocessing. Claude sees the output, not the commands.
+Commands execute during preprocessing. Claude sees command output, not the commands themselves.
 
 ## REFERENCE: CONTEXT FORK
 

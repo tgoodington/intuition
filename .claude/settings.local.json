@@ -33,7 +33,16 @@
       "Bash(del nul)",
       "Bash(npm update:*)",
       "Bash(npm outdated:*)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(intuition --version:*)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" status)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" log --oneline -5)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" diff --stat)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" diff --stat -- .claude/settings.local.json)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" add skills/intuition-discovery/SKILL.md skills/intuition-plan/SKILL.md skills/intuition-execute/SKILL.md skills/intuition-handoff/SKILL.md skills/intuition-start/SKILL.md skills/intuition-initialize/SKILL.md skills/intuition-initialize/references/state_template.json skills/intuition-initialize/references/claude_template.md skills/intuition-initialize/references/agents_template.md skills/intuition-agent-advisor/ skills/intuition-skill-guide/ scripts/install-skills.js package.json)",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" commit -m \"$\\(cat <<''EOF''\nfeat: v4.0.0 - Imperative protocol rewrite for all skills, schema v2.0, twin advisors\n\nAll 8 skills rewritten from marketing copy to imperative directives with\nCRITICAL RULES at top. Root cause: reference files in subdirectories were\nnever auto-loaded by Claude Code - only SKILL.md is injected into context.\n\nKey changes:\n- All skills: imperative protocol in SKILL.md, under 500 lines each\n- Schema: v1.0 personalization → v2.0 workflow \\(discovery/planning/execution\\)\n- State ownership: handoff is the ONLY skill that writes .project-memory-state.json\n- Routing: all work skills route to /intuition-handoff between phases\n- New skills: intuition-agent-advisor, intuition-skill-guide \\(the twins\\)\n- Initialize: extracted CLAUDE.md/AGENTS.md templates to reference files\n- Models: Waldo=opus, Magellan=sonnet, Faraday=opus, twins=sonnet, start/handoff=haiku\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"C:\\\\Projects\\\\Intuition\" push origin master)"
     ]
   }
 }
