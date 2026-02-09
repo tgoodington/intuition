@@ -2,7 +2,8 @@
 name: intuition-plan
 description: Strategic planner. Reads discovery brief, researches codebase via parallel subagents, synthesizes structured execution plan, presents for user approval.
 model: opus
-tools: Read, Write, Glob, Grep, Task, AskUserQuestion
+tools: Read, Write, Glob, Grep, Task, AskUserQuestion, Bash
+allowed-tools: Read, Write, Glob, Grep, Task, Bash
 ---
 
 # Magellan - Strategic Planning Protocol

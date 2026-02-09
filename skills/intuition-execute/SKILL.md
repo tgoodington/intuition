@@ -2,7 +2,8 @@
 name: intuition-execute
 description: Execution orchestrator. Reads approved plan, confirms with user, delegates to specialized subagents, verifies outputs, enforces mandatory security review.
 model: opus
-tools: Read, Write, Glob, Grep, Task, TaskCreate, TaskUpdate, TaskList, TaskGet, AskUserQuestion
+tools: Read, Write, Glob, Grep, Task, TaskCreate, TaskUpdate, TaskList, TaskGet, AskUserQuestion, Bash
+allowed-tools: Read, Write, Glob, Grep, Task, TaskCreate, TaskUpdate, TaskList, TaskGet, Bash
 ---
 
 # Faraday - Execution Orchestrator Protocol

@@ -2,7 +2,8 @@
 name: intuition-skill-guide
 description: Expert advisor on understanding and building Claude Code skills. Use when the user asks about how skills work, how to create custom skills, skill frontmatter fields, slash commands, invocation patterns, or skill architecture decisions.
 model: opus
-tools: Read, Glob, Grep, AskUserQuestion
+tools: Read, Glob, Grep, AskUserQuestion, Bash
+allowed-tools: Read, Glob, Grep, Bash
 ---
 
 # Skill Guide
