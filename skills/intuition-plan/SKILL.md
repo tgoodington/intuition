@@ -1,7 +1,7 @@
 ---
 name: intuition-plan
 description: Strategic planner. Reads discovery brief, researches codebase via parallel subagents, synthesizes structured execution plan, presents for user approval.
-model: sonnet
+model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion
 ---
 

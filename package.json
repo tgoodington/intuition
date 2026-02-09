@@ -1,6 +1,6 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Three-agent system for software project planning and execution. Waldo (discovery), Magellan (planning), Faraday (execution) with file-based handoffs through project memory.",
   "keywords": [
     "claude-code",
