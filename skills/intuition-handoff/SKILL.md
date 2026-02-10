@@ -3,6 +3,7 @@ name: intuition-handoff
 description: Universal phase transition orchestrator. Processes phase outputs, updates project memory, generates fresh briefs for next agent.
 model: haiku
 tools: Read, Write, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Glob, Grep
 ---
 
 # Handoff - Phase Transition Orchestrator Protocol

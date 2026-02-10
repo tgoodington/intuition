@@ -3,6 +3,7 @@ name: intuition-update
 description: Check for and install updates to the @tgoodington/intuition package.
 model: haiku
 tools: Bash, AskUserQuestion
+allowed-tools: Bash
 disable-model-invocation: true
 ---
 
@@ -70,9 +71,13 @@ Options:
 
 If user selected "Yes, update now":
 
+First, uninstall the existing package:
+Run: `npm uninstall -g @tgoodington/intuition`
+
+Then, install the latest version fresh:
 Run: `npm install -g @tgoodington/intuition@latest`
 
-Monitor the output for success or errors.
+Both commands must succeed. If uninstall fails, STOP and report the error. If install fails after uninstall, report the error and warn that the package is currently uninstalled and needs to be reinstalled.
 
 If user selected "No, skip for now":
 - Report: "Update skipped. You can run `/intuition-update` anytime to update."

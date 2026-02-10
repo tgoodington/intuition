@@ -3,7 +3,7 @@ name: intuition-start
 description: Load project context, detect workflow phase, generate phase-appropriate briefs. Prime the session for next steps.
 model: haiku
 tools: Read, Glob, Grep, AskUserQuestion, Bash
-allowed-tools: Bash
+allowed-tools: Read, Glob, Grep, Bash
 ---
 
 # Start - Session Primer Protocol

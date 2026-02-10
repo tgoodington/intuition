@@ -3,6 +3,7 @@ name: intuition-initialize
 description: Set up project memory infrastructure with workflow state tracking, memory files, and configuration templates.
 model: haiku
 tools: Read, Write, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Glob, Grep
 ---
 
 # Initialize - Project Memory Setup Protocol
