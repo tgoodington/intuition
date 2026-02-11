@@ -241,7 +241,7 @@ Tell the user: "Plan processed. Execution brief saved to `docs/project_notes/exe
 
 ### Read Outputs
 
-Read execution results from any files Faraday produced. Check `docs/project_notes/` for execution reports.
+Read execution results from any files the execution phase produced. Check `docs/project_notes/` for execution reports.
 
 ### Extract and Structure
 
@@ -262,7 +262,7 @@ Read execution results from any files Faraday produced. Check `docs/project_note
 
 ### Route User
 
-Tell the user: "Workflow cycle complete. Run `/intuition-discovery` to start a new cycle, or `/intuition-start` to review project status."
+Tell the user: "Workflow cycle complete. Run `/intuition-prompt` or `/intuition-discovery` to start a new cycle, or `/intuition-start` to review project status."
 
 ## MEMORY FILE FORMATS
 

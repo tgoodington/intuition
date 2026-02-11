@@ -70,7 +70,7 @@ Read `docs/project_notes/.project-memory-state.json`. Use this decision tree:
 ```
 IF .project-memory-state.json does NOT exist:
   → PHASE: first_time
-  → ACTION: Welcome, suggest /intuition-discovery
+  → ACTION: Welcome, suggest /intuition-prompt or /intuition-discovery
 
 ELSE IF workflow.discovery.started == false OR workflow.discovery.completed == false:
   → PHASE: discovery_in_progress
@@ -94,7 +94,7 @@ ELSE IF workflow.execution.completed == false:
 
 ELSE:
   → PHASE: complete
-  → ACTION: Celebrate, suggest /intuition-discovery for next cycle
+  → ACTION: Celebrate, suggest /intuition-prompt or /intuition-discovery for next cycle
 ```
 
 If `.project-memory-state.json` exists but is corrupted or unreadable, infer the phase from which output files exist:
@@ -106,15 +106,27 @@ If `.project-memory-state.json` exists but is corrupted or unreadable, infer the
 
 ### First Time (No Project Memory)
 
-Output:
+Output a welcome message, then use AskUserQuestion to offer the discovery choice:
+
 ```
 Welcome to Intuition!
 
-I don't see any project memory yet. To get started, run:
-/intuition-discovery
-
-Waldo will help you explore and define what you're building.
+I don't see any project memory yet. Let's kick things off with discovery.
 ```
+
+Then immediately use AskUserQuestion:
+```
+Question: "How would you like to start?"
+Header: "Discovery"
+Options:
+- "Prompt — I have a vision, help me sharpen it" / "Focused and fast. You describe what you want, and we'll refine it into a planning-ready brief through targeted questions. Best when you already know roughly what you're after. Runs /intuition-prompt"
+- "Discovery — I want to think this through" / "Exploratory and collaborative. We'll dig into the problem together, with research to inform smarter questions along the way. Best when you're still forming the idea. Runs /intuition-discovery"
+MultiSelect: false
+```
+
+After the user selects, tell them to run the corresponding skill:
+- If Prompt: "Run `/intuition-prompt` to get started."
+- If Discovery: "Run `/intuition-discovery` to get started."
 
 ### Discovery In Progress
 
@@ -213,7 +225,8 @@ Run /intuition-execute to continue.
 
 ### Complete
 
-Output:
+Output a completion summary, then use AskUserQuestion to offer the next cycle choice:
+
 ```
 Welcome back! This workflow cycle is complete.
 
@@ -221,9 +234,20 @@ Discovery: Complete
 Plan: Complete
 Execution: Complete
 
-Ready for the next cycle? Run /intuition-discovery to start
-exploring your next feature or iteration.
+Ready for the next cycle?
 ```
+
+Then use AskUserQuestion:
+```
+Question: "How would you like to start your next cycle?"
+Header: "Next cycle"
+Options:
+- "Prompt — I have a vision, help me sharpen it" / "Focused and fast. Refine a clear idea into a planning-ready brief. Runs /intuition-prompt"
+- "Discovery — I want to think this through" / "Exploratory and collaborative. Dig into a new problem with research-informed dialogue. Runs /intuition-discovery"
+MultiSelect: false
+```
+
+After the user selects, tell them to run the corresponding skill.
 
 ## BRIEF CURATION RULES
 

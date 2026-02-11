@@ -166,15 +166,28 @@ try {
     process.exit(1);
   }
 
+  // Copy /intuition-prompt skill
+  const promptSrc = path.join(packageRoot, 'skills', 'intuition-prompt');
+  const promptDest = path.join(claudeSkillsDir, 'intuition-prompt');
+
+  if (fs.existsSync(promptSrc)) {
+    copyDirRecursive(promptSrc, promptDest);
+    log(`✓ Installed /intuition-prompt skill to ${promptDest}`);
+  } else {
+    error(`intuition-prompt skill not found at ${promptSrc}`);
+    process.exit(1);
+  }
+
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest) && fs.existsSync(updateDest)) {
+  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest) && fs.existsSync(updateDest) && fs.existsSync(promptDest)) {
     log(`✓ Installation complete!`);
     log(`Skills are now available globally:`);
-    log(`  /intuition-start          - Load project context and enforce compliance`);
-    log(`  /intuition-discovery      - Discovery with Waldo (GAPP dialogue)`);
-    log(`  /intuition-handoff        - Handoff orchestrator (discovery→planning→execution)`);
-    log(`  /intuition-plan           - Planning with Magellan (strategic planning)`);
-    log(`  /intuition-execute        - Execution with Faraday (methodical implementation)`);
+    log(`  /intuition-start          - Load project context and detect workflow phase`);
+    log(`  /intuition-discovery      - Exploratory discovery (research-informed dialogue)`);
+    log(`  /intuition-prompt         - Focused discovery (prompt-engineering refinement)`);
+    log(`  /intuition-handoff        - Handoff orchestrator (phase transitions)`);
+    log(`  /intuition-plan           - Strategic planning (ARCH protocol)`);
+    log(`  /intuition-execute        - Execution orchestrator (subagent delegation)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
     log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);
