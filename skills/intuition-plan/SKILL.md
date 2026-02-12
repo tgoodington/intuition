@@ -1,6 +1,6 @@
 ---
 name: intuition-plan
-description: Strategic architect. Reads discovery brief, engages in interactive dialogue to map stakeholders, explore components, evaluate options, and synthesize an executable blueprint.
+description: Strategic architect. Reads discovery brief, engages in interactive dialogue to map stakeholders, explore components, evaluate options, synthesize an executable blueprint, and flag tasks requiring design exploration.
 model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion, Bash, WebFetch
 allowed-tools: Read, Write, Glob, Grep, Task, Bash, WebFetch
@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Glob, Grep, Task, Bash, WebFetch
 
 These are non-negotiable. Violating any of these means the protocol has failed.
 
-1. You MUST read `docs/project_notes/discovery_brief.md` before planning. If missing, stop and tell the user to run `/intuition-discovery`.
+1. You MUST read `docs/project_notes/discovery_brief.md` before planning. If missing, stop and tell the user to run `/intuition-prompt`.
 2. You MUST launch orientation research agents during Intake, after reading the discovery brief but BEFORE your first AskUserQuestion.
 3. You MUST use ARCH coverage tracking. Homestretch only unlocks when Actors, Reach, and Choices are sufficiently explored.
 4. You MUST ask exactly ONE question per turn via AskUserQuestion. For decisional questions, present 2-3 options with trade-offs. For informational questions (gathering facts, confirming understanding), present relevant options but trade-off analysis is not required.
@@ -23,6 +23,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 11. You MUST NOT modify `discovery_brief.md` or `planning_brief.md`.
 12. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 13. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
+14. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
 
 REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-execute`.
 
@@ -81,7 +82,7 @@ This phase is exactly 1 turn. Execute all of the following before your first use
 ## Step 1: Read inputs
 
 Read these files:
-- `docs/project_notes/discovery_brief.md` — REQUIRED. If missing, stop immediately: "No discovery brief found. Run `/intuition-discovery` first."
+- `docs/project_notes/discovery_brief.md` — REQUIRED. If missing, stop immediately: "No discovery brief found. Run `/intuition-prompt` first."
 - `docs/project_notes/planning_brief.md` — optional, may contain handoff context.
 - `.claude/USER_PROFILE.json` — optional, for tailoring communication style.
 
@@ -223,9 +224,11 @@ After explicit approval:
 
 ## Scope Scaling
 
-- **Lightweight**: Sections 1, 2, 6, 10
-- **Standard**: Sections 1, 2, 3, 6, 7, 8, 10
-- **Comprehensive**: All sections (1-10)
+- **Lightweight**: Sections 1, 2, 6, 6.5, 10
+- **Standard**: Sections 1, 2, 3, 6, 6.5, 7, 8, 10
+- **Comprehensive**: All sections (1-10, including 6.5)
+
+Section 6.5 is Design Recommendations — ALWAYS included regardless of tier.
 
 ## Section Specifications
 
@@ -297,6 +300,45 @@ Overlap resolution: Planning specifies public interfaces between components and 
 
 Interim artifacts in `.planning_research/` are working files for planning context management. They are NOT part of the plan-execute contract. Only `plan.md` crosses the handoff boundary.
 
+# DESIGN READINESS ASSESSMENT
+
+After drafting the task sequence, evaluate EVERY task for design readiness. A task is "ready for execution" if it is 95% clear — execution can fill in the remaining 5% without making design decisions.
+
+## Flagging Criteria
+
+Flag a task as **DESIGN REQUIRED** if ANY of these apply:
+
+- **Novel territory**: No existing pattern in the project to follow. The implementation approach needs to be invented, not just applied.
+- **Multiple valid approaches**: There are 2+ reasonable ways to build this, and the choice has lasting consequences. Execution shouldn't make this call.
+- **User-facing decisions**: The task involves layout, creative direction, user experience, tone, or aesthetic choices the user should weigh in on.
+- **Complex interactions**: The task touches multiple components and the interfaces between them need explicit definition before implementation.
+- **Ambiguous scope**: The task description says WHAT but the HOW has genuine options that affect quality, performance, or maintainability.
+
+Do NOT flag tasks that are:
+- Straightforward application of existing patterns
+- Mechanical wiring, boilerplate, or configuration
+- Well-understood implementations with clear precedent in the codebase
+- Simple enough that a competent engineer needs no design input
+
+## Design Recommendations Output
+
+Include this section in the plan AFTER the Task Sequence (Section 6) and BEFORE Testing Strategy (Section 7):
+
+```markdown
+### Design Recommendations
+
+| Task(s) | Item Name | Recommendation | Rationale |
+|---------|-----------|---------------|-----------|
+| Task 3, 4 | [Descriptive Name] | DESIGN REQUIRED | [Specific reason — what's unclear] |
+| Task 7 | [Descriptive Name] | DESIGN REQUIRED | [Specific reason] |
+| Task 1, 2 | [Name] | Ready for execution | [Why it's clear enough] |
+| Task 5, 6 | [Name] | Ready for execution | [Why it's clear enough] |
+
+**Design items group related tasks that share a design surface.** A single design session covers all tasks in the group. Items are named descriptively (e.g., "Behavior Tree AI System" not "Tasks 3-4").
+```
+
+When presenting the draft plan in Phase 4, explicitly call out which items you're recommending for design and why. The user confirms or adjusts during plan approval.
+
 # EXECUTABLE PLAN CHECKLIST
 
 Validate ALL before presenting the draft:
@@ -310,6 +352,8 @@ Validate ALL before presenting the draft:
 - [ ] Interface contracts provided where components interact (Comprehensive)
 - [ ] Risks have mitigations (Standard+)
 - [ ] Execution phase has enough context in Execution Notes to begin independently
+- [ ] Design Recommendations section included with every task assessed
+- [ ] Each DESIGN REQUIRED flag has a specific rationale (not generic)
 
 If any check fails, fix it before presenting.
 

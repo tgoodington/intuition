@@ -1,7 +1,7 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "5.0.0",
-  "description": "Three-agent system for software project planning and execution. Waldo (discovery), Magellan (planning), Faraday (execution) with file-based handoffs through project memory.",
+  "version": "6.0.0",
+  "description": "Four-phase workflow system for Claude Code: prompt, plan, design, execute. Domain-agnostic design exploration with ECD framework, iterative design loop, and file-based handoffs through project memory.",
   "keywords": [
     "claude-code",
     "skills",

@@ -57,7 +57,7 @@ Review the "Package Version Info" section above. Parse the version numbers from 
 2. Extract latest version from the npm view output (should be just the version number)
 3. Compare the versions:
    - If installed < latest: Add this line at the TOP of your output (before welcome message):
-     `⚠️  Update available: v[installed] → v[latest]. Run /intuition-update to install.`
+     `Update available: v[installed] -> v[latest]. Run /intuition-update to install.`
    - If versions match OR if version info is missing/errored: Say nothing about versions
    - If you cannot parse versions: Say nothing (don't block startup)
 
@@ -70,11 +70,11 @@ Read `docs/project_notes/.project-memory-state.json`. Use this decision tree:
 ```
 IF .project-memory-state.json does NOT exist:
   → PHASE: first_time
-  → ACTION: Welcome, suggest /intuition-prompt or /intuition-discovery
+  → ACTION: Welcome, suggest /intuition-prompt
 
-ELSE IF workflow.discovery.started == false OR workflow.discovery.completed == false:
-  → PHASE: discovery_in_progress
-  → ACTION: Note discovery is underway, suggest /intuition-discovery
+ELSE IF workflow.prompt.started == false OR workflow.prompt.completed == false:
+  → PHASE: prompt_in_progress
+  → ACTION: Note prompt is underway, suggest /intuition-prompt
 
 ELSE IF workflow.planning.started == false:
   → PHASE: ready_for_planning
@@ -83,6 +83,11 @@ ELSE IF workflow.planning.started == false:
 ELSE IF workflow.planning.completed == false:
   → PHASE: planning_in_progress
   → ACTION: Note planning is underway, suggest /intuition-plan
+
+ELSE IF workflow.status == "design" AND workflow.design.started == true
+     AND workflow.design.completed == false:
+  → PHASE: design_in_progress
+  → ACTION: Show design queue progress, suggest /intuition-design or /intuition-handoff
 
 ELSE IF workflow.execution.started == false:
   → PHASE: ready_for_execution
@@ -94,52 +99,42 @@ ELSE IF workflow.execution.completed == false:
 
 ELSE:
   → PHASE: complete
-  → ACTION: Celebrate, suggest /intuition-prompt or /intuition-discovery for next cycle
+  → ACTION: Celebrate, suggest /intuition-prompt for next cycle
 ```
 
 If `.project-memory-state.json` exists but is corrupted or unreadable, infer the phase from which output files exist:
-- `discovery_brief.md` exists → discovery complete
+- `discovery_brief.md` exists → prompt complete
 - `plan.md` exists → planning complete
+- `design_spec_*.md` exists → design in progress or complete
 - Ask user to confirm if ambiguous.
 
 ## PHASE HANDLERS
 
 ### First Time (No Project Memory)
 
-Output a welcome message, then use AskUserQuestion to offer the discovery choice:
+Output a welcome message, then suggest getting started:
 
 ```
 Welcome to Intuition!
 
-I don't see any project memory yet. Let's kick things off with discovery.
+I don't see any project memory yet. Let's kick things off.
+
+Run /intuition-prompt to describe what you want to build or change.
+I'll help you sharpen it into something the planning phase can run with.
 ```
 
-Then immediately use AskUserQuestion:
-```
-Question: "How would you like to start?"
-Header: "Discovery"
-Options:
-- "Prompt — I have a vision, help me sharpen it" / "Focused and fast. You describe what you want, and we'll refine it into a planning-ready brief through targeted questions. Best when you already know roughly what you're after. Runs /intuition-prompt"
-- "Discovery — I want to think this through" / "Exploratory and collaborative. We'll dig into the problem together, with research to inform smarter questions along the way. Best when you're still forming the idea. Runs /intuition-discovery"
-MultiSelect: false
-```
-
-After the user selects, tell them to run the corresponding skill:
-- If Prompt: "Run `/intuition-prompt` to get started."
-- If Discovery: "Run `/intuition-discovery` to get started."
-
-### Discovery In Progress
+### Prompt In Progress
 
 Check if `docs/project_notes/discovery_brief.md` exists for progress context.
 
 Output:
 ```
-Welcome back! Discovery is in progress.
+Welcome back! Prompt refinement is in progress.
 
 [If brief exists]: Progress saved at docs/project_notes/discovery_brief.md
-[If no brief yet]: No brief saved yet — still early in discovery.
+[If no brief yet]: No brief saved yet — still early in refinement.
 
-Run /intuition-discovery to continue.
+Run /intuition-prompt to continue.
 ```
 
 ### Ready for Planning
@@ -182,12 +177,35 @@ Plan: In progress (docs/project_notes/plan.md)
 Run /intuition-plan to continue.
 ```
 
+### Design In Progress
+
+Read `.project-memory-state.json` for design queue status. Read `docs/project_notes/design_brief.md` for current item context.
+
+Output:
+```
+Welcome back! Design exploration is in progress.
+
+Discovery: Complete
+Plan: Approved
+Design: In progress
+
+Design Queue:
+[For each item in design.items:]
+- [x] [Item Name] (completed) → design_spec_[name].md
+- [>] [Item Name] (in progress)
+- [ ] [Item Name] (pending)
+
+[If current item is in_progress]: Run /intuition-design to continue designing [current item].
+[If current item just completed]: Run /intuition-handoff to process the design and move to the next item.
+```
+
 ### Ready for Execution
 
 Read and curate from:
 - `docs/project_notes/plan.md` — extract objective, task count, approach
 - `docs/project_notes/execution_brief.md` — reference location
 - `docs/project_notes/decisions.md` — relevant ADRs
+- `docs/project_notes/design_spec_*.md` — list any design specs
 
 Output:
 ```
@@ -195,6 +213,9 @@ Welcome back! Your plan is approved and ready.
 
 Discovery: Complete
 Plan: Approved
+[If design specs exist]: Design: Complete ([N] specs)
+Execution: Ready
+
   - [N] tasks
   - Approach: [1 sentence]
   - Scope: [Simple/Moderate/Complex]
@@ -218,6 +239,7 @@ Welcome back! Execution is in progress.
 
 Discovery: Complete
 Plan: Approved
+[If design specs exist]: Design: Complete
 Execution: In progress
 
 Run /intuition-execute to continue.
@@ -225,29 +247,18 @@ Run /intuition-execute to continue.
 
 ### Complete
 
-Output a completion summary, then use AskUserQuestion to offer the next cycle choice:
+Output a completion summary:
 
 ```
 Welcome back! This workflow cycle is complete.
 
 Discovery: Complete
 Plan: Complete
+[If design was used]: Design: Complete
 Execution: Complete
 
-Ready for the next cycle?
+Ready for the next cycle? Run /intuition-prompt to start a new project or feature.
 ```
-
-Then use AskUserQuestion:
-```
-Question: "How would you like to start your next cycle?"
-Header: "Next cycle"
-Options:
-- "Prompt — I have a vision, help me sharpen it" / "Focused and fast. Refine a clear idea into a planning-ready brief. Runs /intuition-prompt"
-- "Discovery — I want to think this through" / "Exploratory and collaborative. Dig into a new problem with research-informed dialogue. Runs /intuition-discovery"
-MultiSelect: false
-```
-
-After the user selects, tell them to run the corresponding skill.
 
 ## BRIEF CURATION RULES
 
@@ -267,6 +278,11 @@ You are curating information for the user, not dumping files. Follow these rules
 - Scope: Simple/Moderate/Complex
 - One key constraint
 
+**For design summaries:**
+- Design queue status (completed/in-progress/pending)
+- Current item name
+- Number of specs produced
+
 **NEVER include:**
 - Every assumption from discovery
 - All context details
@@ -279,6 +295,7 @@ You are curating information for the user, not dumping files. Follow these rules
 - **Missing files referenced by state**: Report what you found and what's missing. Don't try to fix it. Suggest `/intuition-handoff` if briefs need regeneration.
 - **State says complete but output files missing**: "State indicates [phase] is complete but I can't find [file]. Run `/intuition-handoff` to reconcile, or check if the file was moved."
 - **User manually edited memory files**: Trust file contents as source of truth. Report what you find.
+- **Old v2.0 state schema detected** (has `discovery` instead of `prompt`): Treat `discovery` fields as `prompt` fields. Suggest running `/intuition-initialize` to update to v3.0 schema.
 
 ## VOICE
 

@@ -3,8 +3,8 @@
 /**
  * Installation script for Intuition skills
  *
- * This script is run after `npm install -g intuition`
- * It copies the /plan and /execute skills to ~/.claude/skills/ for global access
+ * This script is run after `npm install -g @tgoodington/intuition`
+ * It copies skills to ~/.claude/skills/ for global access
  */
 
 const fs = require('fs');
@@ -39,13 +39,26 @@ function error(msg) {
   console.error(`[intuition-install] ERROR: ${msg}`);
 }
 
+// All skills to install
+const skills = [
+  'intuition-start',
+  'intuition-prompt',
+  'intuition-handoff',
+  'intuition-plan',
+  'intuition-design',
+  'intuition-execute',
+  'intuition-initialize',
+  'intuition-agent-advisor',
+  'intuition-skill-guide',
+  'intuition-update'
+];
+
 // Main installation logic
 try {
   const homeDir = os.homedir();
   const claudeSkillsDir = path.join(homeDir, '.claude', 'skills');
 
-  // Get the location of the installed package (where this script is running from)
-  // In npm global installation, this is typically in node_modules/intuition/
+  // Get the location of the installed package
   const packageRoot = path.dirname(path.dirname(path.resolve(__filename)));
 
   log(`Installing Intuition skills...`);
@@ -58,135 +71,40 @@ try {
     log(`Created ${claudeSkillsDir}`);
   }
 
-  // Copy /intuition-start skill
-  const startSrc = path.join(packageRoot, 'skills', 'intuition-start');
-  const startDest = path.join(claudeSkillsDir, 'intuition-start');
-
-  if (fs.existsSync(startSrc)) {
-    copyDirRecursive(startSrc, startDest);
-    log(`✓ Installed /intuition-start skill to ${startDest}`);
-  } else {
-    error(`intuition-start skill not found at ${startSrc}`);
-    process.exit(1);
+  // Remove old discovery skill if it exists (replaced by design in v6.0)
+  const oldDiscoveryDest = path.join(claudeSkillsDir, 'intuition-discovery');
+  if (fs.existsSync(oldDiscoveryDest)) {
+    fs.rmSync(oldDiscoveryDest, { recursive: true, force: true });
+    log(`Removed old /intuition-discovery skill (replaced by /intuition-design in v6.0)`);
   }
 
-  // Copy /intuition-plan skill
-  const planSrc = path.join(packageRoot, 'skills', 'intuition-plan');
-  const planDest = path.join(claudeSkillsDir, 'intuition-plan');
+  // Install each skill
+  skills.forEach(skillName => {
+    const src = path.join(packageRoot, 'skills', skillName);
+    const dest = path.join(claudeSkillsDir, skillName);
 
-  if (fs.existsSync(planSrc)) {
-    copyDirRecursive(planSrc, planDest);
-    log(`✓ Installed /intuition-plan skill to ${planDest}`);
-  } else {
-    error(`intuition-plan skill not found at ${planSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-execute skill
-  const executeSrc = path.join(packageRoot, 'skills', 'intuition-execute');
-  const executeDest = path.join(claudeSkillsDir, 'intuition-execute');
-
-  if (fs.existsSync(executeSrc)) {
-    copyDirRecursive(executeSrc, executeDest);
-    log(`✓ Installed /intuition-execute skill to ${executeDest}`);
-  } else {
-    error(`intuition-execute skill not found at ${executeSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-initialize skill
-  const initializeSrc = path.join(packageRoot, 'skills', 'intuition-initialize');
-  const initializeDest = path.join(claudeSkillsDir, 'intuition-initialize');
-
-  if (fs.existsSync(initializeSrc)) {
-    copyDirRecursive(initializeSrc, initializeDest);
-    log(`✓ Installed /intuition-initialize skill to ${initializeDest}`);
-  } else {
-    error(`intuition-initialize skill not found at ${initializeSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-discovery skill
-  const discoverySrc = path.join(packageRoot, 'skills', 'intuition-discovery');
-  const discoveryDest = path.join(claudeSkillsDir, 'intuition-discovery');
-
-  if (fs.existsSync(discoverySrc)) {
-    copyDirRecursive(discoverySrc, discoveryDest);
-    log(`✓ Installed /intuition-discovery skill to ${discoveryDest}`);
-  } else {
-    error(`intuition-discovery skill not found at ${discoverySrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-handoff skill
-  const handoffSrc = path.join(packageRoot, 'skills', 'intuition-handoff');
-  const handoffDest = path.join(claudeSkillsDir, 'intuition-handoff');
-
-  if (fs.existsSync(handoffSrc)) {
-    copyDirRecursive(handoffSrc, handoffDest);
-    log(`✓ Installed /intuition-handoff skill to ${handoffDest}`);
-  } else {
-    error(`intuition-handoff skill not found at ${handoffSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-agent-advisor skill
-  const agentAdvisorSrc = path.join(packageRoot, 'skills', 'intuition-agent-advisor');
-  const agentAdvisorDest = path.join(claudeSkillsDir, 'intuition-agent-advisor');
-
-  if (fs.existsSync(agentAdvisorSrc)) {
-    copyDirRecursive(agentAdvisorSrc, agentAdvisorDest);
-    log(`✓ Installed /intuition-agent-advisor skill to ${agentAdvisorDest}`);
-  } else {
-    error(`intuition-agent-advisor skill not found at ${agentAdvisorSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-skill-guide skill
-  const skillGuideSrc = path.join(packageRoot, 'skills', 'intuition-skill-guide');
-  const skillGuideDest = path.join(claudeSkillsDir, 'intuition-skill-guide');
-
-  if (fs.existsSync(skillGuideSrc)) {
-    copyDirRecursive(skillGuideSrc, skillGuideDest);
-    log(`✓ Installed /intuition-skill-guide skill to ${skillGuideDest}`);
-  } else {
-    error(`intuition-skill-guide skill not found at ${skillGuideSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-update skill
-  const updateSrc = path.join(packageRoot, 'skills', 'intuition-update');
-  const updateDest = path.join(claudeSkillsDir, 'intuition-update');
-
-  if (fs.existsSync(updateSrc)) {
-    copyDirRecursive(updateSrc, updateDest);
-    log(`✓ Installed /intuition-update skill to ${updateDest}`);
-  } else {
-    error(`intuition-update skill not found at ${updateSrc}`);
-    process.exit(1);
-  }
-
-  // Copy /intuition-prompt skill
-  const promptSrc = path.join(packageRoot, 'skills', 'intuition-prompt');
-  const promptDest = path.join(claudeSkillsDir, 'intuition-prompt');
-
-  if (fs.existsSync(promptSrc)) {
-    copyDirRecursive(promptSrc, promptDest);
-    log(`✓ Installed /intuition-prompt skill to ${promptDest}`);
-  } else {
-    error(`intuition-prompt skill not found at ${promptSrc}`);
-    process.exit(1);
-  }
+    if (fs.existsSync(src)) {
+      copyDirRecursive(src, dest);
+      log(`\u2713 Installed /${skillName} skill to ${dest}`);
+    } else {
+      error(`${skillName} skill not found at ${src}`);
+      process.exit(1);
+    }
+  });
 
   // Verify installation
-  if (fs.existsSync(startDest) && fs.existsSync(planDest) && fs.existsSync(executeDest) && fs.existsSync(initializeDest) && fs.existsSync(discoveryDest) && fs.existsSync(handoffDest) && fs.existsSync(agentAdvisorDest) && fs.existsSync(skillGuideDest) && fs.existsSync(updateDest) && fs.existsSync(promptDest)) {
-    log(`✓ Installation complete!`);
+  const allInstalled = skills.every(skillName =>
+    fs.existsSync(path.join(claudeSkillsDir, skillName))
+  );
+
+  if (allInstalled) {
+    log(`\u2713 Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start          - Load project context and detect workflow phase`);
-    log(`  /intuition-discovery      - Exploratory discovery (research-informed dialogue)`);
     log(`  /intuition-prompt         - Focused discovery (prompt-engineering refinement)`);
-    log(`  /intuition-handoff        - Handoff orchestrator (phase transitions)`);
-    log(`  /intuition-plan           - Strategic planning (ARCH protocol)`);
+    log(`  /intuition-handoff        - Handoff orchestrator (phase transitions + design loop)`);
+    log(`  /intuition-plan           - Strategic planning (ARCH protocol + design flagging)`);
+    log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
     log(`  /intuition-execute        - Execution orchestrator (subagent delegation)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);

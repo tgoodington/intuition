@@ -1,9 +1,9 @@
 {
   "initialized": true,
-  "version": "2.0",
+  "version": "3.0",
   "workflow": {
     "status": "none",
-    "discovery": {
+    "prompt": {
       "started": false,
       "started_at": null,
       "completed": false,
@@ -16,6 +16,13 @@
       "completed": false,
       "completed_at": null,
       "approved": false
+    },
+    "design": {
+      "started": false,
+      "completed": false,
+      "completed_at": null,
+      "items": [],
+      "current_item": null
     },
     "execution": {
       "started": false,

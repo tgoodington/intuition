@@ -3,8 +3,8 @@
 /**
  * Uninstallation script for Intuition skills
  *
- * This script is run before `npm uninstall -g intuition`
- * It removes the /plan and /execute skills from ~/.claude/skills/
+ * This script is run before `npm uninstall -g @tgoodington/intuition`
+ * It removes all Intuition skills from ~/.claude/skills/
  */
 
 const fs = require('fs');
@@ -40,20 +40,26 @@ try {
     process.exit(0);
   }
 
-  // Remove all Intuition skills
+  // Remove all Intuition skills (current + legacy)
   const skillsToRemove = [
     'intuition-start',
-    'intuition-initialize',
-    'intuition-discovery',
+    'intuition-prompt',
     'intuition-handoff',
     'intuition-plan',
-    'intuition-execute'
+    'intuition-design',
+    'intuition-execute',
+    'intuition-initialize',
+    'intuition-agent-advisor',
+    'intuition-skill-guide',
+    'intuition-update',
+    // Legacy skills (removed in v6.0)
+    'intuition-discovery'
   ];
 
   skillsToRemove.forEach(skillName => {
     const skillDest = path.join(claudeSkillsDir, skillName);
     if (removeDir(skillDest)) {
-      log(`✓ Removed /${skillName} skill from ${skillDest}`);
+      log(`\u2713 Removed /${skillName} skill from ${skillDest}`);
     }
   });
 
@@ -62,19 +68,21 @@ try {
     const remaining = fs.readdirSync(claudeSkillsDir);
     if (remaining.length === 0) {
       fs.rmSync(claudeSkillsDir, { force: true });
-      log(`✓ Removed empty skills directory`);
+      log(`\u2713 Removed empty skills directory`);
 
       // Also clean up .claude if it's empty
       const claudeDir = path.join(homeDir, '.claude');
-      const claudeRemaining = fs.readdirSync(claudeDir);
-      if (claudeRemaining.length === 0) {
-        fs.rmSync(claudeDir, { force: true });
-        log(`✓ Removed empty .claude directory`);
+      if (fs.existsSync(claudeDir)) {
+        const claudeRemaining = fs.readdirSync(claudeDir);
+        if (claudeRemaining.length === 0) {
+          fs.rmSync(claudeDir, { force: true });
+          log(`\u2713 Removed empty .claude directory`);
+        }
       }
     }
   }
 
-  log(`✓ Uninstallation complete!`);
+  log(`\u2713 Uninstallation complete!`);
 
 } catch (err) {
   error(`Uninstallation failed: ${err.message}`);

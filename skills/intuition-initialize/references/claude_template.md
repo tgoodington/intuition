@@ -1,36 +1,46 @@
 ## Project Workflow and Memory System
 
-This project uses a three-phase workflow coordinated by the Intuition system, with institutional knowledge maintained in `docs/project_notes/` for consistency across sessions.
+This project uses a four-phase workflow coordinated by the Intuition system, with institutional knowledge maintained in `docs/project_notes/` for consistency across sessions.
 
 ### Workflow Phases
 
 The project follows a structured workflow with handoff transitions between phases:
 
-**Discovery (Waldo)** — `/intuition-discovery`
-- Deep understanding of the problem through collaborative dialogue
-- Framework: GAPP (Problem → Goals → UX Context → Personalization)
+**Prompt** — `/intuition-prompt`
+- Transforms a rough vision into a precise, planning-ready discovery brief
+- Framework: Capture → Refine → Reflect → Confirm
 - Output: `discovery_brief.md` and `discovery_output.json`
 
 **Handoff** — `/intuition-handoff`
 - Processes phase outputs, updates memory files, generates brief for next agent
-- Runs between every phase transition (discovery→planning and planning→execution)
+- Runs between every phase transition
+- Manages the design loop (item-by-item design cycles)
 - ONLY component that writes to `.project-memory-state.json`
 
-**Planning (Magellan)** — `/intuition-plan`
+**Planning** — `/intuition-plan`
 - Strategic synthesis and structured execution planning
 - Researches codebase, identifies patterns, creates detailed plan
-- Output: `plan.md` with tasks, dependencies, risks
+- Flags tasks requiring design exploration with rationale
+- Output: `plan.md` with tasks, dependencies, risks, design recommendations
 
-**Execution (Faraday)** — `/intuition-execute`
+**Design** — `/intuition-design`
+- Detailed design exploration for flagged plan items
+- Framework: ECD (Elements, Connections, Dynamics)
+- Domain-agnostic: works for code, world building, UI, documents, or any creative/structural work
+- Runs once per flagged item in a loop managed by handoff
+- Output: `design_spec_[item].md` per item
+
+**Execution** — `/intuition-execute`
 - Methodical implementation with verification and quality checks
 - Delegates to specialized sub-agents, coordinates work, verifies outputs
+- Reads both plan.md and design specs for implementation guidance
 - Output: Implemented features, updated memory, completion report
 
 **Session Primer** — `/intuition-start`
 - Loads project context, detects workflow phase, suggests next step
 - Run at the start of any session to get oriented
 
-**Recommended Flow**: Discovery → Handoff → Planning → Handoff → Execution → Handoff
+**Recommended Flow**: Prompt → Handoff → Plan → Handoff → [Design Loop] → Handoff → Execute → Handoff
 
 ### Memory Files
 
@@ -42,10 +52,12 @@ The project follows a structured workflow with handoff transitions between phase
 - **.project-memory-state.json** — Workflow phase tracking and session state
 
 **Phase Output Files** (created during workflow):
-- **discovery_brief.md** — Discovery phase synthesis (created by Waldo)
-- **discovery_output.json** — Structured findings (created by Waldo, processed by Handoff)
+- **discovery_brief.md** — Prompt phase synthesis
+- **discovery_output.json** — Structured findings (processed by Handoff)
 - **planning_brief.md** — Brief for planning phase (created by Handoff)
-- **plan.md** — Structured project plan (created by Magellan)
+- **plan.md** — Structured project plan with design recommendations
+- **design_brief.md** — Brief for current design item (created/updated by Handoff)
+- **design_spec_[item].md** — Design specifications per item
 - **execution_brief.md** — Brief for execution phase (created by Handoff)
 
 ### Memory-Aware Protocols
@@ -77,14 +89,17 @@ The project follows a structured workflow with handoff transitions between phase
 
 ### Smart Skill Suggestions
 
-**When discovery is complete:**
-- "Discovery looks complete! Use `/intuition-handoff` to process insights and prepare for planning."
+**When prompt refinement is complete:**
+- "Prompt refinement looks complete! Use `/intuition-handoff` to process insights and prepare for planning."
 
 **When user suggests planning work:**
 - "This sounds like a good candidate for planning. Use `/intuition-handoff` to process discovery, then `/intuition-plan` to develop a structured approach."
 
-**When plan is ready for execution:**
-- "The plan looks ready! Use `/intuition-handoff` to prepare execution context, then `/intuition-execute` to begin."
+**When plan is ready and has design items:**
+- "The plan looks ready! Use `/intuition-handoff` to review design recommendations and start the design loop."
+
+**When design items are complete:**
+- "All design specs are done! Use `/intuition-handoff` to prepare the execution brief."
 
 **When user is ready to execute:**
 - "Execution brief is ready! Use `/intuition-execute` to kick off coordinated implementation."

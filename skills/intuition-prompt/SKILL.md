@@ -1,6 +1,6 @@
 ---
 name: intuition-prompt
-description: Prompt-engineering discovery. Transforms a rough vision into a precise, planning-ready discovery brief through focused iterative refinement. Use instead of /intuition-discovery when you already know roughly what you want and need to sharpen it.
+description: Prompt-engineering discovery. Transforms a rough vision into a precise, planning-ready discovery brief through focused iterative refinement. The primary entry point for all new work in the Intuition workflow.
 model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion
 allowed-tools: Read, Write, Glob, Grep, Task

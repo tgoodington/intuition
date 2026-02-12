@@ -32,6 +32,7 @@ Step 1: Detect existing setup
 Step 2: Create memory directory and files from templates
 Step 3: Create .project-memory-state.json with v2.0 workflow schema
 Step 4: Update CLAUDE.md with workflow protocols
+Step 4.5: Create INTUITION.md framework overview
 Step 5: Offer optional components (AGENTS.md, settings, user profile)
 Step 6: Report completion and suggest next step
 ```
@@ -84,13 +85,15 @@ Do NOT create workflow output files (discovery_brief.md, plan.md, execution_brie
 
 Read `references/state_template.json` and write to `docs/project_notes/.project-memory-state.json`.
 
-The state file uses the v2.0 WORKFLOW schema:
+The state file uses the v3.0 WORKFLOW schema:
 
 ```json
 {
+  "initialized": true,
+  "version": "3.0",
   "workflow": {
     "status": "none",
-    "discovery": {
+    "prompt": {
       "started": false,
       "completed": false,
       "started_at": null,
@@ -104,19 +107,28 @@ The state file uses the v2.0 WORKFLOW schema:
       "completed_at": null,
       "approved": false
     },
+    "design": {
+      "started": false,
+      "completed": false,
+      "completed_at": null,
+      "items": [],
+      "current_item": null
+    },
     "execution": {
       "started": false,
       "completed": false,
       "started_at": null,
       "completed_at": null
     }
-  }
+  },
+  "last_handoff": null,
+  "last_handoff_transition": null
 }
 ```
 
 **CRITICAL**: This is the authoritative schema. Handoff is the ONLY skill that updates this file after initialization. All other skills read it but NEVER write to it.
 
-Do NOT use the old v1.0 schema that had `personalization`, `waldo_greeted`, `plan_created`, or `plan_status` fields. That schema is obsolete.
+Do NOT use older schemas (v1.0 with `personalization` fields, or v2.0 with `discovery` instead of `prompt`). Those schemas are obsolete.
 
 ## STEP 4: UPDATE CLAUDE.MD
 
@@ -133,10 +145,25 @@ IF CLAUDE.md does NOT exist:
 ```
 
 The template includes:
-- Three-phase workflow description (discovery → handoff → plan → handoff → execute)
+- Four-phase workflow description (prompt → plan → design → execute with handoffs)
 - Memory file descriptions and locations
 - Memory-aware protocols (check decisions before changes, search bugs before debugging)
-- Smart skill suggestions (when to suggest /intuition-discovery, /intuition-plan, etc.)
+- Smart skill suggestions (when to suggest /intuition-prompt, /intuition-plan, /intuition-design, etc.)
+
+## STEP 4.5: CREATE INTUITION.MD
+
+Read `references/intuition_readme_template.md` and write to `INTUITION.md` at the project root (same level as CLAUDE.md).
+
+```
+IF INTUITION.md already exists:
+  → Ask user: "INTUITION.md already exists. Overwrite with current version?"
+  → If no, skip
+
+IF INTUITION.md does NOT exist:
+  → Create it from template
+```
+
+This is a brief, human-readable overview of the Intuition workflow. It helps anyone on the project understand what the skills do and how to use them.
 
 ## STEP 5: OPTIONAL COMPONENTS
 
@@ -199,12 +226,13 @@ Created:
 - docs/project_notes/decisions.md
 - docs/project_notes/key_facts.md
 - docs/project_notes/issues.md
-- docs/project_notes/.project-memory-state.json (v2.0 workflow schema)
+- docs/project_notes/.project-memory-state.json (v3.0 workflow schema)
 - CLAUDE.md workflow protocols
+- INTUITION.md framework overview
 
 [List any optional components created]
 
-Next step: Run /intuition-discovery to start exploring your problem,
+Next step: Run /intuition-prompt to describe what you want to build,
 or /intuition-start to check project status.
 ```
 
@@ -228,6 +256,9 @@ These template files are in the `references/` directory. Use Read tool to access
 **State template** (used in Step 3):
 - `state_template.json` — v2.0 workflow schema
 
+**Framework overview** (used in Step 4.5):
+- `intuition_readme_template.md` — high-level workflow overview for INTUITION.md
+
 **Configuration templates** (used in Steps 4-5):
 - `claude_template.md` — workflow protocols for CLAUDE.md
 - `agents_template.md` — agent registry for AGENTS.md
@@ -237,6 +268,7 @@ These template files are in the `references/` directory. Use Read tool to access
 **Workflow output templates** (NOT used by initialize — used by handoff):
 - `discovery_output_template.json`
 - `planning_brief_template.md`
+- `design_brief_template.md`
 - `execution_brief_template.md`
 
 ## MEMORY FILE FORMATS
