@@ -35,6 +35,8 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 5. You MUST NOT "refresh" or "regenerate" briefs — that's handoff's job.
 6. You MUST NOT manage .project-memory-state.json — handoff owns state transitions.
 7. You MUST keep output concise. Curate, don't dump.
+8. You MUST resolve context_path from active_context before reading any workflow artifacts.
+9. If state has version "3.0" or no active_context field, you MUST warn the user to upgrade — do not attempt phase detection on v3.0 state.
 
 ## PROTOCOL: COMPLETE FLOW
 
@@ -43,10 +45,12 @@ Execute these steps in order:
 ```
 Step 0: Check package version and notify if update available (non-blocking)
 Step 1: Check for docs/project_notes/.project-memory-state.json
-Step 2: Detect current phase using decision tree
-Step 3: Load relevant memory files for context
-Step 4: Curate a concise status summary
-Step 5: Suggest the correct next skill
+Step 2: Detect schema version; warn if v3.0
+Step 3: Resolve active_context and context_path
+Step 4: Detect current phase using decision tree
+Step 5: Load relevant memory files for context
+Step 6: Curate a concise status summary
+Step 7: Suggest the correct next skill
 ```
 
 ## VERSION CHECK (Step 0)
@@ -63,56 +67,90 @@ Review the "Package Version Info" section above. Parse the version numbers from 
 
 IMPORTANT: This check is NON-BLOCKING. If the version commands failed or output is unparseable, skip version notification and proceed with normal protocol. NEVER let version checking prevent you from completing the session primer.
 
-## PHASE DETECTION
+## SCHEMA VERSION CHECK (Step 2)
 
-Read `docs/project_notes/.project-memory-state.json`. Use this decision tree:
+After reading `.project-memory-state.json`, check the version field:
+
+```
+IF state.version == "3.0" OR state.active_context is missing:
+  → STOP phase detection
+  → OUTPUT:
+    "This project uses the v3.0 state schema, which is no longer compatible
+    with Intuition v7.0+. Run /intuition-handoff or /intuition-initialize
+    to upgrade to v4.0."
+  → END protocol here
+```
+
+## CONTEXT PATH RESOLUTION (Step 3)
+
+After confirming v4.0 schema:
+
+```
+active_context = state.active_context   (e.g. "trunk" or "feature-auth")
+
+IF active_context == "trunk":
+  context_path = "docs/project_notes/trunk/"
+  context_workflow = state.trunk
+ELSE:
+  context_path = "docs/project_notes/branches/{active_context}/"
+  context_workflow = state.branches[active_context]
+```
+
+Use `context_path` for ALL artifact reads in this session.
+Use `context_workflow` for ALL phase detection.
+
+## PHASE DETECTION (Step 4)
+
+Use `context_workflow` resolved above. Apply this decision tree:
 
 ```
 IF .project-memory-state.json does NOT exist:
   → PHASE: first_time
-  → ACTION: Welcome, suggest /intuition-prompt
 
-ELSE IF workflow.prompt.started == false OR workflow.prompt.completed == false:
-  → PHASE: prompt_in_progress
-  → ACTION: Note prompt is underway, suggest /intuition-prompt
+ELSE IF any context is complete AND no context is in-progress:
+  → PHASE: post_completion
 
-ELSE IF workflow.planning.started == false:
-  → PHASE: ready_for_planning
-  → ACTION: Summarize discovery, suggest /intuition-plan
+ELSE IF a context is in-progress (active_context has status not "complete"):
+  Apply the following against context_workflow:
 
-ELSE IF workflow.planning.completed == false:
-  → PHASE: planning_in_progress
-  → ACTION: Note planning is underway, suggest /intuition-plan
+  IF context_workflow.workflow.prompt.started == false
+  OR context_workflow.workflow.prompt.completed == false:
+    → PHASE: prompt_in_progress
 
-ELSE IF workflow.status == "design" AND workflow.design.started == true
-     AND workflow.design.completed == false:
-  → PHASE: design_in_progress
-  → ACTION: Show design queue progress, suggest /intuition-design or /intuition-handoff
+  ELSE IF context_workflow.workflow.planning.started == false:
+    → PHASE: ready_for_planning
 
-ELSE IF workflow.execution.started == false:
-  → PHASE: ready_for_execution
-  → ACTION: Summarize plan, suggest /intuition-execute
+  ELSE IF context_workflow.workflow.planning.completed == false:
+    → PHASE: planning_in_progress
 
-ELSE IF workflow.execution.completed == false:
-  → PHASE: execution_in_progress
-  → ACTION: Note execution progress, suggest /intuition-execute
+  ELSE IF context_workflow.status == "design"
+       AND context_workflow.workflow.design.started == true
+       AND context_workflow.workflow.design.completed == false:
+    → PHASE: design_in_progress
 
-ELSE:
-  → PHASE: complete
-  → ACTION: Celebrate, suggest /intuition-prompt for next cycle
+  ELSE IF context_workflow.workflow.execution.started == false:
+    → PHASE: ready_for_execution
+
+  ELSE IF context_workflow.workflow.execution.completed == false:
+    → PHASE: execution_in_progress
+
+  ELSE:
+    → PHASE: post_completion
 ```
 
-If `.project-memory-state.json` exists but is corrupted or unreadable, infer the phase from which output files exist:
-- `discovery_brief.md` exists → prompt complete
-- `plan.md` exists → planning complete
-- `design_spec_*.md` exists → design in progress or complete
+**"Any context is complete"** means: `state.trunk.status == "complete"` OR any entry in `state.branches` has `status == "complete"`.
+
+**"No context is in-progress"** means: `state.trunk.status` is not in `["prompt","planning","design","executing"]` AND no branch has status in those values.
+
+If `.project-memory-state.json` exists but is corrupted or unreadable, infer phase from which files exist under `context_path`:
+- `{context_path}discovery_brief.md` exists → prompt complete
+- `{context_path}plan.md` exists → planning complete
+- `{context_path}design_spec_*.md` exist → design in progress or complete
 - Ask user to confirm if ambiguous.
 
 ## PHASE HANDLERS
 
 ### First Time (No Project Memory)
-
-Output a welcome message, then suggest getting started:
 
 ```
 Welcome to Intuition!
@@ -123,15 +161,78 @@ Run /intuition-prompt to describe what you want to build or change.
 I'll help you sharpen it into something the planning phase can run with.
 ```
 
+### Post-Completion
+
+Read the state file and build the status tree. Read `{context_path}plan.md` for the trunk objective (first sentence of Section 1).
+
+Display:
+
+```
+Welcome back! Here's your project status:
+
+Project Status:
+├── Trunk: [status]
+│   └── "[trunk objective — 1 sentence]"
+[For each branch in state.branches:]
+├── Branch: [display_name] (from [created_from]): [status]
+│   └── "[purpose]"
+```
+
+Status labels: `none` → "Not started", `prompt` → "Prompting...", `planning` → "Planning...", `design` → "Designing...", `executing` → "Executing...", `complete` → "Complete"
+
+**If any context is in-progress:**
+
+```
+You have work in progress on [context display name] (status: [status]).
+Run /intuition-[next skill] to continue.
+```
+
+Do NOT proceed to the two-choice prompt — resume the in-progress context instead.
+
+**If all contexts are complete (or only complete + none):**
+
+Use AskUserQuestion:
+
+```
+Question: "All current work is complete. What's next?"
+Header: "Next Step"
+Options:
+- "Create a new branch (new feature or change)"
+- "Troubleshoot an issue (/intuition-engineer)"
+```
+
+**If "Create a new branch":**
+
+Collect the following via sequential AskUserQuestion prompts:
+
+1. Branch name: "What should we call this branch? Use a short, descriptive name (e.g. feature-auth, caching-layer, ui-overhaul)." (Header: "Branch Name")
+2. Branch purpose: "In one sentence, what will this branch accomplish?" (Header: "Branch Purpose")
+3. Parent context (only if multiple completed contexts exist): "Which completed context should this branch build from?" with options listing each completed context. (Header: "Branch From")
+   - If only one completed context exists, auto-select it and tell the user.
+
+Then tell the user:
+
+```
+Got it. Branch "[name]" will [purpose], building from [parent].
+
+Run /intuition-handoff to register the branch and begin.
+Pass along: branch name "[name]", purpose "[purpose]", parent "[parent]".
+```
+
+**If "Troubleshoot":**
+
+```
+Run /intuition-engineer to diagnose and fix issues in any completed context.
+```
+
 ### Prompt In Progress
 
-Check if `docs/project_notes/discovery_brief.md` exists for progress context.
+Check if `{context_path}discovery_brief.md` exists.
 
-Output:
 ```
 Welcome back! Prompt refinement is in progress.
 
-[If brief exists]: Progress saved at docs/project_notes/discovery_brief.md
+[If brief exists]: Progress saved at {context_path}discovery_brief.md
 [If no brief yet]: No brief saved yet — still early in refinement.
 
 Run /intuition-prompt to continue.
@@ -140,11 +241,10 @@ Run /intuition-prompt to continue.
 ### Ready for Planning
 
 Read and curate from:
-- `docs/project_notes/discovery_brief.md` — extract problem, goals, constraints
-- `docs/project_notes/planning_brief.md` — reference location (don't read in detail)
+- `{context_path}discovery_brief.md` — extract problem, goals, constraints
+- `{context_path}planning_brief.md` — reference location (don't read in detail)
 - `docs/project_notes/decisions.md` — extract 2-4 recent ADRs
 
-Output:
 ```
 Welcome back! Discovery is complete.
 
@@ -156,21 +256,20 @@ Here's what was discovered:
 Relevant Decisions:
 - [ADR titles if any exist]
 
-Planning brief ready at: docs/project_notes/planning_brief.md
+Planning brief ready at: {context_path}planning_brief.md
 
 Run /intuition-plan to create a structured plan.
 ```
 
 ### Planning In Progress
 
-Read `docs/project_notes/plan.md` for task count and scope.
+Read `{context_path}plan.md` for task count and scope.
 
-Output:
 ```
 Welcome back! Planning is in progress.
 
 Discovery: Complete
-Plan: In progress (docs/project_notes/plan.md)
+Plan: In progress ({context_path}plan.md)
   - [N] tasks identified so far
   - Scope: [Simple/Moderate/Complex if determinable]
 
@@ -179,9 +278,8 @@ Run /intuition-plan to continue.
 
 ### Design In Progress
 
-Read `.project-memory-state.json` for design queue status. Read `docs/project_notes/design_brief.md` for current item context.
+Read `.project-memory-state.json` for design queue status. Read `{context_path}design_brief.md` for current item context.
 
-Output:
 ```
 Welcome back! Design exploration is in progress.
 
@@ -190,8 +288,8 @@ Plan: Approved
 Design: In progress
 
 Design Queue:
-[For each item in design.items:]
-- [x] [Item Name] (completed) → design_spec_[name].md
+[For each item in context_workflow.workflow.design.items:]
+- [x] [Item Name] (completed) → {context_path}design_spec_[name].md
 - [>] [Item Name] (in progress)
 - [ ] [Item Name] (pending)
 
@@ -202,12 +300,11 @@ Design Queue:
 ### Ready for Execution
 
 Read and curate from:
-- `docs/project_notes/plan.md` — extract objective, task count, approach
-- `docs/project_notes/execution_brief.md` — reference location
+- `{context_path}plan.md` — extract objective, task count, approach
+- `{context_path}execution_brief.md` — reference location
 - `docs/project_notes/decisions.md` — relevant ADRs
-- `docs/project_notes/design_spec_*.md` — list any design specs
+- `{context_path}design_spec_*.md` — list any design specs
 
-Output:
 ```
 Welcome back! Your plan is approved and ready.
 
@@ -224,16 +321,15 @@ Key context:
 - Problem: [1 sentence from discovery]
 - Main constraint: [most limiting]
 
-Execution brief ready at: docs/project_notes/execution_brief.md
+Execution brief ready at: {context_path}execution_brief.md
 
 Run /intuition-execute to begin implementation.
 ```
 
 ### Execution In Progress
 
-Read plan.md for total tasks and any execution state available.
+Read `{context_path}plan.md` for total tasks and any execution state available.
 
-Output:
 ```
 Welcome back! Execution is in progress.
 
@@ -243,21 +339,6 @@ Plan: Approved
 Execution: In progress
 
 Run /intuition-execute to continue.
-```
-
-### Complete
-
-Output a completion summary:
-
-```
-Welcome back! This workflow cycle is complete.
-
-Discovery: Complete
-Plan: Complete
-[If design was used]: Design: Complete
-Execution: Complete
-
-Ready for the next cycle? Run /intuition-prompt to start a new project or feature.
 ```
 
 ## BRIEF CURATION RULES
@@ -295,7 +376,9 @@ You are curating information for the user, not dumping files. Follow these rules
 - **Missing files referenced by state**: Report what you found and what's missing. Don't try to fix it. Suggest `/intuition-handoff` if briefs need regeneration.
 - **State says complete but output files missing**: "State indicates [phase] is complete but I can't find [file]. Run `/intuition-handoff` to reconcile, or check if the file was moved."
 - **User manually edited memory files**: Trust file contents as source of truth. Report what you find.
-- **Old v2.0 state schema detected** (has `discovery` instead of `prompt`): Treat `discovery` fields as `prompt` fields. Suggest running `/intuition-initialize` to update to v3.0 schema.
+- **Old v2.0 state schema detected** (has `discovery` instead of `prompt`): Treat `discovery` fields as `prompt` fields. Suggest running `/intuition-initialize` to update to current schema.
+- **State file exists but active_context is null or missing**: Treat as v3.0 — output the upgrade warning and stop.
+- **Branch referenced in active_context but not found in branches map**: Report the inconsistency and suggest `/intuition-handoff` to reconcile state.
 
 ## VOICE
 

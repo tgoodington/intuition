@@ -22,6 +22,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 6. You MUST route to `/intuition-handoff` at the end. NEVER to `/intuition-plan` directly.
 7. You MUST NOT ask about the user's motivations, feelings, philosophical drivers, or personal constraints. Ask about what the solution DOES, not why the person cares.
 8. You MUST NOT open a response with a compliment. No "Great!", "Smart!", "That's compelling!" Show you heard them through substance, not praise.
+9. You MUST read `.project-memory-state.json` to determine the active context path before writing any files. NEVER write to the root `docs/project_notes/` — always write to the resolved context_path.
 
 ## PROTOCOL: FOUR-PHASE FLOW
 
@@ -34,12 +35,42 @@ Phase 4: CONFIRM   (1 turn)    — Draft brief, approve, write files, route to h
 
 Target: 5-7 total turns. Every turn directly refines the output artifact.
 
+## STARTUP: CONTEXT PATH RESOLUTION
+
+Before doing anything else, run this resolution step:
+
+```
+1. Read .project-memory-state.json
+2. Get active_context value
+3. IF active_context == "trunk":
+     context_path = "docs/project_notes/trunk/"
+   ELSE:
+     context_path = "docs/project_notes/branches/{active_context}/"
+     branch = state.branches[active_context]
+     branch_display_name = branch.display_name
+     branch_created_from = branch.created_from
+     branch_purpose = branch.purpose
+4. Use context_path for ALL file reads and writes in this session
+```
+
 ## PHASE 1: CAPTURE
 
-Your first response when invoked. No preamble, no mode selection, no research. One warm prompt:
+Your first response when invoked. No preamble, no mode selection, no research.
+
+**If active_context is trunk**, use this opening:
 
 ```
 Tell me what you want to build or change. Be as rough or specific as you like —
+I'll help you sharpen it into something the planning phase can run with.
+```
+
+**If active_context is a branch**, use this opening:
+
+```
+You're working on branch "[branch_display_name]" (from [branch_created_from]).
+Branch purpose: [branch_purpose]
+
+Tell me what you want to build or change for this branch.
 I'll help you sharpen it into something the planning phase can run with.
 ```
 
@@ -139,7 +170,7 @@ If they want adjustments, address them (1-2 more turns max), then re-present. If
 
 Write the output files and route to handoff.
 
-### Write `docs/project_notes/discovery_brief.md`
+### Write `{context_path}/discovery_brief.md`
 
 ```markdown
 # Discovery Brief: [Problem Title]
@@ -176,7 +207,7 @@ Write the output files and route to handoff.
 - [Assumption that needs validation]
 ```
 
-### Write `docs/project_notes/discovery_output.json`
+### Write `{context_path}/discovery_output.json`
 
 ```json
 {

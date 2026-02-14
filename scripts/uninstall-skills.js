@@ -48,6 +48,7 @@ try {
     'intuition-plan',
     'intuition-design',
     'intuition-execute',
+    'intuition-engineer',
     'intuition-initialize',
     'intuition-agent-advisor',
     'intuition-skill-guide',

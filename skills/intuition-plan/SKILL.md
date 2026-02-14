@@ -10,20 +10,22 @@ allowed-tools: Read, Write, Glob, Grep, Task, Bash, WebFetch
 
 These are non-negotiable. Violating any of these means the protocol has failed.
 
-1. You MUST read `docs/project_notes/discovery_brief.md` before planning. If missing, stop and tell the user to run `/intuition-prompt`.
-2. You MUST launch orientation research agents during Intake, after reading the discovery brief but BEFORE your first AskUserQuestion.
-3. You MUST use ARCH coverage tracking. Homestretch only unlocks when Actors, Reach, and Choices are sufficiently explored.
-4. You MUST ask exactly ONE question per turn via AskUserQuestion. For decisional questions, present 2-3 options with trade-offs. For informational questions (gathering facts, confirming understanding), present relevant options but trade-off analysis is not required.
-5. You MUST get explicit user approval before saving the plan.
-6. You MUST save the final plan to `docs/project_notes/plan.md`.
-7. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
-8. You MUST write interim artifacts to `docs/project_notes/.planning_research/` for context management.
-9. You MUST validate against the Executable Plan Checklist before presenting the draft plan.
-10. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
-11. You MUST NOT modify `discovery_brief.md` or `planning_brief.md`.
-12. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
-13. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
-14. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
+1. You MUST read `.project-memory-state.json` on startup to determine `active_context` and resolve `context_path`. Use context_path for ALL file reads and writes.
+2. You MUST read `{context_path}/discovery_brief.md` before planning. If missing, stop and tell the user to run `/intuition-prompt`.
+3. You MUST launch orientation research agents during Intake, after reading the discovery brief but BEFORE your first AskUserQuestion.
+4. You MUST use ARCH coverage tracking. Homestretch only unlocks when Actors, Reach, and Choices are sufficiently explored.
+5. You MUST ask exactly ONE question per turn via AskUserQuestion. For decisional questions, present 2-3 options with trade-offs. For informational questions (gathering facts, confirming understanding), present relevant options but trade-off analysis is not required.
+6. You MUST get explicit user approval before saving the plan.
+7. You MUST save the final plan to `{context_path}/plan.md`.
+8. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
+9. You MUST write interim artifacts to `{context_path}/.planning_research/` for context management.
+10. You MUST validate against the Executable Plan Checklist before presenting the draft plan.
+11. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
+12. You MUST NOT modify `discovery_brief.md` or `planning_brief.md`.
+13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
+14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
+15. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
+16. When planning on a branch, you MUST read the parent context's plan.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 
 REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-execute`.
 
@@ -42,6 +44,8 @@ Sufficiency thresholds scale with the selected depth tier:
 - **Lightweight**: Actors confirmed, Reach identified, key Choices resolved. Minimal depth.
 - **Standard**: Actors mapped with tensions identified, Reach fully scoped, all major Choices resolved with research.
 - **Comprehensive**: Actors deeply analyzed, Reach mapped with integration points, all Choices resolved with multiple options evaluated and documented.
+
+When on a branch, the Reach dimension explicitly includes intersection with parent. The Choices dimension must acknowledge inherited decisions from the parent plan.
 
 # VOICE
 
@@ -101,6 +105,22 @@ Prompt: "Analyze this project's codebase structure. Report on: (1) top-level dir
 Prompt: "Analyze this project's codebase for patterns. Report on: (1) architectural patterns in use, (2) coding conventions, (3) existing abstractions, (4) dependency patterns between modules. Use Glob, Grep, Read to explore. Under 500 words. Facts only."
 
 When both return, combine results and write to `docs/project_notes/.planning_research/orientation.md`.
+
+## BRANCH-AWARE INTAKE (Branch Only)
+
+When `active_context` is NOT trunk:
+
+1. Determine parent: `state.branches[active_context].created_from`
+2. Resolve parent path:
+   - If parent is "trunk": `docs/project_notes/trunk/`
+   - If parent is a branch: `docs/project_notes/branches/{parent}/`
+3. Read parent's plan.md and any design specs at `{parent_path}/design_spec_*.md`.
+4. Launch a THIRD orientation research agent alongside the existing two:
+
+**Agent 3 — Parent Intersection Analysis** (subagent_type: Explore, model: haiku):
+Prompt: "Compare the discovery brief at {context_path}/discovery_brief.md with the plan at {parent_path}/plan.md. Identify: (1) Shared files/components that both touch, (2) Decisions in the parent plan that constrain this branch, (3) Potential conflicts or dependencies, (4) Patterns from parent that should be reused. Under 500 words. Facts only."
+
+Write results to `{context_path}/.planning_research/parent_intersection.md`.
 
 ## Step 3: Greet and begin
 
@@ -229,6 +249,7 @@ After explicit approval:
 - **Comprehensive**: All sections (1-10, including 6.5)
 
 Section 6.5 is Design Recommendations — ALWAYS included regardless of tier.
+Section 2.5 is Parent Context — included for ALL tiers when on a branch.
 
 ## Section Specifications
 
@@ -237,6 +258,23 @@ Section 6.5 is Design Recommendations — ALWAYS included regardless of tier.
 
 ### 2. Discovery Summary (always)
 Bullets: problem statement, goals, target users, constraints, key findings from discovery.
+
+### 2.5. Parent Context (branch plans only, all tiers)
+
+**Parent:** [trunk or branch name]
+**Parent Objective:** [1 sentence from parent plan]
+
+**Shared Components:**
+- [Component]: [how this branch's work relates to parent's use]
+
+**Inherited Decisions:**
+- [Decision from parent that constrains this branch]
+
+**Intersection Points:**
+- [File/module touched by both parent and this branch]
+
+**Divergence:**
+- [Where this branch intentionally departs from parent patterns]
 
 ### 3. Technology Decisions (Standard+, when decisions exist)
 

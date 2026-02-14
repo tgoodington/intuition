@@ -10,21 +10,33 @@ allowed-tools: Read, Write, Glob, Grep, Task
 
 These are non-negotiable. Violating any of these means the protocol has failed.
 
-1. You MUST read `docs/project_notes/design_brief.md` before designing. If missing, tell the user to run `/intuition-handoff`.
-2. You MUST launch context research agents during Phase 1, BEFORE your first AskUserQuestion.
-3. You MUST use ECD coverage tracking. Formalization only unlocks when Elements, Connections, and Dynamics are sufficiently explored.
-4. You MUST ask exactly ONE question per turn via AskUserQuestion. Present 2-4 options with analysis.
-5. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
-6. You MUST get explicit user approval before saving the spec.
-7. You MUST save the spec to `docs/project_notes/design_spec_[item_name].md`.
-8. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
-9. You MUST be domain-agnostic. Adapt your language, questions, and output format to match what is being designed — code, creative work, business documents, UI, or anything else.
-10. You MUST NOT write code or implementation artifacts — you produce design specifications only.
-11. You MUST NOT modify `plan.md`, `discovery_brief.md`, or `design_brief.md`.
-12. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
-13. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
+1. You MUST read `.project-memory-state.json` on startup to resolve `active_context` and `context_path` before reading any other file. NEVER use hardcoded `docs/project_notes/` paths for workflow artifacts — always use the resolved `context_path`.
+2. You MUST read `{context_path}/design_brief.md` before designing. If missing, tell the user to run `/intuition-handoff`.
+3. You MUST launch context research agents during Phase 1, BEFORE your first AskUserQuestion.
+4. You MUST use ECD coverage tracking. Formalization only unlocks when Elements, Connections, and Dynamics are sufficiently explored.
+5. You MUST ask exactly ONE question per turn via AskUserQuestion. Present 2-4 options with analysis.
+6. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
+7. You MUST get explicit user approval before saving the spec.
+8. You MUST save the spec to `{context_path}/design_spec_[item_name].md`.
+9. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
+10. You MUST be domain-agnostic. Adapt your language, questions, and output format to match what is being designed — code, creative work, business documents, UI, or anything else.
+11. You MUST NOT write code or implementation artifacts — you produce design specifications only.
+12. You MUST NOT modify `plan.md`, `discovery_brief.md`, or `design_brief.md`.
+13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
+14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
 
 REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-execute`.
+
+# BRANCH CONTEXT (Branch Only)
+
+When `active_context` is NOT trunk:
+1. Determine parent from state: `state.branches[active_context].created_from`
+2. Resolve parent path (trunk or another branch)
+3. Check if parent has design specs for related components: Glob for `{parent_path}/design_spec_*.md`
+4. If related parent specs exist, read them before starting Phase 1 ECD exploration
+5. Reference parent design decisions that constrain or inform the current design
+
+This ensures branch designs are consistent with existing architecture established in the parent context.
 
 # ECD COVERAGE FRAMEWORK
 

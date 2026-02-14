@@ -16,7 +16,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 
 1. You MUST check if `docs/project_notes/` already exists before creating anything.
 2. You MUST use template files from `references/` directory for all initial content. Read each template with the Read tool, then Write to the target path.
-3. You MUST create `.project-memory-state.json` using the v2.0 WORKFLOW schema from `references/state_template.json`. Do NOT use the old v1.0 personalization schema.
+3. You MUST create `.project-memory-state.json` using the v4.0 schema from `references/state_template.json`. Do NOT use older schemas (v1.0, v2.0, v3.0).
 4. You MUST update CLAUDE.md with workflow and memory protocols.
 5. You MUST NOT overwrite existing memory files without asking the user first.
 6. You MUST NOT invoke other skills (discovery, plan, execute). You only set up infrastructure.
@@ -30,7 +30,7 @@ Execute these steps in order:
 ```
 Step 1: Detect existing setup
 Step 2: Create memory directory and files from templates
-Step 3: Create .project-memory-state.json with v2.0 workflow schema
+Step 3: Create .project-memory-state.json with v4.0 schema
 Step 4: Update CLAUDE.md with workflow protocols
 Step 4.5: Create INTUITION.md framework overview
 Step 5: Offer optional components (AGENTS.md, settings, user profile)
@@ -63,12 +63,16 @@ Create the directory structure and initialize memory files:
 ```
 docs/
 └── project_notes/
+    ├── trunk/
+    ├── branches/
     ├── bugs.md
     ├── decisions.md
     ├── key_facts.md
     ├── issues.md
     └── .project-memory-state.json
 ```
+
+Create `docs/project_notes/trunk/` and `docs/project_notes/branches/` as empty directories. Write a `.gitkeep` placeholder to each so they are tracked by git.
 
 For each file, use the Read tool to read the template, then use Write to create the target:
 
@@ -85,42 +89,44 @@ Do NOT create workflow output files (discovery_brief.md, plan.md, execution_brie
 
 Read `references/state_template.json` and write to `docs/project_notes/.project-memory-state.json`.
 
-The state file uses the v3.0 WORKFLOW schema:
+The state file uses the v4.0 schema:
 
 ```json
 {
   "initialized": true,
-  "version": "3.0",
-  "workflow": {
+  "version": "4.0",
+  "active_context": "trunk",
+  "trunk": {
     "status": "none",
-    "prompt": {
-      "started": false,
-      "completed": false,
-      "started_at": null,
-      "completed_at": null,
-      "output_files": []
-    },
-    "planning": {
-      "started": false,
-      "completed": false,
-      "started_at": null,
-      "completed_at": null,
-      "approved": false
-    },
-    "design": {
-      "started": false,
-      "completed": false,
-      "completed_at": null,
-      "items": [],
-      "current_item": null
-    },
-    "execution": {
-      "started": false,
-      "completed": false,
-      "started_at": null,
-      "completed_at": null
+    "workflow": {
+      "prompt": {
+        "started": false,
+        "completed": false,
+        "started_at": null,
+        "completed_at": null,
+        "output_files": []
+      },
+      "planning": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "approved": false
+      },
+      "design": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "items": [],
+        "current_item": null
+      },
+      "execution": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      }
     }
   },
+  "branches": {},
   "last_handoff": null,
   "last_handoff_transition": null
 }
@@ -128,7 +134,7 @@ The state file uses the v3.0 WORKFLOW schema:
 
 **CRITICAL**: This is the authoritative schema. Handoff is the ONLY skill that updates this file after initialization. All other skills read it but NEVER write to it.
 
-Do NOT use older schemas (v1.0 with `personalization` fields, or v2.0 with `discovery` instead of `prompt`). Those schemas are obsolete.
+Do NOT use older schemas (v1.0, v2.0, or v3.0). Those schemas are obsolete.
 
 ## STEP 4: UPDATE CLAUDE.MD
 
@@ -222,11 +228,13 @@ Present a concise summary of what was created:
 Project memory initialized!
 
 Created:
+- docs/project_notes/trunk/         (trunk workflow artifacts)
+- docs/project_notes/branches/      (branch workflow artifacts)
 - docs/project_notes/bugs.md
 - docs/project_notes/decisions.md
 - docs/project_notes/key_facts.md
 - docs/project_notes/issues.md
-- docs/project_notes/.project-memory-state.json (v3.0 workflow schema)
+- docs/project_notes/.project-memory-state.json (v4.0 schema)
 - CLAUDE.md workflow protocols
 - INTUITION.md framework overview
 
@@ -254,7 +262,7 @@ These template files are in the `references/` directory. Use Read tool to access
 - `issues_template.md`
 
 **State template** (used in Step 3):
-- `state_template.json` — v2.0 workflow schema
+- `state_template.json` — v4.0 schema
 
 **Framework overview** (used in Step 4.5):
 - `intuition_readme_template.md` — high-level workflow overview for INTUITION.md

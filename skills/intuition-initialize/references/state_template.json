@@ -1,36 +1,38 @@
 {
   "initialized": true,
-  "version": "3.0",
-  "workflow": {
+  "version": "4.0",
+  "active_context": "trunk",
+  "trunk": {
     "status": "none",
-    "prompt": {
-      "started": false,
-      "started_at": null,
-      "completed": false,
-      "completed_at": null,
-      "output_files": []
-    },
-    "planning": {
-      "started": false,
-      "started_at": null,
-      "completed": false,
-      "completed_at": null,
-      "approved": false
-    },
-    "design": {
-      "started": false,
-      "completed": false,
-      "completed_at": null,
-      "items": [],
-      "current_item": null
-    },
-    "execution": {
-      "started": false,
-      "started_at": null,
-      "completed": false,
-      "completed_at": null
+    "workflow": {
+      "prompt": {
+        "started": false,
+        "completed": false,
+        "started_at": null,
+        "completed_at": null,
+        "output_files": []
+      },
+      "planning": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "approved": false
+      },
+      "design": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "items": [],
+        "current_item": null
+      },
+      "execution": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      }
     }
   },
+  "branches": {},
   "last_handoff": null,
   "last_handoff_transition": null
 }
