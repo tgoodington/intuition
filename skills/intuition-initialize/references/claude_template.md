@@ -7,12 +7,12 @@ This project uses a four-phase workflow coordinated by the Intuition system, wit
 The Intuition workflow uses a trunk-and-branch model:
 - **Trunk**: The first prompt→plan→design→execute cycle. Represents the core vision.
 - **Branches**: Subsequent cycles that build on, extend, or diverge from trunk or other branches.
-- **Engineer**: Post-execution troubleshooting with holistic codebase awareness.
+- **Debugger**: Post-execution diagnostic specialist for hard problems.
 
 All phases: `/intuition-prompt` → `/intuition-handoff` → `/intuition-plan` → `/intuition-handoff` →
 `[/intuition-design loop]` → `/intuition-handoff` → `/intuition-execute` → `/intuition-handoff` → complete
 
-After completion: `/intuition-start` to create branches or `/intuition-engineer` to troubleshoot.
+After completion: `/intuition-start` to create branches or `/intuition-debugger` to debug issues.
 
 ### Workflow Phases
 
@@ -54,7 +54,7 @@ The project follows a structured workflow with handoff transitions between phase
 
 **Recommended Flow**: Prompt → Handoff → Plan → Handoff → [Design Loop] → Handoff → Execute → Handoff → complete
 
-After completion, run `/intuition-start` to create a branch or invoke `/intuition-engineer` to troubleshoot.
+After completion, run `/intuition-start` to create a branch or invoke `/intuition-debugger` to debug issues.
 
 ### Memory Files
 
@@ -119,4 +119,4 @@ After completion, run `/intuition-start` to create a branch or invoke `/intuitio
 - "Execution brief is ready! Use `/intuition-execute` to kick off coordinated implementation."
 
 **When execution is complete:**
-- "Workflow cycle complete! Use `/intuition-start` to create a branch for new work, or `/intuition-engineer` to troubleshoot any issues."
+- "Workflow cycle complete! Use `/intuition-start` to create a branch for new work, or `/intuition-debugger` to debug any issues."

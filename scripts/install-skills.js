@@ -47,7 +47,7 @@ const skills = [
   'intuition-plan',
   'intuition-design',
   'intuition-execute',
-  'intuition-engineer',
+  'intuition-debugger',
   'intuition-initialize',
   'intuition-agent-advisor',
   'intuition-skill-guide',
@@ -107,7 +107,7 @@ try {
     log(`  /intuition-plan           - Strategic planning (ARCH protocol + design flagging)`);
     log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
     log(`  /intuition-execute        - Execution orchestrator (subagent delegation)`);
-    log(`  /intuition-engineer       - Engineer advisor on architectural decisions`);
+    log(`  /intuition-debugger       - Expert debugger (diagnostic specialist)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
     log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);

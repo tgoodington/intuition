@@ -1,6 +1,6 @@
 # Intuition
 
-A trunk-and-branch workflow system for Claude Code. Turns rough ideas into structured plans, detailed designs, and executed implementations through guided dialogue. Supports iterative development through independent branch cycles and post-execution troubleshooting.
+A trunk-and-branch workflow system for Claude Code. Turns rough ideas into structured plans, detailed designs, and executed implementations through guided dialogue. Supports iterative development through independent branch cycles and post-execution debugging.
 
 ## Workflow
 
@@ -13,12 +13,12 @@ A trunk-and-branch workflow system for Claude Code. Turns rough ideas into struc
                                                         ↓
                                                /intuition-handoff  →  complete
                                                         ↓
-                              /intuition-start  →  create branch  or  /intuition-engineer
+                              /intuition-start  →  create branch  or  /intuition-debugger
 ```
 
 Run `/intuition-handoff` between every phase. It manages state, generates briefs, and routes you forward.
 
-The first prompt→execute cycle is the **trunk**. After trunk completes, create **branches** for new features or changes. Use `/intuition-engineer` to troubleshoot issues in any completed context.
+The first prompt→execute cycle is the **trunk**. After trunk completes, create **branches** for new features or changes. Use `/intuition-debugger` to investigate hard problems in any completed context.
 
 ## Skills
 
@@ -28,8 +28,8 @@ The first prompt→execute cycle is the **trunk**. After trunk completes, create
 | `/intuition-prompt` | Sharpens a rough idea into a planning-ready brief through focused Q&A |
 | `/intuition-plan` | Builds a strategic blueprint with tasks, decisions, and design flags |
 | `/intuition-design` | Elaborates flagged items through collaborative design exploration (ECD framework) |
-| `/intuition-execute` | Delegates implementation to specialized subagents and verifies quality |
-| `/intuition-engineer` | Holistic post-execution troubleshooter — diagnoses and fixes issues with full codebase awareness |
+| `/intuition-execute` | Tech lead orchestrator — engineering assessment, implementation guide, informed delegation |
+| `/intuition-debugger` | Expert debugger — diagnostic specialist for complex bugs, cross-context failures, performance issues |
 | `/intuition-handoff` | Processes phase outputs, updates memory, prepares the next phase |
 | `/intuition-initialize` | Sets up project memory (you already ran this) |
 
@@ -53,8 +53,8 @@ Not every project needs design. If the plan is clear enough, handoff skips strai
 
 10. `/intuition-start` — see project status and choose next step
     - **Create a branch** — start a new feature or change cycle, informed by trunk
-    - **Open the engineer** — diagnose and fix issues in any completed context
+    - **Open the debugger** — investigate hard problems in any completed context
 
-### Troubleshooting
+### Debugging
 
-Run `/intuition-engineer` at any time after a context is complete. It loads your workflow artifacts, investigates issues holistically, and delegates fixes to subagents.
+Run `/intuition-debugger` at any time after a context is complete. It classifies issues into diagnostic categories (causal chain, cross-context, emergent, performance, plan-was-wrong) and runs specialized investigation protocols.

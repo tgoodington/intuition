@@ -198,7 +198,7 @@ Question: "All current work is complete. What's next?"
 Header: "Next Step"
 Options:
 - "Create a new branch (new feature or change)"
-- "Troubleshoot an issue (/intuition-engineer)"
+- "Debug an issue (/intuition-debugger)"
 ```
 
 **If "Create a new branch":**
@@ -222,7 +222,9 @@ Pass along: branch name "[name]", purpose "[purpose]", parent "[parent]".
 **If "Troubleshoot":**
 
 ```
-Run /intuition-engineer to diagnose and fix issues in any completed context.
+Run /intuition-debugger to investigate and debug issues in any completed context.
+The debugger specializes in hard problems — causal chain bugs, cross-context failures,
+performance issues, and cases where the plan or design was wrong.
 ```
 
 ### Prompt In Progress

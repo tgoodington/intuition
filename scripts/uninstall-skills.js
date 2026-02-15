@@ -48,6 +48,8 @@ try {
     'intuition-plan',
     'intuition-design',
     'intuition-execute',
+    'intuition-debugger',
+    // Legacy skills (removed in v7.1)
     'intuition-engineer',
     'intuition-initialize',
     'intuition-agent-advisor',
