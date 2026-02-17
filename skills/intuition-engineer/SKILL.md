@@ -96,33 +96,81 @@ Options:
 
 ## STEP 2: FAN-OUT RESEARCH
 
-For each task (or group of related tasks), launch a haiku research subagent via the Task tool:
+For each task (or group of related tasks), launch a haiku research subagent via the Task tool (subagent_type: Explore, model: haiku).
+
+When constructing each prompt, replace bracketed placeholders with actual values from the plan. If the task has known file paths, use the "Known Files" variant. If files are marked TBD, use the "TBD Files" variant.
+
+### Known Files variant:
 
 ```
-You are a codebase researcher gathering information for engineering specs.
+You are a codebase researcher. The project root is the current working directory.
 
-TASK: Research the codebase relevant to plan Task #[N]: [title]
+TASK: Gather implementation details for plan Task #[N]: [title]
+DESCRIPTION: [from plan]
+COMPONENT: [from plan]
 
-CONTEXT:
-- Task description: [from plan]
-- Known files: [from plan's Files field]
-- Component: [from plan's Component field]
+EXECUTE THESE STEPS IN ORDER:
 
-RESEARCH PROTOCOL:
-1. Read the files listed in the task (or Glob/Grep to find them if marked TBD).
-2. Identify existing patterns: naming conventions, error handling, module structure.
-3. Find 2-3 examples of similar patterns already in the codebase.
-4. Check for shared utilities or abstractions that should be reused.
-5. Read 1 level of dependents — what imports or calls the files you'll modify?
-6. Note any conventions that must be followed.
+Step 1 — Read target files:
+- Read [exact path 1]
+- Read [exact path 2]
+- [list all known files]
+
+Step 2 — Find dependents:
+- Grep for the filename (without extension) in all source files to find imports/references.
+- Read the top 2-3 files that import or call the target files.
+
+Step 3 — Find similar patterns:
+- In the target files, identify the primary function or class name.
+- Grep for similar patterns in other files within the same directory or parent directory.
 
 REPORT FORMAT (under 500 words):
-- **Relevant Files**: [paths with brief descriptions]
-- **Existing Patterns**: [patterns found with file references]
-- **Shared Utilities**: [reusable code found]
+- **Relevant Files**: [paths with 1-line descriptions]
+- **Existing Patterns**: [patterns found, with file:line references]
+- **Shared Utilities**: [reusable code found, or "None found"]
 - **Dependents**: [files that import/use the target files]
-- **Conventions**: [naming, structure, error handling patterns]
-- **Notes**: [anything unexpected or important]
+- **Conventions**: [naming, structure, error handling patterns observed]
+- **Notes**: [anything unexpected]
+
+Report only what you find. Do not speculate.
+```
+
+### TBD Files variant:
+
+```
+You are a codebase researcher. The project root is the current working directory.
+
+TASK: Gather implementation details for plan Task #[N]: [title]
+DESCRIPTION: [from plan]
+COMPONENT: [from plan]
+
+EXECUTE THESE STEPS IN ORDER:
+
+Step 1 — Locate files:
+- Run Glob('[component directory]/**/*') to list files in the component area.
+- If no component directory is obvious, Grep for keywords from the task title across all source files.
+- Read the 3-5 most relevant files found.
+
+Step 2 — Find dependents:
+- For each relevant file found, Grep for its name in other source files to find imports/references.
+
+Step 3 — Find similar patterns:
+- Grep for function or class names related to the task domain.
+- Read 1-2 examples of similar functionality elsewhere in the codebase.
+
+Step 4 — Check for shared utilities:
+- Run Glob('**/util*') and Glob('**/helper*') and Glob('**/shared*').
+- Read any utility file relevant to this task's domain.
+
+REPORT FORMAT (under 500 words):
+- **Relevant Files**: [paths with 1-line descriptions]
+- **Existing Patterns**: [patterns found, with file:line references]
+- **Shared Utilities**: [reusable code found, or "None found"]
+- **Dependents**: [files that import/use the target files]
+- **Conventions**: [naming, structure, error handling patterns observed]
+- **Notes**: [anything unexpected]
+
+Report only what you find. Do not speculate.
 ```
 
 **Parallelization rules:**

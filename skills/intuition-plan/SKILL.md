@@ -94,17 +94,51 @@ From the discovery brief, extract: core problem, success criteria, stakeholders,
 
 ## Step 2: Launch orientation research
 
-Create the directory `docs/project_notes/.planning_research/` if it does not exist.
+Create the directory `{context_path}/.planning_research/` if it does not exist.
 
-Launch 2 haiku research agents in parallel using the Task tool:
+Launch 2 sonnet research agents in parallel using the Task tool:
 
-**Agent 1 — Codebase Topology** (subagent_type: Explore, model: haiku):
-Prompt: "Analyze this project's codebase structure. Report on: (1) top-level directory structure, (2) key modules and responsibilities, (3) entry points, (4) test infrastructure, (5) build system. Use Glob, Grep, Read to explore. Under 500 words. Facts only."
+**Agent 1 — Codebase Topology** (subagent_type: Explore, model: sonnet):
+Prompt:
+"The project root is the current working directory. Analyze the codebase structure by following these steps in order:
 
-**Agent 2 — Pattern Extraction** (subagent_type: Explore, model: haiku):
-Prompt: "Analyze this project's codebase for patterns. Report on: (1) architectural patterns in use, (2) coding conventions, (3) existing abstractions, (4) dependency patterns between modules. Use Glob, Grep, Read to explore. Under 500 words. Facts only."
+1. Run Glob('*') to list all top-level files and directories.
+2. Read package.json (or equivalent manifest) for project metadata, scripts, and dependencies.
+3. Read any README.md or CLAUDE.md at the project root.
+4. For each top-level source directory, run Glob('{dir}/*') to map one level of contents.
+5. Grep for common entry points: 'main', 'index', 'app', 'server' in source files.
+6. Check for test infrastructure: Glob('**/*.test.*') or Glob('**/*.spec.*') or Glob('**/test/**').
+7. Check for build config: Glob('**/tsconfig*') or Glob('**/webpack*') or Glob('**/vite*') or similar.
 
-When both return, combine results and write to `docs/project_notes/.planning_research/orientation.md`.
+Report on:
+(1) Top-level directory structure with purpose of each directory
+(2) Key modules and their responsibilities
+(3) Entry points
+(4) Test infrastructure (framework, location, patterns)
+(5) Build system and tooling
+
+Under 500 words. Facts only, no speculation."
+
+**Agent 2 — Pattern Extraction** (subagent_type: Explore, model: sonnet):
+Prompt:
+"The project root is the current working directory. Analyze codebase patterns by following these steps:
+
+1. Read 3-5 representative source files from different directories to identify coding style.
+2. Grep for 'export' or 'module.exports' to understand module boundaries.
+3. Grep for 'import' or 'require' to map dependency patterns between modules.
+4. Grep for error handling patterns: 'catch', 'throw', 'Error', 'try'.
+5. Grep for common abstractions: 'class', 'interface', 'type', 'abstract', 'base'.
+6. Check for configuration patterns: Glob('**/*.config.*') or Glob('**/.{eslint,prettier}*').
+
+Report on:
+(1) Architectural patterns in use (MVC, event-driven, plugin system, etc.)
+(2) Coding conventions (naming, file organization, export style)
+(3) Existing abstractions and base classes/utilities
+(4) Dependency patterns between modules (which modules depend on which)
+
+Under 500 words. Facts only, no speculation."
+
+When both return, combine results and write to `{context_path}/.planning_research/orientation.md`.
 
 ## BRANCH-AWARE INTAKE (Branch Only)
 
@@ -117,8 +151,23 @@ When `active_context` is NOT trunk:
 3. Read parent's plan.md and any design specs at `{parent_path}/design_spec_*.md`.
 4. Launch a THIRD orientation research agent alongside the existing two:
 
-**Agent 3 — Parent Intersection Analysis** (subagent_type: Explore, model: haiku):
-Prompt: "Compare the discovery brief at {context_path}/discovery_brief.md with the plan at {parent_path}/plan.md. Identify: (1) Shared files/components that both touch, (2) Decisions in the parent plan that constrain this branch, (3) Potential conflicts or dependencies, (4) Patterns from parent that should be reused. Under 500 words. Facts only."
+**Agent 3 — Parent Intersection Analysis** (subagent_type: Explore, model: sonnet):
+Prompt:
+"The project root is the current working directory. Compare two workflow artifacts:
+
+1. Read the discovery brief at {context_path}/discovery_brief.md.
+2. Read the parent plan at {parent_path}/plan.md.
+3. For each file path mentioned in the parent plan's tasks, check if the discovery brief references the same files or components.
+4. Extract all technology decisions from the parent plan (Section 3 if it exists).
+5. Identify acceptance criteria in the parent plan that touch the same areas as the discovery brief.
+
+Report on:
+(1) Shared files/components that both parent plan and this branch's discovery brief touch
+(2) Decisions in the parent plan that constrain this branch
+(3) Potential conflicts or dependencies between parent and branch work
+(4) Patterns from parent implementation that this branch should reuse
+
+Under 500 words. Facts only, no speculation."
 
 Write results to `{context_path}/.planning_research/parent_intersection.md`.
 
@@ -403,7 +452,7 @@ If any check fails, fix it before presenting.
 
 ## Tier 1: Orientation (launched in Phase 1)
 
-Launch 2 haiku Explore agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `docs/project_notes/.planning_research/orientation.md`.
+Launch 2 sonnet Explore agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `{context_path}/.planning_research/orientation.md`.
 
 ## Tier 2: Decision Research (launched on demand in Phase 3)
 
