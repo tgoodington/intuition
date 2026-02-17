@@ -2,8 +2,8 @@
 name: intuition-handoff
 description: Universal phase transition orchestrator. Processes phase outputs, updates project memory, generates fresh briefs for next agent. Manages the design loop for multi-item design cycles.
 model: haiku
-tools: Read, Write, Glob, Grep, AskUserQuestion
-allowed-tools: Read, Write, Glob, Grep
+tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
+allowed-tools: Read, Write, Glob, Grep, Bash
 ---
 
 # Handoff - Phase Transition Orchestrator Protocol
@@ -23,8 +23,8 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 7. You MUST NOT evaluate or critique phase outputs. Process and document, never judge.
 8. You MUST NOT skip the user profile merge step during prompt→planning transitions.
 9. You MUST suggest the correct next skill after completing the transition.
-10. You MUST NOT modify discovery_brief.md, plan.md, design_spec_*.md, or other phase output files — they are read-only inputs.
-11. You MUST manage the design loop: track which items are designed, route to next item or to execute when all are done.
+10. You MUST NOT modify discovery_brief.md, plan.md, design_spec_*.md, code_specs.md, or other phase output files — they are read-only inputs.
+11. You MUST manage the design loop: track which items are designed, route to next item or to engineer when all are done.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -62,42 +62,47 @@ After resolving context_path and context_workflow, determine:
 ```
 IF context_workflow.status == "prompt" AND workflow.prompt.completed == true
    AND workflow.planning.started == false:
-   → TRANSITION: Prompt → Planning
+   → TRANSITION: Prompt → Planning (Transition 1)
 
 IF context_workflow.status == "planning" AND workflow.planning.completed == true
-   AND workflow.design.started == false:
-   → TRANSITION: Planning → Design (initial setup)
+   AND workflow.design.started == false AND workflow.engineering.started == false:
+   → TRANSITION: Planning → Design (Transition 2) OR Planning → Engineer (Transition 2B)
 
 IF context_workflow.status == "design":
    → Check workflow.design.items array
    → IF current item just completed AND more items remain:
-      → TRANSITION: Design → Design (next item)
+      → TRANSITION: Design → Design (Transition 3)
    → IF all items completed:
-      → TRANSITION: Design → Execution
+      → TRANSITION: Design → Engineer (Transition 4)
 
-IF context_workflow.status == "executing" AND workflow.execution.completed == true:
-   → TRANSITION: Execution → Complete
+IF context_workflow.status == "engineering" AND workflow.engineering.completed == true
+   AND workflow.build.started == false:
+   → TRANSITION: Engineer → Build (Transition 5)
+
+IF context_workflow.status == "building" AND workflow.build.completed == true:
+   → TRANSITION: Build → Complete (Transition 6)
 
 IF no clear transition detected:
    → ASK USER: "Which phase just completed?" (use AskUserQuestion)
 ```
 
-## STATE SCHEMA (v4.0)
+## STATE SCHEMA (v5.0)
 
 This is the authoritative schema for `.project-memory-state.json`:
 
 ```json
 {
   "initialized": true,
-  "version": "4.0",
+  "version": "5.0",
   "active_context": "trunk",
   "trunk": {
-    "status": "none | prompt | planning | design | executing | complete",
+    "status": "none | prompt | planning | design | engineering | building | complete",
     "workflow": {
       "prompt": { "started": false, "completed": false, "started_at": null, "completed_at": null, "output_files": [] },
       "planning": { "started": false, "completed": false, "completed_at": null, "approved": false },
       "design": { "started": false, "completed": false, "completed_at": null, "items": [], "current_item": null },
-      "execution": { "started": false, "completed": false, "completed_at": null }
+      "engineering": { "started": false, "completed": false, "completed_at": null },
+      "build": { "started": false, "completed": false, "completed_at": null }
     }
   },
   "branches": {},
@@ -108,7 +113,7 @@ This is the authoritative schema for `.project-memory-state.json`:
 
 ### Branch Entry Schema
 
-Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure.
+Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure (including `engineering` and `build` phases).
 
 ### Design Items Schema
 
@@ -141,10 +146,29 @@ Triggered when start routes to handoff with branch creation intent. User has pro
    - `created_at`: ISO timestamp
    - `purpose`: user-provided sentence
    - `status`: "none"
-   - `workflow`: identical structure to trunk's workflow (all false/null/empty)
+   - `workflow`: identical structure to trunk's workflow (all false/null/empty — including `engineering` and `build` phases)
 4. **Set `active_context`** to the new branch key.
 5. **Write updated state**. Set `last_handoff_transition` to "branch_creation".
 6. **Route user**: "Branch **[display_name]** created. Run `/intuition-prompt` to define what this branch will accomplish."
+
+## V4 STATE MIGRATION
+
+Fires automatically when handoff detects a v4.0 state before processing any transition.
+
+### Detection
+
+`version == "4.0"` OR (state has `execution` phase in workflow but no `engineering` phase).
+
+### Migration Steps
+
+1. For trunk and every branch, transform the workflow object:
+   - Rename `execution` → `build` (preserve all field values)
+   - Add `engineering: { "started": false, "completed": false, "completed_at": null }` before `build`
+   - If a context has `status == "executing"`, change to `status = "building"`
+2. Set `version: "5.0"`
+3. Preserve all other fields unchanged.
+4. Write updated state.
+5. Report to user: "Migrated state from v4.0 to v5.0 (added engineering phase, renamed execution → build)." Then continue with the original transition.
 
 ## V3 STATE MIGRATION
 
@@ -166,10 +190,11 @@ Fires automatically when handoff detects a v3.0 state before processing any tran
    - Wrap existing `status` and `workflow` into a `trunk` object
    - Add `active_context: "trunk"`
    - Add `branches: {}`
-   - Set `version: "4.0"`
+   - Transform workflow: rename `execution` → `build`, add `engineering` phase
+   - Set `version: "5.0"`
    - Preserve all other top-level fields (`initialized`, `last_handoff`, `last_handoff_transition`)
 4. Write updated state.
-5. Report to user: list which files were migrated and confirm v4.0 upgrade. Then continue with the original transition.
+5. Report to user: list which files were migrated and confirm v5.0 upgrade. Then continue with the original transition.
 
 Leave shared files (`key_facts.md`, `decisions.md`, `issues.md`, `bugs.md`) at `docs/project_notes/` — do NOT move them.
 
@@ -239,9 +264,9 @@ From the plan: new architectural decisions → `docs/project_notes/decisions.md`
 Use AskUserQuestion:
 - Header: "Design Items"
 - Question: List each flagged item with rationale
-- Options: "All recommended items need design" / "Some items — let me specify" / "None — skip design, go straight to execution"
+- Options: "All recommended items need design" / "Some items — let me specify" / "None — skip design, go straight to engineering"
 
-If "Some items," follow up. If "None," use Transition 4B.
+If "Some items," follow up. If "None," use Transition 2B.
 
 ### Generate Design Brief
 
@@ -261,6 +286,28 @@ Update active context: set `status` to `"design"`, mark `planning.completed = tr
 ### Route User
 
 "Plan processed. Design brief prepared for **[First Item Name]**. Run `/intuition-design` to begin design exploration."
+
+## TRANSITION 2B: PLANNING → ENGINEER (Skip Design)
+
+Used when user confirms NO items need design.
+
+### Generate Engineering Brief
+
+Write `{context_path}engineering_brief.md` with these sections:
+- **Plan Summary** (1-2 paragraphs)
+- **Objective**
+- **Discovery Context** (brief reminder)
+- **Task Summary** (task list with brief descriptions)
+- **Known Risks** (with mitigations)
+- **References** (plan path, discovery path)
+
+### Update State
+
+Update active context: set `status` to `"engineering"`, mark `planning.completed = true` with timestamp and `approved = true`, set `design.started = false`, `design.completed = false`, `design.items = []`, set `engineering.started = true`.
+
+### Route User
+
+"Plan processed. No design items flagged. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/intuition-engineer` to create code specs."
 
 ## TRANSITION 3: DESIGN → DESIGN (Next Item)
 
@@ -298,7 +345,7 @@ Update active context's `design.items`: mark completed item as `"completed"` wit
 
 "[Previous Item] design complete. Design brief updated for **[Next Item Name]** ([N] of [total], [remaining] remaining). Run `/intuition-design` to continue."
 
-## TRANSITION 4: DESIGN → EXECUTION
+## TRANSITION 4: DESIGN → ENGINEER
 
 Triggers when ALL design items have status `"completed"` or `"skipped"`.
 
@@ -311,55 +358,90 @@ Read: `{context_path}plan.md`
 
 From design specs: decisions → `docs/project_notes/decisions.md`, key facts → `docs/project_notes/key_facts.md`, design work → `docs/project_notes/issues.md`.
 
-### Generate Execution Brief
+### Generate Engineering Brief
 
-Write `{context_path}execution_brief.md` with these sections:
+Write `{context_path}engineering_brief.md` with these sections:
 - **Plan Summary** (1-2 paragraphs)
 - **Objective**
 - **Discovery Context** (brief reminder)
-- **Design Specifications** (list each spec with one-line summary; include: "Execute agents MUST read these specs before implementing flagged tasks.")
-- **Task Summary** (execution order, mark tasks with design specs)
-- **Quality Gates** (security review, tests, code review)
+- **Design Specifications** (list each spec with one-line summary; include: "Engineer MUST read these specs before creating code specs for flagged tasks.")
+- **Task Summary** (list tasks, mark tasks with design specs)
 - **Known Risks** (with mitigations)
 - **References** (plan path, discovery path, design spec paths)
 
 ### Update State
 
-Update active context: set `status` to `"executing"`, mark `design.completed = true` with timestamp, set `execution.started = true`.
+Update active context: set `status` to `"engineering"`, mark `design.completed = true` with timestamp, set `engineering.started = true`.
 
 ### Route User
 
-"All design specs processed. Execution brief saved to `{context_path}execution_brief.md`. Run `/intuition-execute` to begin implementation."
+"All design specs processed. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/intuition-engineer` to create code specs."
 
-## TRANSITION 4B: PLANNING → EXECUTION (Skip Design)
-
-Used when user confirms NO items need design.
-
-### Generate Execution Brief
-
-Same format as Transition 4 but without the "Design Specifications" section. Write to `{context_path}execution_brief.md`.
-
-### Update State
-
-Update active context: set `status` to `"executing"`, mark `planning.completed = true` with timestamp and `approved = true`, set `design.started = false`, `design.completed = false`, `design.items = []`, set `execution.started = true`.
-
-### Route User
-
-"Plan processed. No design items flagged. Execution brief saved to `{context_path}execution_brief.md`. Run `/intuition-execute` to begin implementation."
-
-## TRANSITION 5: EXECUTION → COMPLETE
+## TRANSITION 5: ENGINEER → BUILD
 
 ### Read Outputs
 
-Read execution results from `{context_path}` for any reports the execution phase produced.
+Read: `{context_path}code_specs.md`
+Read: `{context_path}plan.md`
+
+### Extract and Structure
+
+From code specs: engineering decisions → `docs/project_notes/decisions.md`, key facts about implementation approach → `docs/project_notes/key_facts.md`.
+
+### Generate Build Brief
+
+Write `{context_path}build_brief.md` with these sections:
+- **Plan Summary** (1-2 paragraphs)
+- **Objective**
+- **Code Specs Summary** (task count, key engineering decisions — 1 line each)
+- **Required User Steps** (from code_specs.md — things the user must do manually)
+- **Quality Gates** (security review, tests, code review)
+- **Known Risks** (from code specs risk notes)
+- **References** (plan path, code_specs path, design spec paths if any)
+
+### Update State
+
+Update active context: set `status` to `"building"`, mark `engineering.completed = true` with timestamp, set `build.started = true`.
+
+### Route User
+
+"Code specs processed. Build brief saved to `{context_path}build_brief.md`. Run `/intuition-build` to begin implementation."
+
+## TRANSITION 6: BUILD → COMPLETE
+
+### Read Outputs
+
+Read build results from `{context_path}` for any reports the build phase produced.
 
 ### Extract and Structure
 
 Bugs found → `docs/project_notes/bugs.md`, lessons learned → `docs/project_notes/key_facts.md`, work completed → `docs/project_notes/issues.md`.
 
+### Git Commit Offer
+
+Check if a `.git` directory exists at the project root (use Bash: `test -d .git && echo "yes" || echo "no"`).
+
+If git repo exists, use AskUserQuestion:
+```
+Question: "Build complete. Would you like to commit the changes?"
+Header: "Git Commit"
+Options:
+- "Yes — commit and push"
+- "Yes — commit only (no push)"
+- "No — skip git"
+```
+
+If user approves commit:
+1. Run `git status` to see changed files
+2. Run `git add [specific files from build report]` — only add files that were part of the build
+3. Run `git commit` with a descriptive message summarizing the build
+4. If user chose push: run `git push`
+
+If no git repo or user skips: proceed without git operations.
+
 ### Update State
 
-Update active context: set `status` to `"complete"`, mark `execution.completed = true` with timestamp.
+Update active context: set `status` to `"complete"`, mark `build.completed = true` with timestamp.
 
 ### Route User
 
@@ -382,9 +464,10 @@ All shared memory files live at `docs/project_notes/` (never context_path).
 - **New constraints from planning**: Update key_facts.md, create ADR if architectural.
 - **Interrupted handoff**: Check what's updated, continue from there, don't duplicate.
 - **Corrupted state**: Infer phase from existing files. Ask user to confirm.
-- **Design item skipped mid-loop**: Mark as `"skipped"`, proceed to next. Note in execution brief.
-- **No Design Recommendations in plan**: Present tasks to user, ask if any need design. If none, use 4B.
+- **Design item skipped mid-loop**: Mark as `"skipped"`, proceed to next. Note in engineering brief.
+- **No Design Recommendations in plan**: Present tasks to user, ask if any need design. If none, use 2B.
 - **Plan revision after design started**: Alert user. Ask whether to continue or re-evaluate.
+- **Missing code_specs.md at Transition 5**: Tell user to run `/intuition-engineer` first.
 
 ## VOICE
 

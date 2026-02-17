@@ -304,10 +304,9 @@ Ordered list forming a valid dependency DAG. Each task:
   [minimum 2 per task]
 - **Dependencies**: [Task numbers] or "None"
 - **Files**: [Specific paths when known] or "TBD — [component area]"
-- **Implementation Latitude**: [What Execute gets to decide — patterns, error handling, internal structure, approach]
 ```
 
-**Acceptance criteria rule:** If a criterion can only be satisfied ONE way, it is over-specified. Criteria describe outcomes ("users can reset passwords via email"), not implementations ("add a resetPassword() method that calls sendEmail()"). Execute and its engineers decide the code-level HOW.
+**Acceptance criteria rule:** If a criterion can only be satisfied ONE way, it is over-specified. Criteria describe outcomes ("users can reset passwords via email"), not implementations ("add a resetPassword() method that calls sendEmail()"). The engineer and build phases decide the code-level HOW.
 
 ### 7. Testing Strategy (Standard+, when code is produced)
 Test types required. Which tasks need tests (reference task numbers). Critical test scenarios. Infrastructure needed.
@@ -326,20 +325,20 @@ Test types required. Which tasks need tests (reference task numbers). Critical t
 
 Every open question MUST have a Recommended Default. The execution phase uses the default unless the user provides direction. If you cannot write a reasonable default, the question is not ready to be left open — resolve it during dialogue.
 
-### 10. Planning Context for Execute (always)
-Context and considerations for the execution phase — NOT instructions. Execute owns all implementation decisions.
+### 10. Planning Context for Engineer (always)
+Context and considerations for the engineering phase — NOT instructions. Engineer owns all implementation decisions.
 
-- **Sequencing Considerations**: Factors that affect task ordering (NOT a prescribed order — Execute decides)
-- **Parallelization Opportunities**: Which tasks touch independent surfaces (Execute validates and decides)
-- **Engineering Questions**: Open implementation questions Execute must resolve during its Engineering Assessment (e.g., "How should error propagation work across Tasks 3-5?" / "Tasks 2 and 6 both touch the auth layer — shared abstraction or independent?")
-- **Constraints**: Hard boundaries Execute must respect (performance targets, API contracts, backward compatibility)
-- **Risk Context**: What could go wrong and why — Execute decides mitigation strategy
+- **Sequencing Considerations**: Factors that affect task ordering (NOT a prescribed order — Engineer decides)
+- **Parallelization Opportunities**: Which tasks touch independent surfaces (Engineer validates and decides)
+- **Engineering Questions**: Open implementation questions Engineer must resolve during code spec creation (e.g., "How should error propagation work across Tasks 3-5?" / "Tasks 2 and 6 both touch the auth layer — shared abstraction or independent?")
+- **Constraints**: Hard boundaries Engineer must respect (performance targets, API contracts, backward compatibility)
+- **Risk Context**: What could go wrong and why — Engineer decides mitigation strategy
 
 ## Architect-Engineer Boundary
 
-The planning phase decides WHAT to build, WHERE it lives in the architecture, and WHY each decision was made. The execution phase decides HOW to build it at the code level — internal implementation, code patterns, file decomposition within components. Execute produces an `implementation_guide.md` documenting its engineering decisions before delegating work.
+The planning phase decides WHAT to build, WHERE it lives in the architecture, and WHY each decision was made. The engineering phase decides HOW to build it at the code level — internal implementation, code patterns, file decomposition within components. Engineer produces `code_specs.md` documenting its engineering decisions, then Build implements against those specs.
 
-Overlap resolution: Planning specifies public interfaces between components and known file paths. Execution owns everything internal to a component and determines paths for new files marked TBD. The Implementation Latitude field on each task explicitly marks what Execute gets to decide.
+Overlap resolution: Planning specifies public interfaces between components and known file paths. Engineer owns everything internal to a component and determines paths for new files marked TBD.
 
 Interim artifacts in `.planning_research/` are working files for planning context management. They are NOT part of the plan-execute contract. Only `plan.md` crosses the handoff boundary.
 
@@ -394,8 +393,7 @@ Validate ALL before presenting the draft:
 - [ ] Technology decisions explicitly marked Locked or Recommended (Standard+)
 - [ ] Interface contracts provided where components interact (Comprehensive)
 - [ ] Risks have mitigations (Standard+)
-- [ ] Planning Context for Execute includes engineering questions, not prescriptive instructions
-- [ ] Every task has an Implementation Latitude field identifying what Execute decides
+- [ ] Planning Context for Engineer includes engineering questions, not prescriptive instructions
 - [ ] Design Recommendations section included with every task assessed
 - [ ] Each DESIGN REQUIRED flag has a specific rationale (not generic)
 

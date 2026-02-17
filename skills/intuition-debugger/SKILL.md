@@ -337,7 +337,28 @@ Do NOT skip the log entry. The Prevention field is critical — it feeds back in
 - [What should change in future execution to prevent this class of bug]
 ```
 
-After reporting, ask: "Is there another issue to investigate?" If yes, return to Step 4. If no, close.
+### Git Commit Offer
+
+After logging the fix, check if a `.git` directory exists at the project root (use Bash: `test -d .git && echo "yes" || echo "no"`).
+
+If git repo exists, use AskUserQuestion:
+```
+Question: "Fix applied and logged. Would you like to commit the changes?"
+Header: "Git Commit"
+Options:
+- "Yes — commit the fix"
+- "No — skip git"
+```
+
+If user approves:
+1. Run `git add [specific files that were modified by the fix]` — only add files from the fix
+2. Run `git commit` with a descriptive message (e.g., "fix: [brief bug description] — [root cause summary]")
+
+If no git repo or user skips: proceed without git operations.
+
+### Next Issue
+
+After reporting (and optional git commit), ask: "Is there another issue to investigate?" If yes, return to Step 4. If no, close.
 
 ---
 

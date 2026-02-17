@@ -46,7 +46,8 @@ const skills = [
   'intuition-handoff',
   'intuition-plan',
   'intuition-design',
-  'intuition-execute',
+  'intuition-engineer',
+  'intuition-build',
   'intuition-debugger',
   'intuition-initialize',
   'intuition-agent-advisor',
@@ -79,6 +80,13 @@ try {
     log(`Removed old /intuition-discovery skill (replaced by /intuition-design in v6.0)`);
   }
 
+  // Remove old execute skill if it exists (split into engineer + build in v8.0)
+  const oldExecuteDest = path.join(claudeSkillsDir, 'intuition-execute');
+  if (fs.existsSync(oldExecuteDest)) {
+    fs.rmSync(oldExecuteDest, { recursive: true, force: true });
+    log(`Removed old /intuition-execute skill (split into /intuition-engineer + /intuition-build in v8.0)`);
+  }
+
   // Install each skill
   skills.forEach(skillName => {
     const src = path.join(packageRoot, 'skills', skillName);
@@ -106,7 +114,8 @@ try {
     log(`  /intuition-handoff        - Handoff orchestrator (phase transitions + design loop)`);
     log(`  /intuition-plan           - Strategic planning (ARCH protocol + design flagging)`);
     log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
-    log(`  /intuition-execute        - Execution orchestrator (subagent delegation)`);
+    log(`  /intuition-engineer       - Code spec creator (engineering decisions)`);
+    log(`  /intuition-build          - Build manager (subagent delegation)`);
     log(`  /intuition-debugger       - Expert debugger (diagnostic specialist)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);

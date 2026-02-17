@@ -47,14 +47,15 @@ try {
     'intuition-handoff',
     'intuition-plan',
     'intuition-design',
-    'intuition-execute',
-    'intuition-debugger',
-    // Legacy skills (removed in v7.1)
     'intuition-engineer',
+    'intuition-build',
+    'intuition-debugger',
     'intuition-initialize',
     'intuition-agent-advisor',
     'intuition-skill-guide',
     'intuition-update',
+    // Legacy skills (removed in v8.0)
+    'intuition-execute',
     // Legacy skills (removed in v6.0)
     'intuition-discovery'
   ];

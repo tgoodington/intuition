@@ -76,14 +76,14 @@ IF state.version == "3.0" OR state.active_context is missing:
   → STOP phase detection
   → OUTPUT:
     "This project uses the v3.0 state schema, which is no longer compatible
-    with Intuition v7.0+. Run /intuition-handoff or /intuition-initialize
-    to upgrade to v4.0."
+    with Intuition v8.0+. Run /intuition-handoff or /intuition-initialize
+    to upgrade to v5.0."
   → END protocol here
 ```
 
 ## CONTEXT PATH RESOLUTION (Step 3)
 
-After confirming v4.0 schema:
+After confirming v4.0+ schema:
 
 ```
 active_context = state.active_context   (e.g. "trunk" or "feature-auth")
@@ -128,11 +128,17 @@ ELSE IF a context is in-progress (active_context has status not "complete"):
        AND context_workflow.workflow.design.completed == false:
     → PHASE: design_in_progress
 
-  ELSE IF context_workflow.workflow.execution.started == false:
-    → PHASE: ready_for_execution
+  ELSE IF context_workflow.workflow.engineering.started == false:
+    → PHASE: ready_for_engineering
 
-  ELSE IF context_workflow.workflow.execution.completed == false:
-    → PHASE: execution_in_progress
+  ELSE IF context_workflow.workflow.engineering.completed == false:
+    → PHASE: engineering_in_progress
+
+  ELSE IF context_workflow.workflow.build.started == false:
+    → PHASE: ready_for_build
+
+  ELSE IF context_workflow.workflow.build.completed == false:
+    → PHASE: build_in_progress
 
   ELSE:
     → PHASE: post_completion
@@ -140,12 +146,13 @@ ELSE IF a context is in-progress (active_context has status not "complete"):
 
 **"Any context is complete"** means: `state.trunk.status == "complete"` OR any entry in `state.branches` has `status == "complete"`.
 
-**"No context is in-progress"** means: `state.trunk.status` is not in `["prompt","planning","design","executing"]` AND no branch has status in those values.
+**"No context is in-progress"** means: `state.trunk.status` is not in `["prompt","planning","design","engineering","building"]` AND no branch has status in those values.
 
 If `.project-memory-state.json` exists but is corrupted or unreadable, infer phase from which files exist under `context_path`:
 - `{context_path}discovery_brief.md` exists → prompt complete
 - `{context_path}plan.md` exists → planning complete
 - `{context_path}design_spec_*.md` exist → design in progress or complete
+- `{context_path}code_specs.md` exists → engineering complete
 - Ask user to confirm if ambiguous.
 
 ## PHASE HANDLERS
@@ -178,7 +185,7 @@ Project Status:
 │   └── "[purpose]"
 ```
 
-Status labels: `none` → "Not started", `prompt` → "Prompting...", `planning` → "Planning...", `design` → "Designing...", `executing` → "Executing...", `complete` → "Complete"
+Status labels: `none` → "Not started", `prompt` → "Prompting...", `planning` → "Planning...", `design` → "Designing...", `engineering` → "Engineering...", `building` → "Building...", `complete` → "Complete"
 
 **If any context is in-progress:**
 
@@ -299,21 +306,59 @@ Design Queue:
 [If current item just completed]: Run /intuition-handoff to process the design and move to the next item.
 ```
 
-### Ready for Execution
+### Ready for Engineering
 
 Read and curate from:
-- `{context_path}plan.md` — extract objective, task count, approach
-- `{context_path}execution_brief.md` — reference location
+- `{context_path}plan.md` — extract objective, task count
+- `{context_path}engineering_brief.md` — reference location
 - `docs/project_notes/decisions.md` — relevant ADRs
 - `{context_path}design_spec_*.md` — list any design specs
 
 ```
-Welcome back! Your plan is approved and ready.
+Welcome back! Ready for engineering.
 
 Discovery: Complete
 Plan: Approved
 [If design specs exist]: Design: Complete ([N] specs)
-Execution: Ready
+Engineering: Ready
+
+  - [N] tasks to spec
+  - Objective: [1 sentence]
+
+Engineering brief ready at: {context_path}engineering_brief.md
+
+Run /intuition-engineer to create code specs.
+```
+
+### Engineering In Progress
+
+```
+Welcome back! Engineering is in progress.
+
+Discovery: Complete
+Plan: Approved
+[If design specs exist]: Design: Complete
+Engineering: In progress
+
+Run /intuition-engineer to continue creating code specs.
+```
+
+### Ready for Build
+
+Read and curate from:
+- `{context_path}plan.md` — extract objective, task count, approach
+- `{context_path}code_specs.md` — reference location
+- `{context_path}build_brief.md` — reference location
+- `docs/project_notes/decisions.md` — relevant ADRs
+
+```
+Welcome back! Code specs are ready.
+
+Discovery: Complete
+Plan: Approved
+[If design specs exist]: Design: Complete ([N] specs)
+Engineering: Complete
+Build: Ready
 
   - [N] tasks
   - Approach: [1 sentence]
@@ -323,24 +368,25 @@ Key context:
 - Problem: [1 sentence from discovery]
 - Main constraint: [most limiting]
 
-Execution brief ready at: {context_path}execution_brief.md
+Build brief ready at: {context_path}build_brief.md
 
-Run /intuition-execute to begin implementation.
+Run /intuition-build to begin implementation.
 ```
 
-### Execution In Progress
+### Build In Progress
 
-Read `{context_path}plan.md` for total tasks and any execution state available.
+Read `{context_path}plan.md` for total tasks and any build state available.
 
 ```
-Welcome back! Execution is in progress.
+Welcome back! Build is in progress.
 
 Discovery: Complete
 Plan: Approved
 [If design specs exist]: Design: Complete
-Execution: In progress
+Engineering: Complete
+Build: In progress
 
-Run /intuition-execute to continue.
+Run /intuition-build to continue.
 ```
 
 ## BRIEF CURATION RULES
@@ -381,6 +427,7 @@ You are curating information for the user, not dumping files. Follow these rules
 - **Old v2.0 state schema detected** (has `discovery` instead of `prompt`): Treat `discovery` fields as `prompt` fields. Suggest running `/intuition-initialize` to update to current schema.
 - **State file exists but active_context is null or missing**: Treat as v3.0 — output the upgrade warning and stop.
 - **Branch referenced in active_context but not found in branches map**: Report the inconsistency and suggest `/intuition-handoff` to reconcile state.
+- **v4.0 state detected** (has `execution` instead of `build`): Warn user: "State uses v4.0 schema. Run `/intuition-handoff` to migrate to v5.0."
 
 ## VOICE
 
