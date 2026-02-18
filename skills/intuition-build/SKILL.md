@@ -243,32 +243,43 @@ If Security Expert review has not been run, you MUST run it now. ZERO exceptions
 
 ## STEP 7: REPORT RESULTS
 
-Present the build report:
+Write the build report to `{context_path}/build_report.md` AND display a summary to the user.
+
+### Write `{context_path}/build_report.md`
 
 ```markdown
-## Build Complete
+# Build Report
 
 **Plan:** [Title]
+**Date:** [YYYY-MM-DD]
 **Status:** Success / Partial / Failed
 
-**Tasks Completed:**
+## Tasks Completed
 - [x] Task 1 — [brief outcome]
 - [x] Task 2 — [brief outcome]
 
-**Verification Results:**
+## Verification Results
 - Security Review: PASS / FAIL
 - Code Review: PASS / N/A
 - Tests: X passed, Y failed / N/A
 
-**Files Modified:**
+## Files Modified
 - path/to/file — [what changed]
 
-**Issues & Resolutions:**
+## Issues & Resolutions
 - [Any problems encountered and how they were resolved]
 
-**Required User Steps:**
+## Required User Steps
 - [From code_specs.md — remind user of manual steps needed]
+
+## Deviations from Specs
+- [Any places where implementation diverged from code_specs.md, with rationale]
+- [Or "None — all specs followed as written"]
 ```
+
+### Display summary to user
+
+Present a concise version: task count, pass/fail status, files modified count, any required user steps. Reference the full report at `{context_path}/build_report.md`.
 
 ## STEP 8: ROUTE TO HANDOFF
 

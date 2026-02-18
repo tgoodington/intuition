@@ -18,14 +18,14 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 6. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
 7. You MUST get explicit user approval before saving the spec.
 8. You MUST save the spec to `{context_path}/design_spec_[item_name].md`.
-9. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
+9. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-engineer` or `/intuition-build`.
 10. You MUST be domain-agnostic. Adapt your language, questions, and output format to match what is being designed — code, creative work, business documents, UI, or anything else.
 11. You MUST NOT write code or implementation artifacts — you produce design specifications only.
 12. You MUST NOT modify `plan.md`, `discovery_brief.md`, or `design_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
 
-REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-execute`.
+REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-engineer` or `/intuition-build`.
 
 # BRANCH CONTEXT (Branch Only)
 
@@ -92,7 +92,7 @@ Phase 5:   FORMALIZATION      (1 turn)      Draft spec, validate, approve, save
 
 Before starting the protocol, check for existing state:
 
-1. If `docs/project_notes/.design_research/` exists with prior artifacts for this item:
+1. If `{context_path}/.design_research/` exists with prior artifacts for this item:
    - Read `decisions.md` inside to reconstruct ECD coverage
    - Ask via AskUserQuestion: "I found a draft design for [item]. Continue from where we left off, or start fresh?"
 2. If a `design_spec_[item].md` already exists:
@@ -106,9 +106,9 @@ Execute all of the following before your first user-facing message.
 ## Step 1: Read inputs
 
 Read these files:
-- `docs/project_notes/design_brief.md` — REQUIRED. Contains the current item, plan context, and design rationale. If missing, stop: "No design brief found. Run `/intuition-handoff` first."
-- `docs/project_notes/plan.md` — for full task context and acceptance criteria.
-- `docs/project_notes/discovery_brief.md` — for original problem context.
+- `{context_path}/design_brief.md` — REQUIRED. Contains the current item, plan context, and design rationale. If missing, stop: "No design brief found. Run `/intuition-handoff` first."
+- `{context_path}/plan.md` — for full task context and acceptance criteria.
+- `{context_path}/discovery_brief.md` — for original problem context.
 
 From the design brief, extract:
 - Current item name and description
@@ -118,7 +118,7 @@ From the design brief, extract:
 
 ## Step 2: Launch context research (2 haiku agents in parallel)
 
-Create the directory `docs/project_notes/.design_research/[item_name]/` if it does not exist.
+Create the directory `{context_path}/.design_research/[item_name]/` if it does not exist.
 
 **Agent 1 — Existing Work Scan** (subagent_type: Explore, model: haiku):
 Prompt: "Search the project for existing work related to [item description]. Look for: prior documentation, existing implementations, reference material, patterns that inform this design. Check docs/, src/, and any relevant directories. Report findings in under 400 words. Facts only."
@@ -126,7 +126,7 @@ Prompt: "Search the project for existing work related to [item description]. Loo
 **Agent 2 — Context Mapping** (subagent_type: Explore, model: haiku):
 Prompt: "Map the context surrounding [item description]. What already exists that this design must work with or within? What are the boundaries and integration points? Check the codebase structure, existing docs, and configuration. Report in under 400 words. Facts only."
 
-When both return, combine results and write to `docs/project_notes/.design_research/[item_name]/context.md`.
+When both return, combine results and write to `{context_path}/.design_research/[item_name]/context.md`.
 
 ## Step 3: Frame the design challenge
 
@@ -204,13 +204,13 @@ If changes requested, address them (1-2 more turns), then re-present.
 
 ## Step 4: Save and route
 
-Write the spec to `docs/project_notes/design_spec_[item_name].md` using the output format below.
+Write the spec to `{context_path}/design_spec_[item_name].md` using the output format below.
 
-Log design decisions to `docs/project_notes/.design_research/[item_name]/decisions.md`.
+Log design decisions to `{context_path}/.design_research/[item_name]/decisions.md`.
 
 Tell the user:
 ```
-Design spec saved to docs/project_notes/design_spec_[item_name].md.
+Design spec saved to {context_path}/design_spec_[item_name].md.
 Run /intuition-handoff to continue.
 ```
 
@@ -218,7 +218,7 @@ ALWAYS route to `/intuition-handoff`. NEVER suggest `/intuition-execute`.
 
 # OUTPUT FORMAT: DESIGN SPECIFICATION
 
-Saved to `docs/project_notes/design_spec_[item_name].md`. The content adapts to the domain being designed.
+Saved to `{context_path}/design_spec_[item_name].md`. The content adapts to the domain being designed.
 
 ```markdown
 # Design Specification: [Item Name]
@@ -330,15 +330,15 @@ Validate ALL before presenting the draft:
 
 ### Working Files (ephemeral, per-item)
 ```
-docs/project_notes/.design_research/[item_name]/
+{context_path}/.design_research/[item_name]/
   context.md          # Context research from Phase 1
   options_[topic].md  # Research for specific design questions
   decisions.md        # Running log of design decisions made
 ```
 
 ### Final Artifacts (permanent)
-- `docs/project_notes/design_spec_[item_name].md` — the deliverable
-- Updates to `docs/project_notes/decisions.md` if new ADRs emerge during design
+- `{context_path}/design_spec_[item_name].md` — the deliverable
+- Updates to `docs/project_notes/decisions.md` if new ADRs emerge during design (shared memory stays at root)
 
 ### Resume Capability
 Working files in `.design_research/` enable resuming interrupted design sessions. The `decisions.md` log reconstructs ECD coverage state.

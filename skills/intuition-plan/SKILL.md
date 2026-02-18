@@ -17,7 +17,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 5. You MUST ask exactly ONE question per turn via AskUserQuestion. For decisional questions, present 2-3 options with trade-offs. For informational questions (gathering facts, confirming understanding), present relevant options but trade-off analysis is not required.
 6. You MUST get explicit user approval before saving the plan.
 7. You MUST save the final plan to `{context_path}/plan.md`.
-8. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-execute`.
+8. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-engineer` or `/intuition-build`.
 9. You MUST write interim artifacts to `{context_path}/.planning_research/` for context management.
 10. You MUST validate against the Executable Plan Checklist before presenting the draft plan.
 11. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
@@ -27,7 +27,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 15. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
 16. When planning on a branch, you MUST read the parent context's plan.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 
-REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-execute`.
+REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-engineer` or `/intuition-build`.
 
 # ARCH COVERAGE FRAMEWORK
 
@@ -73,10 +73,10 @@ Phase 5:   FORMALIZATION    (1 turn)     Save plan.md, route to handoff
 
 Before starting the protocol, check for existing state:
 
-1. If `docs/project_notes/plan.md` already exists:
+1. If `{context_path}/plan.md` already exists:
    - If it appears complete and approved: ask via AskUserQuestion — "A plan already exists. Would you like to revise it or start fresh?"
    - If it appears incomplete or is a draft: ask — "I found a draft plan. Would you like to continue from where we left off?"
-2. If `docs/project_notes/.planning_research/` exists with interim artifacts, read them to reconstruct dialogue state. Use `decisions_log.md` to determine which ARCH dimensions have been covered.
+2. If `{context_path}/.planning_research/` exists with interim artifacts, read them to reconstruct dialogue state. Use `decisions_log.md` to determine which ARCH dimensions have been covered.
 3. If no prior state exists, proceed with Phase 1.
 
 # PHASE 1: INTAKE
@@ -86,8 +86,8 @@ This phase is exactly 1 turn. Execute all of the following before your first use
 ## Step 1: Read inputs
 
 Read these files:
-- `docs/project_notes/discovery_brief.md` — REQUIRED. If missing, stop immediately: "No discovery brief found. Run `/intuition-prompt` first."
-- `docs/project_notes/planning_brief.md` — optional, may contain handoff context.
+- `{context_path}/discovery_brief.md` — REQUIRED. If missing, stop immediately: "No discovery brief found. Run `/intuition-prompt` first."
+- `{context_path}/planning_brief.md` — optional, may contain handoff context.
 - `.claude/USER_PROFILE.json` — optional, for tailoring communication style.
 
 From the discovery brief, extract: core problem, success criteria, stakeholders, constraints, scope, assumptions, and research insights.
@@ -219,11 +219,11 @@ For each major decision domain identified from the discovery brief, orientation 
    - Use haiku (subagent_type: Explore) for straightforward fact-gathering.
    - Use sonnet (subagent_type: general-purpose) for trade-off analysis against the existing codebase.
    - Each agent prompt MUST reference the specific decision domain, return under 400 words.
-   - Write results to `docs/project_notes/.planning_research/decision_[domain].md` (snake_case).
+   - Write results to `{context_path}/.planning_research/decision_[domain].md` (snake_case).
    - NEVER launch more than 2 agents simultaneously.
 3. **Present** 2-3 options with trade-offs. Include your recommendation and why.
 4. **Ask** the user to select via AskUserQuestion.
-5. **Record** the resolved decision to `docs/project_notes/.planning_research/decisions_log.md`:
+5. **Record** the resolved decision to `{context_path}/.planning_research/decisions_log.md`:
 
 ```markdown
 ## [Decision Domain]
@@ -267,7 +267,7 @@ If the user wants to discuss more, return to Phase 3.
 
 ## Step 2: Draft the plan
 
-Read `docs/project_notes/.planning_research/decisions_log.md` and `orientation.md` to gather resolved context. Draft the plan following the plan.md output format below, applying scope scaling for the selected tier.
+Read `{context_path}/.planning_research/decisions_log.md` and `orientation.md` to gather resolved context. Draft the plan following the plan.md output format below, applying scope scaling for the selected tier.
 
 ## Step 3: Validate
 
@@ -285,8 +285,8 @@ If changes requested, make them and present again. Repeat until explicitly appro
 
 After explicit approval:
 
-1. Write the final plan to `docs/project_notes/plan.md`.
-2. Tell the user: "Plan saved to `docs/project_notes/plan.md`. Next step: Run `/intuition-handoff` to transition into execution."
+1. Write the final plan to `{context_path}/plan.md`.
+2. Tell the user: "Plan saved to `{context_path}/plan.md`. Next step: Run `/intuition-handoff` to transition to the next phase."
 3. ALWAYS route to `/intuition-handoff`. NEVER suggest `/intuition-execute`.
 
 # PLAN.MD OUTPUT FORMAT (Plan-Execute Contract v1.0)
@@ -462,7 +462,7 @@ Launch 1-2 agents per decision domain when dialogue reveals unknowns needing inv
 - Use sonnet general-purpose agents for trade-off analysis (e.g., "Compare approaches X and Y given the current architecture").
 - Each prompt MUST specify the decision domain and a 400-word limit.
 - Reference specific files or directories when possible.
-- Write results to `docs/project_notes/.planning_research/decision_[domain].md`.
+- Write results to `{context_path}/.planning_research/decision_[domain].md`.
 - NEVER launch more than 2 simultaneously.
 
 # CONTEXT MANAGEMENT

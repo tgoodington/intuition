@@ -16,7 +16,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 
 1. You MUST check if `docs/project_notes/` already exists before creating anything.
 2. You MUST use template files from `references/` directory for all initial content. Read each template with the Read tool, then Write to the target path.
-3. You MUST create `.project-memory-state.json` using the v4.0 schema from `references/state_template.json`. Do NOT use older schemas (v1.0, v2.0, v3.0).
+3. You MUST create `.project-memory-state.json` using the v5.0 schema from `references/state_template.json`. Do NOT use older schemas (v1.0, v2.0, v3.0, v4.0).
 4. You MUST update CLAUDE.md with workflow and memory protocols.
 5. You MUST NOT overwrite existing memory files without asking the user first.
 6. You MUST NOT invoke other skills (discovery, plan, execute). You only set up infrastructure.
@@ -30,7 +30,7 @@ Execute these steps in order:
 ```
 Step 1: Detect existing setup
 Step 2: Create memory directory and files from templates
-Step 3: Create .project-memory-state.json with v4.0 schema
+Step 3: Create .project-memory-state.json with v5.0 schema
 Step 4: Update CLAUDE.md with workflow protocols
 Step 4.5: Create INTUITION.md framework overview
 Step 5: Offer optional components (AGENTS.md, settings, user profile)
@@ -83,18 +83,18 @@ For each file, use the Read tool to read the template, then use Write to create 
 | `references/key_facts_template.md` | `docs/project_notes/key_facts.md` |
 | `references/issues_template.md` | `docs/project_notes/issues.md` |
 
-Do NOT create workflow output files (discovery_brief.md, plan.md, execution_brief.md, etc.). Those are created by their respective skills during the workflow.
+Do NOT create workflow output files (discovery_brief.md, plan.md, engineering_brief.md, build_brief.md, etc.). Those are created by their respective skills during the workflow.
 
 ## STEP 3: CREATE STATE FILE
 
 Read `references/state_template.json` and write to `docs/project_notes/.project-memory-state.json`.
 
-The state file uses the v4.0 schema:
+The state file uses the v5.0 schema:
 
 ```json
 {
   "initialized": true,
-  "version": "4.0",
+  "version": "5.0",
   "active_context": "trunk",
   "trunk": {
     "status": "none",
@@ -119,7 +119,12 @@ The state file uses the v4.0 schema:
         "items": [],
         "current_item": null
       },
-      "execution": {
+      "engineering": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "build": {
         "started": false,
         "completed": false,
         "completed_at": null
@@ -134,7 +139,7 @@ The state file uses the v4.0 schema:
 
 **CRITICAL**: This is the authoritative schema. Handoff is the ONLY skill that updates this file after initialization. All other skills read it but NEVER write to it.
 
-Do NOT use older schemas (v1.0, v2.0, or v3.0). Those schemas are obsolete.
+Do NOT use older schemas (v1.0, v2.0, v3.0, or v4.0). Those schemas are obsolete.
 
 ## STEP 4: UPDATE CLAUDE.MD
 
@@ -151,10 +156,10 @@ IF CLAUDE.md does NOT exist:
 ```
 
 The template includes:
-- Four-phase workflow description (prompt → plan → design → execute with handoffs)
+- Five-phase workflow description (prompt → plan → design → engineer → build with handoffs)
 - Memory file descriptions and locations
 - Memory-aware protocols (check decisions before changes, search bugs before debugging)
-- Smart skill suggestions (when to suggest /intuition-prompt, /intuition-plan, /intuition-design, etc.)
+- Smart skill suggestions (when to suggest /intuition-prompt, /intuition-plan, /intuition-design, /intuition-engineer, /intuition-build, etc.)
 
 ## STEP 4.5: CREATE INTUITION.MD
 
@@ -234,7 +239,7 @@ Created:
 - docs/project_notes/decisions.md
 - docs/project_notes/key_facts.md
 - docs/project_notes/issues.md
-- docs/project_notes/.project-memory-state.json (v4.0 schema)
+- docs/project_notes/.project-memory-state.json (v5.0 schema)
 - CLAUDE.md workflow protocols
 - INTUITION.md framework overview
 
@@ -277,7 +282,7 @@ These template files are in the `references/` directory. Use Read tool to access
 - `discovery_output_template.json`
 - `planning_brief_template.md`
 - `design_brief_template.md`
-- `execution_brief_template.md`
+- `execution_brief_template.md` (engineering brief template — legacy filename)
 
 ## MEMORY FILE FORMATS
 

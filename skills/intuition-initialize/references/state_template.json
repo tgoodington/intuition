@@ -1,6 +1,6 @@
 {
   "initialized": true,
-  "version": "4.0",
+  "version": "5.0",
   "active_context": "trunk",
   "trunk": {
     "status": "none",
@@ -25,7 +25,12 @@
         "items": [],
         "current_item": null
       },
-      "execution": {
+      "engineering": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "build": {
         "started": false,
         "completed": false,
         "completed_at": null

@@ -149,7 +149,7 @@ Triggered when start routes to handoff with branch creation intent. User has pro
    - `workflow`: identical structure to trunk's workflow (all false/null/empty — including `engineering` and `build` phases)
 4. **Set `active_context`** to the new branch key.
 5. **Write updated state**. Set `last_handoff_transition` to "branch_creation".
-6. **Route user**: "Branch **[display_name]** created. Run `/intuition-prompt` to define what this branch will accomplish."
+6. **Route user**: "Branch **[display_name]** created. Run `/clear` then `/intuition-prompt` to define what this branch will accomplish."
 
 ## V4 STATE MIGRATION
 
@@ -243,7 +243,7 @@ Update the active context: set `status` to `"planning"`, mark `prompt.completed 
 
 ### Route User
 
-"Discovery processed. Planning brief saved to `{context_path}planning_brief.md`. Run `/intuition-plan` to create a structured plan."
+"Discovery processed. Planning brief saved to `{context_path}planning_brief.md`. Run `/clear` then `/intuition-plan` to create a structured plan."
 
 ## TRANSITION 2: PLANNING → DESIGN (Initial Setup)
 
@@ -285,7 +285,7 @@ Update active context: set `status` to `"design"`, mark `planning.completed = tr
 
 ### Route User
 
-"Plan processed. Design brief prepared for **[First Item Name]**. Run `/intuition-design` to begin design exploration."
+"Plan processed. Design brief prepared for **[First Item Name]**. Run `/clear` then `/intuition-design` to begin design exploration."
 
 ## TRANSITION 2B: PLANNING → ENGINEER (Skip Design)
 
@@ -307,7 +307,7 @@ Update active context: set `status` to `"engineering"`, mark `planning.completed
 
 ### Route User
 
-"Plan processed. No design items flagged. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/intuition-engineer` to create code specs."
+"Plan processed. No design items flagged. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/clear` then `/intuition-engineer` to create code specs."
 
 ## TRANSITION 3: DESIGN → DESIGN (Next Item)
 
@@ -343,7 +343,7 @@ Update active context's `design.items`: mark completed item as `"completed"` wit
 
 ### Route User
 
-"[Previous Item] design complete. Design brief updated for **[Next Item Name]** ([N] of [total], [remaining] remaining). Run `/intuition-design` to continue."
+"[Previous Item] design complete. Design brief updated for **[Next Item Name]** ([N] of [total], [remaining] remaining). Run `/clear` then `/intuition-design` to continue."
 
 ## TRANSITION 4: DESIGN → ENGINEER
 
@@ -375,7 +375,7 @@ Update active context: set `status` to `"engineering"`, mark `design.completed =
 
 ### Route User
 
-"All design specs processed. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/intuition-engineer` to create code specs."
+"All design specs processed. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/clear` then `/intuition-engineer` to create code specs."
 
 ## TRANSITION 5: ENGINEER → BUILD
 
@@ -405,17 +405,20 @@ Update active context: set `status` to `"building"`, mark `engineering.completed
 
 ### Route User
 
-"Code specs processed. Build brief saved to `{context_path}build_brief.md`. Run `/intuition-build` to begin implementation."
+"Code specs processed. Build brief saved to `{context_path}build_brief.md`. Run `/clear` then `/intuition-build` to begin implementation."
 
 ## TRANSITION 6: BUILD → COMPLETE
 
 ### Read Outputs
 
-Read build results from `{context_path}` for any reports the build phase produced.
+Read `{context_path}/build_report.md` — REQUIRED. Contains task outcomes, files modified, verification results, and any deviations from specs. If missing, warn the user that build may not have completed properly, then proceed with what's available.
 
 ### Extract and Structure
 
-Bugs found → `docs/project_notes/bugs.md`, lessons learned → `docs/project_notes/key_facts.md`, work completed → `docs/project_notes/issues.md`.
+From the build report:
+- Bugs found or issues encountered → `docs/project_notes/bugs.md`
+- Lessons learned or deviations → `docs/project_notes/key_facts.md`
+- Work completed → `docs/project_notes/issues.md`
 
 ### Git Commit Offer
 
@@ -433,7 +436,7 @@ Options:
 
 If user approves commit:
 1. Run `git status` to see changed files
-2. Run `git add [specific files from build report]` — only add files that were part of the build
+2. Run `git add` for files listed in the build report's "Files Modified" section. Cross-reference with `git status` to catch any files the report missed.
 3. Run `git commit` with a descriptive message summarizing the build
 4. If user chose push: run `git push`
 
@@ -445,7 +448,7 @@ Update active context: set `status` to `"complete"`, mark `build.completed = tru
 
 ### Route User
 
-"Workflow cycle complete for [context display name]. Run `/intuition-start` to see your project status and decide what's next."
+"Workflow cycle complete for [context display name]. Run `/clear` then `/intuition-start` to see your project status and decide what's next."
 
 ## MEMORY FILE FORMATS
 
