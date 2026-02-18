@@ -1,6 +1,6 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "8.1.0",
+  "version": "8.1.1",
   "description": "Trunk-and-branch workflow system for Claude Code: prompt, plan, design, engineer, build with iterative branching. Code spec creation, domain-agnostic design exploration with ECD framework, and file-based handoffs through project memory.",
   "keywords": [
     "claude-code",
