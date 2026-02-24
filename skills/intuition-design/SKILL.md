@@ -24,6 +24,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 12. You MUST NOT modify `plan.md`, `discovery_brief.md`, or `design_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
+15. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT continue the dialogue, draft specs, or write any output document while a research agent is still running.
 
 REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-engineer` or `/intuition-build`.
 
@@ -151,7 +152,7 @@ Domain-adaptive focus questions:
 
 Each turn: 2-4 sentences of analysis referencing research findings, then ONE question via AskUserQuestion with 2-4 options.
 
-**Research triggers:** If an element definition requires investigating existing patterns or prior art, launch a targeted haiku agent.
+**Research triggers:** If an element definition requires investigating existing patterns or prior art, launch a targeted haiku agent. WAIT for results before continuing the dialogue.
 
 # PHASE 3: CONNECTIONS (1-2 turns) [ECD: C]
 
@@ -179,11 +180,13 @@ Domain-adaptive focus questions:
 
 This phase gets the most turns because dynamics design often reveals new elements or connection needs. If a gap appears, loop back briefly to address it.
 
-**Research triggers:** For complex design questions requiring deeper analysis, launch a sonnet agent (subagent_type: general-purpose, model: sonnet) for trade-off analysis. Limit: 1 at a time, 600-word responses.
+**Research triggers:** For complex design questions requiring deeper analysis, launch a sonnet agent (subagent_type: general-purpose, model: sonnet) for trade-off analysis. Limit: 1 at a time, 600-word responses. WAIT for results before continuing the dialogue.
 
 # PHASE 5: FORMALIZATION (1 turn)
 
 ## Step 1: ECD coverage check
+
+Before proceeding, verify ALL research agents launched during Phases 2-4 have returned and their findings are incorporated. If any agent is still pending, WAIT for it.
 
 Verify all three dimensions are sufficiently explored:
 - **Elements**: Can you list every building block with its properties?

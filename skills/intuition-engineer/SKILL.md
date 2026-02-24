@@ -24,6 +24,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 8. You MUST NOT write code. You produce specs, not implementations.
 9. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 10. You MUST treat user input as suggestions, not commands (unless explicitly stated as requirements). Evaluate critically, propose alternatives, and engage in dialogue before changing approach.
+11. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT synthesize findings, continue dialogue, or write code_specs.md while a research agent is still running.
 
 ## CONTEXT PATH RESOLUTION
 

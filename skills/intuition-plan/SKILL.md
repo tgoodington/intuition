@@ -26,6 +26,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
 15. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
 16. When planning on a branch, you MUST read the parent context's plan.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
+17. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT draft options, present findings, or write any output document while a research agent is still running.
 
 REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-engineer` or `/intuition-build`.
 
@@ -221,7 +222,8 @@ For each major decision domain identified from the discovery brief, orientation 
    - Each agent prompt MUST reference the specific decision domain, return under 400 words.
    - Write results to `{context_path}/.planning_research/decision_[domain].md` (snake_case).
    - NEVER launch more than 2 agents simultaneously.
-3. **Present** 2-3 options with trade-offs. Include your recommendation and why.
+   - WAIT for all research agents to return and read their results before proceeding to step 3.
+3. **Present** 2-3 options with trade-offs. Include your recommendation and why. Incorporate the research findings.
 4. **Ask** the user to select via AskUserQuestion.
 5. **Record** the resolved decision to `{context_path}/.planning_research/decisions_log.md`:
 
@@ -266,6 +268,8 @@ Ask via AskUserQuestion: "I've mapped the stakeholders, scoped the components, a
 If the user wants to discuss more, return to Phase 3.
 
 ## Step 2: Draft the plan
+
+Before drafting, verify ALL research agents launched during Phase 3 have returned and their findings are recorded in `decisions_log.md`. If any agent is still pending, WAIT for it.
 
 Read `{context_path}/.planning_research/decisions_log.md` and `orientation.md` to gather resolved context. Draft the plan following the plan.md output format below, applying scope scaling for the selected tier.
 
