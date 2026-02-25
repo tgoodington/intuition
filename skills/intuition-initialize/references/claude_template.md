@@ -1,16 +1,17 @@
 ## Project Workflow and Memory System
 
-This project uses a four-phase workflow coordinated by the Intuition system, with institutional knowledge maintained in `docs/project_notes/` for consistency across sessions.
+This project uses a five-phase workflow coordinated by the Intuition system, with institutional knowledge maintained in `docs/project_notes/` for consistency across sessions.
 
 ### Workflow Model
 
 The Intuition workflow uses a trunk-and-branch model:
-- **Trunk**: The first prompt→plan→design→execute cycle. Represents the core vision.
+- **Trunk**: The first prompt→plan→design→engineer→build cycle. Represents the core vision.
 - **Branches**: Subsequent cycles that build on, extend, or diverge from trunk or other branches.
-- **Debugger**: Post-execution diagnostic specialist for hard problems.
+- **Debugger**: Post-completion diagnostic specialist for hard problems.
 
 All phases: `/intuition-prompt` → `/intuition-handoff` → `/intuition-plan` → `/intuition-handoff` →
-`[/intuition-design loop]` → `/intuition-handoff` → `/intuition-execute` → `/intuition-handoff` → complete
+`[/intuition-design loop]` → `/intuition-handoff` → `/intuition-engineer` → `/intuition-handoff` →
+`/intuition-build` → `/intuition-handoff` → complete
 
 After completion: `/intuition-start` to create branches or `/intuition-debugger` to debug issues.
 
@@ -19,12 +20,12 @@ After completion: `/intuition-start` to create branches or `/intuition-debugger`
 The project follows a structured workflow with handoff transitions between phases:
 
 **Prompt** — `/intuition-prompt`
-- Transforms a rough vision into a precise, planning-ready discovery brief
+- Transforms a rough vision into a precise, planning-ready brief
 - Framework: Capture → Refine → Reflect → Confirm
-- Output: `discovery_brief.md` and `discovery_output.json`
+- Output: Planning-ready brief (processed by Handoff into `planning_brief.md`)
 
 **Handoff** — `/intuition-handoff`
-- Processes phase outputs, updates memory files, generates brief for next agent
+- Processes phase outputs, updates memory files, generates brief for next phase
 - Runs between every phase transition
 - Manages the design loop (item-by-item design cycles)
 - ONLY component that writes to `.project-memory-state.json`
@@ -40,21 +41,26 @@ The project follows a structured workflow with handoff transitions between phase
 - Framework: ECD (Elements, Connections, Dynamics)
 - Domain-agnostic: works for code, world building, UI, documents, or any creative/structural work
 - Runs once per flagged item in a loop managed by handoff
-- Output: `design_spec_[item].md` per item
+- Output: Design specifications per item
 
-**Execution** — `/intuition-execute`
-- Methodical implementation with verification and quality checks
-- Delegates to specialized sub-agents, coordinates work, verifies outputs
-- Reads both plan.md and design specs for implementation guidance
-- Output: Implemented features, updated memory, completion report
+**Engineering** — `/intuition-engineer`
+- Creates code-level specifications through codebase research and interactive dialogue
+- Research subagents read codebase, engineer discusses decisions with user
+- Output: `code_specs.md` — determines the code-level HOW for every task
+
+**Build** — `/intuition-build`
+- Delegates implementation to subagents, verifies against code specs and acceptance criteria
+- Mandatory security review before completion
+- Makes NO engineering decisions — matches output to specs
+- Output: `build_report.md` — task outcomes, files modified, deviations from specs
 
 **Session Primer** — `/intuition-start`
 - Loads project context, detects workflow phase, suggests next step
 - Run at the start of any session to get oriented
 
-**Recommended Flow**: Prompt → Handoff → Plan → Handoff → [Design Loop] → Handoff → Execute → Handoff → complete
+**Recommended Flow**: Prompt → Handoff → Plan → Handoff → [Design Loop] → Handoff → Engineer → Handoff → Build → Handoff → complete
 
-After completion, run `/intuition-start` to create a branch or invoke `/intuition-debugger` to debug issues.
+Run `/clear` before each phase skill. After completion, run `/intuition-start` to create a branch or invoke `/intuition-debugger` to debug issues.
 
 ### Memory Files
 
@@ -65,14 +71,14 @@ After completion, run `/intuition-start` to create a branch or invoke `/intuitio
 - **issues.md** — Work log with ticket IDs, descriptions, and URLs
 - **.project-memory-state.json** — Workflow phase tracking and session state
 
-**Phase Output Files** (created during workflow):
-- **discovery_brief.md** — Prompt phase synthesis
-- **discovery_output.json** — Structured findings (processed by Handoff)
+**Phase Output Files** (created during workflow, in `{context_path}/`):
 - **planning_brief.md** — Brief for planning phase (created by Handoff)
 - **plan.md** — Structured project plan with design recommendations
 - **design_brief.md** — Brief for current design item (created/updated by Handoff)
-- **design_spec_[item].md** — Design specifications per item
-- **execution_brief.md** — Brief for execution phase (created by Handoff)
+- **engineering_brief.md** — Brief for engineering phase (created by Handoff)
+- **code_specs.md** — Code-level specifications (created by Engineer)
+- **build_brief.md** — Brief for build phase (created by Handoff)
+- **build_report.md** — Task outcomes and files modified (created by Build)
 
 ### Memory-Aware Protocols
 
@@ -107,16 +113,22 @@ After completion, run `/intuition-start` to create a branch or invoke `/intuitio
 - "Prompt refinement looks complete! Use `/intuition-handoff` to process insights and prepare for planning."
 
 **When user suggests planning work:**
-- "This sounds like a good candidate for planning. Use `/intuition-handoff` to process discovery, then `/intuition-plan` to develop a structured approach."
+- "This sounds like a good candidate for planning. Use `/intuition-handoff` to process the brief, then `/intuition-plan` to develop a structured approach."
 
 **When plan is ready and has design items:**
 - "The plan looks ready! Use `/intuition-handoff` to review design recommendations and start the design loop."
 
 **When design items are complete:**
-- "All design specs are done! Use `/intuition-handoff` to prepare the execution brief."
+- "All design specs are done! Use `/intuition-handoff` to prepare the engineering brief."
 
-**When user is ready to execute:**
-- "Execution brief is ready! Use `/intuition-execute` to kick off coordinated implementation."
+**When user is ready to engineer:**
+- "Engineering brief is ready! Use `/intuition-engineer` to create code specifications."
 
-**When execution is complete:**
+**When engineering is complete:**
+- "Code specs are ready! Use `/intuition-handoff` to prepare the build brief."
+
+**When user is ready to build:**
+- "Build brief is ready! Use `/intuition-build` to kick off implementation."
+
+**When build is complete:**
 - "Workflow cycle complete! Use `/intuition-start` to create a branch for new work, or `/intuition-debugger` to debug any issues."

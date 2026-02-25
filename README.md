@@ -1,440 +1,131 @@
-# Intuition v2
+# Intuition
 
-A five-skill orchestration system for software development. Intuition coordinates discovery, planning, and execution through a symphony of specialized agents, with explicit handoff phases maintaining clean context and memory consistency.
+A trunk-and-branch workflow system for Claude Code. Turns rough ideas into structured plans, detailed designs, code specifications, and verified implementations through guided dialogue.
 
-**The Five Skills:**
-1. **`/intuition-start`** - Session primer (load context, detect phase, suggest next step)
-2. **`/intuition-discovery`** - Waldo (explore problems through GAPP and Socratic dialogue)
-3. **`/intuition-handoff`** - Orchestrator (extract insights, update memory, brief next agent)
-4. **`/intuition-plan`** - Magellan (synthesize discovery into structured executable plans)
-5. **`/intuition-execute`** - Faraday (orchestrate implementation with methodical precision)
+**npm**: [`@tgoodington/intuition`](https://www.npmjs.com/package/@tgoodington/intuition)
+**GitHub**: [tgoodington/intuition](https://github.com/tgoodington/intuition)
 
-**Also includes:**
-- `/intuition-initialize` - Setup project memory system
-
-## Quick Start
-
-```bash
-# Install globally
-npm install -g intuition
-
-# In Claude Code, typical workflow:
-/intuition-start            # Load context and check workflow status
-/intuition-discovery        # Waldo guides discovery (GAPP dialogue)
-/intuition-handoff          # Extract insights, brief planner
-/intuition-plan             # Magellan creates structured plan
-/intuition-handoff          # Prepare execution context
-/intuition-execute          # Faraday orchestrates implementation
-```
-
-**Key Point:** Always start with `/intuition-start` — it will tell you which step to take next.
-
-## Why Five Skills?
-
-Each skill has a focused responsibility:
-
-| Skill | Role | Phase | Input | Output | Focus |
-|-------|------|-------|-------|--------|-------|
-| `/intuition-start` | Primer | Any | State file | Context brief + suggestion | Navigation |
-| `/intuition-discovery` | Waldo | Discovery | Problem description | `discovery_brief.md`, `discovery_output.json` | Understanding & dialogue |
-| `/intuition-handoff` | Orchestrator | Transition | Phase output | Updated memory + brief | Context bridging |
-| `/intuition-plan` | Magellan | Planning | `planning_brief.md` | `plan.md` | Strategy & synthesis |
-| `/intuition-execute` | Faraday | Execution | `execution_brief.md` | Code + memory | Implementation |
-
-By splitting into five phases with explicit handoffs:
-- **Clean context** - Each skill gets exactly what it needs, nothing more
-- **Memory consistency** - Handoff maintains project memory across phases
-- **Higher success rate** - Less context bloat, better focus
-- **Resume support** - Interrupted work picks up from last checkpoint
-- **Transparency** - Every phase produces readable, auditable outputs
-
-## The Five-Phase Workflow
-
-### Phase 1: Discovery with Waldo
-
-Explore your problem deeply using the GAPP framework:
-
-```
-/intuition-discovery
-```
-
-Waldo guides you through genuine dialogue covering:
-- **Problem** - What's the core challenge?
-- **Goals** - What does success look like?
-- **UX Context** - Who will use this and how?
-- **Personalization** - What drives this work for you?
-
-**Output:** `docs/project_notes/discovery_brief.md` + `discovery_output.json`
-
-Uses Socratic questioning and systems thinking to surface authentic intentions.
-
-### Phase 1.5: Discovery → Planning Handoff
-
-Process discovery and prepare for planning:
-
-```
-/intuition-handoff
-```
-
-The orchestrator:
-1. Reads your discovery output
-2. Extracts key facts, decisions, constraints
-3. Updates project memory files
-4. Generates `planning_brief.md` for Magellan
-5. Updates workflow state
-
-**Output:** Updated memory + fresh planning context
-
-### Phase 2: Planning with Magellan
-
-Create a structured plan from discovery:
-
-```
-/intuition-plan
-```
-
-Magellan:
-1. Reads your planning brief and memory
-2. Researches your codebase
-3. Synthesizes insights into a strategic plan
-4. Detects planning depth (simple vs. complex)
-5. Presents plan for your approval
-
-**Output:** `docs/project_notes/plan.md`
-
-Includes tasks with acceptance criteria, dependencies, risks, and execution notes.
-
-### Phase 2.5: Planning → Execution Handoff
-
-Process plan and prepare for execution:
-
-```
-/intuition-handoff
-```
-
-The orchestrator:
-1. Reads your plan
-2. Extracts task structure and risks
-3. Updates project memory with planning outcomes
-4. Generates `execution_brief.md` for Faraday
-5. Updates workflow state
-
-**Output:** Updated memory + fresh execution context
-
-### Phase 3: Execution with Faraday
-
-Execute the approved plan:
-
-```
-/intuition-execute
-```
-
-Faraday:
-1. Reads execution brief and memory
-2. Confirms approach with you
-3. Delegates to specialized sub-agents
-4. Verifies outputs against acceptance criteria
-5. Updates project memory
-6. Reports completion
-
-**Output:** Implemented code + updated project memory
-
-## Project Memory System
-
-Intuition maintains persistent project knowledge:
-
-```
-docs/project_notes/
-├── .project-memory-state.json    (workflow status & resume data)
-├── discovery_brief.md            (from Waldo)
-├── plan.md                       (from Magellan)
-├── bugs.md                       (known issues & solutions)
-├── decisions.md                  (architectural decisions)
-├── key_facts.md                  (project configuration)
-└── issues.md                     (work log)
-```
-
-All three agents reference and update project memory for consistency.
-
-## Workflow Status
-
-Check where you are in the workflow:
-
-```
-/intuition-start
-```
-
-Returns current status:
-- **Discovery:** In progress / Complete
-- **Planning:** In progress / Complete / Approved
-- **Execution:** In progress / Complete
-
-Also provides helpful next-step suggestions.
-
-## File Outputs
-
-### discovery_brief.md (From Waldo)
-
-```markdown
-# Discovery Brief
-
-## Problem
-[Core challenge and context]
-
-## Goals
-[Success criteria]
-
-## User Context
-[Personas and workflows]
-
-## Personalization / Motivation
-[What drives this work]
-
-## Scope
-[In scope / out of scope]
-
-## Assumptions
-[With confidence levels]
-```
-
-### plan.md (From Magellan)
-
-```markdown
-# Plan: [Title]
-
-## Objective
-[What will be accomplished]
-
-## Discovery Summary
-[Key insights from Waldo]
-
-## Research Context
-[Codebase findings]
-
-## Approach
-[Strategy and rationale]
-
-## Tasks
-[With acceptance criteria, dependencies]
-
-## Risks & Mitigations
-[Identified risks]
-
-## Execution Notes for Faraday
-[Guidance for execution]
-```
-
-## Resume Support
-
-All three agents can resume interrupted work:
-
-- **Waldo** resumes from the last GAPP phase
-- **Magellan** resumes from research or draft state
-- **Faraday** resumes from the last completed task
-
-Just run the skill again and it will pick up from the checkpoint.
-
-## Discovery Revision
-
-If you need to revise your discovery:
-
-1. Run `/intuition-discovery` again
-2. Waldo updates `discovery_brief.md`
-3. Magellan detects the change and offers to re-plan
-4. New plan created with updated context
-
-## Installation
-
-### Install Globally (Recommended)
+## Install
 
 ```bash
 npm install -g @tgoodington/intuition
 ```
 
-This installs five skills globally to `~/.claude/skills/`:
-- `/intuition-start` - Load project context
-- `/intuition-initialize` - Setup project memory
-- `/intuition-discovery` - Waldo's discovery
-- `/intuition-plan` - Magellan's planning
-- `/intuition-execute` - Faraday's execution
+This installs 12 skills globally to `~/.claude/skills/`. Verify by typing `/` in Claude Code — you should see skills starting with `intuition-`.
 
-### Install from Source (Development)
+## Workflow
 
-```bash
-cd intuition
-npm install -g .
-```
-
-### Verify Installation
-
-In Claude Code, type `/` to see available skills. You should see all five:
-- `/intuition-start`
-- `/intuition-initialize`
-- `/intuition-discovery`
-- `/intuition-plan`
-- `/intuition-execute`
-
-## Skills Reference
-
-### `/intuition-start`
-
-Load project context and check workflow status.
+Five phases with handoff transitions between each:
 
 ```
-/intuition-start
+prompt → plan → [design] → engineer → build
 ```
 
-**Does:**
-- Loads project memory files
-- Checks workflow status
-- Suggests next steps based on status
-- Enforces project protocols
+The first cycle is the **trunk**. After completion, create **branches** for new features or changes.
 
-**When to use:** Start of every session
-
-### `/intuition-initialize`
-
-Setup project memory system.
+### Quick Start
 
 ```
-/intuition-initialize
+/intuition-initialize          # Set up project memory (once per project)
+/intuition-start               # Check status, get routed to next step
+/intuition-prompt              # Describe what you want to build
+/intuition-handoff             # Process → move to planning
+/intuition-plan                # Create the blueprint
+/intuition-handoff             # Review design flags
+/intuition-design              # Elaborate flagged items (if any)
+/intuition-handoff             # Prepare for engineering
+/intuition-engineer            # Create code specifications
+/intuition-handoff             # Prepare for build
+/intuition-build               # Implement and verify
+/intuition-handoff             # Complete the cycle
 ```
 
-**Creates:**
-- `docs/project_notes/` directory
-- `bugs.md` - Bug tracking
-- `decisions.md` - Architecture decisions
-- `key_facts.md` - Project configuration
-- `issues.md` - Work log
-- `.project-memory-state.json` - Workflow tracking
+Run `/clear` before each phase skill to keep context clean. Not every project needs design — if the plan is clear enough, handoff skips straight to engineer.
 
-**When to use:** Once per project, at the start
+## Skills
 
-### `/intuition-discovery`
+### Core Workflow
 
-Explore your problem with Waldo.
+| Skill | Model | Purpose |
+|-------|-------|---------|
+| `/intuition-prompt` | opus | Refines a rough idea into a planning-ready brief |
+| `/intuition-plan` | opus | Strategic blueprint with tasks, dependencies, design flags |
+| `/intuition-design` | opus | ECD framework design exploration for flagged items |
+| `/intuition-engineer` | opus | Code-level specs through research + interactive dialogue |
+| `/intuition-build` | sonnet | Delegates implementation, verifies against specs |
 
-```
-/intuition-discovery
-```
+### Infrastructure
 
-**Waldo does:**
-- GAPP discovery (Problem → Goals → UX Context → Personalization)
-- Socratic questioning
-- Systems thinking perspective
-- Clarifying questions to validate understanding
-- Saves `discovery_brief.md`
+| Skill | Model | Purpose |
+|-------|-------|---------|
+| `/intuition-start` | haiku | Detects phase, routes to next skill, version check |
+| `/intuition-handoff` | haiku | State transitions, brief generation, design loop |
+| `/intuition-initialize` | haiku | Project memory setup (run once) |
+| `/intuition-update` | haiku | Package update manager |
 
-**When to use:** Start of new work
+### Advisory
 
-### `/intuition-plan`
+| Skill | Model | Purpose |
+|-------|-------|---------|
+| `/intuition-debugger` | opus | Expert diagnostics for complex post-completion bugs |
+| `/intuition-agent-advisor` | opus | Guidance on building custom Claude Code agents |
+| `/intuition-skill-guide` | opus | Guidance on building custom Claude Code skills |
 
-Create a plan with Magellan.
+## Key Concepts
 
-```
-/intuition-plan
-```
+### Engineer → Build Split
 
-**Magellan does:**
-- Reads your discovery brief
-- Researches codebase (parallel agents)
-- Synthesizes into strategic plan
-- Auto-detects planning depth
-- Saves `plan.md`
+- **Engineer** (opus) determines the code-level HOW: researches codebase, discusses decisions interactively, produces `code_specs.md`
+- **Build** (sonnet) implements against specs: delegates to subagents, verifies with reviewers, runs mandatory security review, produces `build_report.md`
 
-**When to use:** After discovery is complete
+### Trunk and Branches
 
-### `/intuition-execute`
+- **Trunk**: First prompt→build cycle — the foundation
+- **Branches**: Subsequent cycles that read parent context for continuity
+- After any cycle completes, `/intuition-start` offers branch creation or debugging
 
-Execute the plan with Faraday.
+### Design Loop
 
-```
-/intuition-execute
-```
+The plan flags tasks needing design exploration. Handoff manages a loop: design one item → check for more → design next or advance to engineer.
 
-**Faraday does:**
-- Reads plan and discovery context
-- Confirms approach with you
-- Delegates to sub-agents (parallel when possible)
-- Verifies outputs
-- Updates project memory
+### Project Memory
 
-**When to use:** After plan is approved
-
-## Sub-Agents
-
-Faraday coordinates these specialized agents:
-
-| Agent | Purpose |
-|-------|---------|
-| Code Writer | Implementation |
-| Test Runner | Testing & verification |
-| Code Reviewer | Quality review |
-| Documentation | Updates docs |
-| Research | Codebase exploration |
-| Security Expert | Vulnerability scanning |
-| Technical Spec Writer | Specification creation |
-| Communications Specialist | User-facing documentation |
-
-## Documentation
-
-- **Workflow Guide:** `docs/intuition-workflow.md`
-- **Architecture:** `docs/intuition-architecture.md`
-- **Waldo Reference:** `skills/intuition-discovery/references/waldo_core.md`
-- **Magellan Reference:** `skills/intuition-plan/references/magellan_core.md`
-- **Faraday Reference:** `skills/intuition-execute/references/faraday_core.md`
-
-## Requirements
-
-- Node.js 14.0.0 or higher
-- Claude Code or similar agent system
+All workflow state and knowledge lives in `docs/project_notes/`:
+- Shared memory: `bugs.md`, `decisions.md`, `key_facts.md`, `issues.md`
+- State: `.project-memory-state.json` (owned by handoff)
+- Phase outputs: briefs, plan, code specs, build report (in context-specific paths)
 
 ## Project Structure
 
 ```
 intuition/
 ├── skills/
-│   ├── intuition-start/        # Context loading & workflow status
-│   ├── intuition-initialize/   # Project memory setup
-│   ├── intuition-discovery/    # Waldo - discovery & GAPP
-│   ├── intuition-plan/         # Magellan - strategic planning
-│   └── intuition-execute/      # Faraday - orchestrated execution
-├── docs/                       # Documentation
-│   ├── intuition-workflow.md   # User guide
-│   └── intuition-architecture.md # Technical details
-├── scripts/                    # Installation scripts
-├── package.json                # npm package config
-└── README.md                   # This file
+│   ├── intuition-start/           # Session primer + routing
+│   ├── intuition-prompt/          # Discovery refinement
+│   ├── intuition-plan/            # Strategic planning
+│   ├── intuition-design/          # ECD design exploration
+│   ├── intuition-engineer/        # Code spec creation
+│   ├── intuition-build/           # Implementation + verification
+│   ├── intuition-handoff/         # State transitions + briefs
+│   ├── intuition-debugger/        # Post-completion diagnostics
+│   ├── intuition-initialize/      # Project memory setup
+│   ├── intuition-update/          # Package updates
+│   ├── intuition-agent-advisor/   # Agent building guidance
+│   └── intuition-skill-guide/     # Skill building guidance
+├── scripts/
+│   ├── install-skills.js          # Postinstall → copies skills to ~/.claude/skills/
+│   └── uninstall-skills.js        # Preuninstall → removes skills
+├── docs/                          # Architecture and design documentation
+├── bin/                           # CLI entry point
+├── package.json
+└── README.md
 ```
 
-## Contributing
+## Requirements
 
-Contributions welcome! Areas for enhancement:
-- Additional specialized sub-agents
-- Workflow improvements
-- Documentation enhancements
-- Framework extensions
+- Node.js 14.0.0+
+- Claude Code
 
 ## License
 
 MIT
-
-## Support
-
-For issues or questions:
-- Check `docs/intuition-workflow.md` for user guide
-- Check `docs/intuition-architecture.md` for technical details
-- Review skill documentation in `skills/*/SKILL.md`
-- Check project memory in `docs/project_notes/` for decisions and issues
-
-## Version History
-
-### 2.0.0+
-- Complete refactor into three-agent system (Waldo → Magellan → Faraday)
-- GAPP framework for discovery
-- File-based handoffs through project memory
-- Enhanced state management
-- Resume support for all phases
-
-### 1.x
-- Original monolithic planning system

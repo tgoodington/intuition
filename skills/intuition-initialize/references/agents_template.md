@@ -2,73 +2,117 @@
 
 ## Overview
 
-This project uses a multi-agent system coordinated by Intuition (Claude Code skill system) to streamline development workflows. Specialized agents handle discovery, planning, and execution, with memory maintained in `docs/project_notes/` for consistency across sessions.
+This project uses a multi-agent system coordinated by Intuition (`@tgoodington/intuition`), a Claude Code skill system. Twelve specialized skills handle prompt refinement, planning, design exploration, code engineering, and build execution, with memory maintained in `docs/project_notes/` for consistency across sessions.
 
-## Primary Agents
+## Workflow Skills
 
-**Waldo** — Discovery & Thought Partnership (`/intuition-discovery`)
-- Collaborative dialogue for understanding problems deeply
-- GAPP framework: Problem → Goals → UX Context → Personalization
-- Researches topic via parallel subagents before engaging
-- Output: `discovery_brief.md` and `discovery_output.json`
+### Core Workflow (run in sequence with handoff between each)
 
-**Magellan** — Planning & Strategic Synthesis (`/intuition-plan`)
-- Synthesizes discovery into structured, executable plans
-- Researches codebase via parallel subagents
-- Output: `plan.md` with tasks, dependencies, risks
+| Skill | Model | What it does |
+|-------|-------|-------------|
+| `/intuition-prompt` | opus | Transforms a rough vision into a planning-ready brief through focused iterative refinement |
+| `/intuition-plan` | opus | Strategic architect — maps stakeholders, explores components, evaluates options, creates executable blueprint |
+| `/intuition-design` | opus | Elaborates flagged plan items through ECD framework (Elements, Connections, Dynamics) |
+| `/intuition-engineer` | opus | Creates code-level specifications through codebase research and interactive dialogue → `code_specs.md` |
+| `/intuition-build` | sonnet | Delegates implementation to subagents, verifies outputs against code specs and acceptance criteria |
 
-**Faraday** — Execution & Implementation (`/intuition-execute`)
-- Executes approved plans by orchestrating specialized sub-agents
-- Delegates to Code Writer, Test Runner, Code Reviewer, Security Expert
-- Mandatory security review before completion
-- Output: Implemented features, completion report
+### Infrastructure
 
-**Handoff Orchestrator** (`/intuition-handoff`)
-- Processes phase outputs, updates memory files, briefs next agent
-- ONLY component that writes to `.project-memory-state.json`
-- Bridges discovery→planning and planning→execution transitions
+| Skill | Model | What it does |
+|-------|-------|-------------|
+| `/intuition-start` | haiku | Loads project context, detects workflow phase, routes to correct next skill |
+| `/intuition-handoff` | haiku | Processes phase outputs, updates memory, generates briefs for the next phase |
+| `/intuition-initialize` | haiku | Sets up project memory infrastructure (run once per project) |
+| `/intuition-update` | haiku | Package update manager |
 
-## Specialized Sub-Agents
+### Advisory
 
-**Code Writer** — Implements features and fixes
-**Test Runner** — Runs unit and integration tests
-**Code Reviewer** — Reviews quality, maintainability, security
-**Security Expert** — Scans for vulnerabilities (mandatory before completion)
-**Documentation** — Creates and updates docs
-**Research** — Investigates issues, explores codebases
+| Skill | Model | What it does |
+|-------|-------|-------------|
+| `/intuition-debugger` | opus | Expert debugger — 5 diagnostic categories, causal chain analysis, post-completion only |
+| `/intuition-agent-advisor` | opus | Expert advisor on building custom Claude Code agents |
+| `/intuition-skill-guide` | opus | Expert advisor on building custom Claude Code skills |
 
-## Workflow Patterns
+## Model Strategy
 
-### Pattern 1: Full Feature Development (Recommended)
-1. User → Waldo (collaborative discovery dialogue)
-2. Handoff (processes discovery, briefs planner)
-3. Magellan (creates structured plan)
-4. Handoff (processes plan, briefs executor)
-5. Faraday → Sub-agents (parallel delegation)
-6. Security Expert review (mandatory)
+- **opus** — Complex multi-step reasoning: prompt refinement, planning, design exploration, code engineering, debugging, advisory
+- **sonnet** — Project management and delegation: build manager, broad research subagents
+- **haiku** — Focused simple tasks: start, handoff, state updates, narrow research subagents
 
-### Pattern 2: Direct Execution (Simple Tasks)
-1. User → Faraday (describe what to do)
-2. Faraday → Sub-agents (delegated work)
-3. Security Expert review
+## Workflow
 
-## Project Memory Integration
+### Trunk (first cycle)
 
-**Memory Files Location**: `docs/project_notes/`
-- `bugs.md` — Bug log with solutions
-- `decisions.md` — Architectural Decision Records
-- `key_facts.md` — Project configuration, constants
+```
+/intuition-prompt → handoff → /intuition-plan → handoff →
+  [/intuition-design loop] → handoff → /intuition-engineer → handoff →
+  /intuition-build → handoff → complete
+```
+
+Each handoff transition:
+1. Reads the previous phase's output
+2. Updates shared memory files
+3. Generates a fresh brief for the next phase
+4. Updates `.project-memory-state.json`
+5. Routes to the next skill (with `/clear` between phases)
+
+### Branches (subsequent cycles)
+
+After trunk completes, run `/intuition-start` to:
+- **Create a branch** — new prompt→build cycle informed by trunk context
+- **Open the debugger** — investigate hard problems in any completed context
+
+Branches follow the same 5-phase workflow but read parent context for continuity.
+
+### Design Loop (optional)
+
+The plan flags tasks requiring design exploration (Section 6.5). If design items exist:
+1. Handoff generates a design brief for the first item
+2. `/intuition-design` elaborates it using the ECD framework
+3. Handoff checks for remaining items → loops back or advances to engineer
+
+### Engineer → Build Split
+
+- **Engineer** (opus, interactive) determines the code-level HOW: reads codebase via research subagents, discusses decisions with you, produces `code_specs.md`
+- **Build** (sonnet, PM) implements against specs: delegates to Code Writer subagents, verifies with Code Reviewer, runs mandatory Security Expert review, produces `build_report.md`
+- Build makes NO engineering decisions — it matches output to specs
+
+## Build Sub-Agents
+
+The build phase delegates to these task-based subagents via the Task tool:
+
+| Sub-Agent | Model | Purpose |
+|-----------|-------|---------|
+| Code Writer | sonnet | Implements features and fixes per code specs |
+| Code Reviewer | sonnet | Reviews quality, maintainability, adherence to specs |
+| Security Expert | sonnet | Scans for vulnerabilities (mandatory before completion) |
+
+## Project Memory
+
+**Memory Files** (`docs/project_notes/`):
+- `bugs.md` — Bug log with solutions and prevention notes
+- `decisions.md` — Architectural Decision Records (ADRs)
+- `key_facts.md` — Project configuration, constants, URLs
 - `issues.md` — Work log with ticket references
 
-**How Agents Use Memory:**
+**Phase Output Files** (in `{context_path}/`):
+- `planning_brief.md` — Brief for planning (created by handoff)
+- `plan.md` — Structured plan with tasks, design recommendations
+- `design_brief.md` — Brief for current design item (created/updated by handoff)
+- `engineering_brief.md` — Brief for engineering (created by handoff)
+- `code_specs.md` — Code-level specifications (created by engineer)
+- `build_brief.md` — Brief for build (created by handoff)
+- `build_report.md` — Task outcomes, files modified (created by build)
+
+**How Skills Use Memory:**
 - Check `decisions.md` before proposing architectural changes
 - Search `bugs.md` for similar issues before debugging
 - Reference `key_facts.md` for project configuration
 - Log completed work in `issues.md`
 
-## Agent Coordination
+## Coordination
 
-- All work skills route to `/intuition-handoff` between phases
-- Handoff owns all state transitions in `.project-memory-state.json`
-- Agents use structured markdown output
-- State is tracked in memory files for cross-session continuity
+- All workflow skills route to `/intuition-handoff` between phases
+- Handoff is the ONLY skill that writes to `.project-memory-state.json`
+- `/clear` runs between phases to keep context clean (each skill reads from disk)
+- State tracks trunk, branches, and active context with per-context workflow pipelines

@@ -1,6 +1,6 @@
 # Intuition
 
-A trunk-and-branch workflow system for Claude Code. Turns rough ideas into structured plans, detailed designs, and executed implementations through guided dialogue. Supports iterative development through independent branch cycles and post-execution debugging.
+A trunk-and-branch workflow system for Claude Code. Turns rough ideas into structured plans, detailed designs, code specifications, and verified implementations through guided dialogue. Supports iterative development through independent branch cycles and post-completion debugging.
 
 ## Workflow
 
@@ -9,16 +9,18 @@ A trunk-and-branch workflow system for Claude Code. Turns rough ideas into struc
                                                                         ↓
                                                               [design loop, if needed]
                                                                         ↓
-                                                /intuition-execute  ←  /intuition-handoff
+                                                               /intuition-handoff  →  /intuition-engineer
+                                                                                            ↓
+                                               /intuition-build  ←  /intuition-handoff
                                                         ↓
                                                /intuition-handoff  →  complete
                                                         ↓
                               /intuition-start  →  create branch  or  /intuition-debugger
 ```
 
-Run `/intuition-handoff` between every phase. It manages state, generates briefs, and routes you forward.
+Run `/intuition-handoff` between every phase. It manages state, generates briefs, and routes you forward. Run `/clear` before each new phase skill to keep context clean.
 
-The first prompt→execute cycle is the **trunk**. After trunk completes, create **branches** for new features or changes. Use `/intuition-debugger` to investigate hard problems in any completed context.
+The first prompt→build cycle is the **trunk**. After trunk completes, create **branches** for new features or changes. Use `/intuition-debugger` to investigate hard problems in any completed context.
 
 ## Skills
 
@@ -28,7 +30,8 @@ The first prompt→execute cycle is the **trunk**. After trunk completes, create
 | `/intuition-prompt` | Sharpens a rough idea into a planning-ready brief through focused Q&A |
 | `/intuition-plan` | Builds a strategic blueprint with tasks, decisions, and design flags |
 | `/intuition-design` | Elaborates flagged items through collaborative design exploration (ECD framework) |
-| `/intuition-execute` | Tech lead orchestrator — engineering assessment, implementation guide, informed delegation |
+| `/intuition-engineer` | Creates code-level specifications through codebase research and interactive dialogue |
+| `/intuition-build` | Delegates implementation to subagents, verifies against code specs and acceptance criteria |
 | `/intuition-debugger` | Expert debugger — diagnostic specialist for complex bugs, cross-context failures, performance issues |
 | `/intuition-handoff` | Processes phase outputs, updates memory, prepares the next phase |
 | `/intuition-initialize` | Sets up project memory (you already ran this) |
@@ -43,15 +46,17 @@ The first prompt→execute cycle is the **trunk**. After trunk completes, create
 4. `/intuition-plan` — create the blueprint
 5. `/intuition-handoff` — review design flags, confirm items
 6. `/intuition-design` — elaborate each flagged item (repeat with handoff between)
-7. `/intuition-handoff` — prepare for execution
-8. `/intuition-execute` — build it
-9. `/intuition-handoff` — complete the cycle
+7. `/intuition-handoff` — prepare for engineering
+8. `/intuition-engineer` — create code specifications
+9. `/intuition-handoff` — prepare for build
+10. `/intuition-build` — implement and verify
+11. `/intuition-handoff` — complete the cycle
 
-Not every project needs design. If the plan is clear enough, handoff skips straight to execute.
+Not every project needs design. If the plan is clear enough, handoff skips straight to engineer. Run `/clear` before each phase skill.
 
 ### After trunk completes (branches)
 
-10. `/intuition-start` — see project status and choose next step
+12. `/intuition-start` — see project status and choose next step
     - **Create a branch** — start a new feature or change cycle, informed by trunk
     - **Open the debugger** — investigate hard problems in any completed context
 
