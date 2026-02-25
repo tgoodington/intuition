@@ -45,7 +45,10 @@
       "Bash(git -C \"C:\\\\Projects\\\\Intuition\" push origin master)",
       "Bash(npm run install-skills:*)",
       "Bash(git status:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(gh auth:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(cd:*)"
     ]
   }
 }
