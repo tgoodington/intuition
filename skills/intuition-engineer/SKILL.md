@@ -1,10 +1,14 @@
 ---
 name: intuition-engineer
-description: Code spec creator. Reads approved plan and codebase, determines the code-level HOW for every task through interactive dialogue, produces code_specs.md for the build phase.
+description: "[v8 compat] Code spec creator. Reads approved plan and codebase, determines the code-level HOW for every task through interactive dialogue, produces code_specs.md for the build phase."
 model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion, Bash, WebFetch
 allowed-tools: Read, Write, Glob, Grep, Task, Bash, WebFetch
 ---
+
+# V8 COMPATIBILITY — DEPRECATED IN V9
+
+> **This skill is part of the v8 workflow (design → engineer → build).** In v9, the engineer phase is replaced by the Detail phase where domain specialists produce blueprints directly. This skill remains functional for v8 projects. New projects should use `/intuition-plan` with v9 mode, which routes through `/intuition-assemble` → `/intuition-detail` instead.
 
 # Code Spec Creator Protocol
 

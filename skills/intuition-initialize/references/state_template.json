@@ -1,6 +1,6 @@
 {
   "initialized": true,
-  "version": "5.0",
+  "version": "6.0",
   "active_context": "trunk",
   "trunk": {
     "status": "none",
@@ -34,6 +34,15 @@
         "started": false,
         "completed": false,
         "completed_at": null
+      },
+      "detail": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "team_assignment": null,
+        "specialists": [],
+        "current_specialist": null,
+        "execution_phase": 1
       }
     }
   },

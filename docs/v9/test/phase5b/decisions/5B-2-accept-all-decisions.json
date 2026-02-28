@@ -1,0 +1,68 @@
+{
+  "specialist": "code-architect",
+  "gate_started": "2026-02-27T16:10:00Z",
+  "gate_completed": "2026-02-27T16:14:00Z",
+  "assumptions": [
+    {
+      "id": "A1",
+      "title": "Output Format Consistency",
+      "default": "Use existing 3-tier rating system (excellent_fit, acceptable_fit, poor_fit)",
+      "status": "accepted",
+      "user_override": null
+    },
+    {
+      "id": "A2",
+      "title": "Single-File Skill Structure",
+      "default": "Implement as a single SKILL.md file",
+      "status": "accepted",
+      "user_override": null
+    },
+    {
+      "id": "A3",
+      "title": "Model Selection for Execution",
+      "default": "Use sonnet as the execution model",
+      "status": "accepted",
+      "user_override": null
+    },
+    {
+      "id": "A4",
+      "title": "Hardware Profile Path",
+      "default": "Read hardware profile from config/hardware-profile.json",
+      "status": "accepted",
+      "user_override": null
+    },
+    {
+      "id": "A5",
+      "title": "Report Naming Convention",
+      "default": "model_rec_YYYY-MM-DD_[use-case-slug].md",
+      "status": "accepted",
+      "user_override": null
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "title": "Scoring Formula Approach",
+      "context": "Need to rank 47 models against user hardware. RAM, VRAM, and context length are the key dimensions.",
+      "options": ["A: Weighted percentage — RAM 40%, VRAM 40%, context 20% (recommended)", "B: Binary pass/fail per dimension, rank by headroom", "C: Single composite ratio averaged across dimensions"],
+      "chosen": "A",
+      "user_input": null
+    },
+    {
+      "id": "D2",
+      "title": "Use-Case Filtering Strategy",
+      "context": "Models have use-case tags (chat, code, creative, reasoning). User provides a query like 'I need a coding model'.",
+      "options": ["A: Strict tag match (recommended)", "B: Fuzzy match — tagged first, then 'might also work'"],
+      "chosen": "B",
+      "user_input": null
+    },
+    {
+      "id": "D3",
+      "title": "Top-N Presentation Count",
+      "context": "Need to decide how many models to show in the recommendation report.",
+      "options": ["A: Top 5 models (recommended)", "B: Top 3 models", "C: All models above acceptable_fit threshold"],
+      "chosen": "A",
+      "user_input": null
+    }
+  ]
+}

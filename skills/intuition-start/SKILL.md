@@ -58,12 +58,16 @@ After reading `.project-memory-state.json`:
 
 ```
 IF state.version == "3.0" OR state.active_context is missing:
-  → OUTPUT: "This project uses an incompatible state schema. Run /intuition-initialize to upgrade to v5.0."
+  → OUTPUT: "This project uses an incompatible state schema. Run /intuition-initialize to upgrade to v6.0."
   → STOP
 
 IF state has "execution" instead of "build" (v4.0):
-  → OUTPUT: "State uses v4.0 schema. Run /intuition-handoff to migrate to v5.0."
+  → OUTPUT: "State uses v4.0 schema. Run /intuition-handoff to migrate to v6.0."
   → STOP
+
+IF state.version == "5.0" (missing detail object):
+  → OUTPUT: "State uses v5.0 schema (no v9 detail phase support). Run /intuition-handoff to migrate to v6.0."
+  → NON-BLOCKING: Continue with v8 routing. v9 features unavailable until migrated.
 ```
 
 ## CONTEXT PATH RESOLUTION (Step 3)
@@ -100,6 +104,15 @@ ELSE (a context is in-progress):
   ELSE IF workflow.planning.completed == false:
     → planning_in_progress
 
+  ELSE IF status == "planning" AND workflow.planning.completed == true
+       AND workflow.detail exists:
+    IF workflow.detail.started == false:
+      → ready_for_assemble
+    ELSE IF workflow.detail.completed == false:
+      → detail_in_progress
+    ELSE IF workflow.build.started == false:
+      → ready_for_build
+
   ELSE IF status == "design" AND workflow.design.started == true
        AND workflow.design.completed == false:
     → design_in_progress
@@ -121,9 +134,9 @@ ELSE (a context is in-progress):
 ```
 
 **"Any context is complete"** = trunk.status == "complete" OR any branch has status == "complete".
-**"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building"].
+**"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building","detail"].
 
-**Fallback** (state corrupted): Infer from files under context_path — discovery_brief.md (prompt done), plan.md (planning done), code_specs.md (engineering done). Ask user if ambiguous.
+**Fallback** (state corrupted): Infer from files under context_path — discovery_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done). Ask user if ambiguous.
 
 ## ROUTING TABLE (Step 5)
 
@@ -135,14 +148,18 @@ Output one line of status, then the next command.
 | prompt_in_progress | "Prompt refinement in progress." | `/intuition-prompt` |
 | ready_for_planning | "Discovery complete." | Run `/clear` then `/intuition-plan` |
 | planning_in_progress | "Planning in progress." | `/intuition-plan` |
+| ready_for_assemble | "Planning complete (v9)." | Run `/clear` then `/intuition-assemble` |
+| detail_in_progress | "Detail phase in progress." | See DETAIL ROUTING below |
 | design_in_progress | "Design exploration in progress." | See DESIGN ROUTING below |
-| ready_for_engineering | "Planning complete." | Run `/clear` then `/intuition-engineer` |
+| ready_for_engineering | "Planning complete (v8)." | Run `/clear` then `/intuition-engineer` |
 | engineering_in_progress | "Engineering in progress." | `/intuition-engineer` |
 | ready_for_build | "Code specs ready." | Run `/clear` then `/intuition-build` |
 | build_in_progress | "Build in progress." | `/intuition-build` |
 | post_completion | See POST-COMPLETION below | — |
 
 **DESIGN ROUTING:** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" → `/intuition-design`. If an item just completed and others remain → `/intuition-handoff`. If ambiguous, ask the user.
+
+**DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If a specialist just completed and others remain → `/intuition-handoff`. If all specialists completed but build not started → `/intuition-handoff`. If ambiguous, ask the user.
 
 Include `/clear` only for "ready_for" phases (transitioning between skills). Omit `/clear` for "in_progress" phases (resuming the same skill).
 
@@ -157,7 +174,7 @@ Project Status:
 ├── Branch: [display_name] (from [created_from]): [status label]
 ```
 
-Status labels: "Not started" | "Prompting..." | "Planning..." | "Designing..." | "Engineering..." | "Building..." | "Complete"
+Status labels: "Not started" | "Prompting..." | "Planning..." | "Assembling..." | "Detailing..." | "Designing..." | "Engineering..." | "Building..." | "Complete"
 
 **If any context is in-progress:** Route to that context's next skill instead of showing choices.
 

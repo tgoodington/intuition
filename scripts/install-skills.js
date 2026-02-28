@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Installation script for Intuition skills
+ * Installation script for Intuition skills, specialists, and producers
  *
  * This script is run after `npm install -g @tgoodington/intuition`
- * It copies skills to ~/.claude/skills/ for global access
+ * It copies skills to ~/.claude/skills/, specialists to ~/.claude/specialists/,
+ * and producers to ~/.claude/producers/ for global access.
  */
 
 const fs = require('fs');
@@ -52,7 +53,27 @@ const skills = [
   'intuition-initialize',
   'intuition-agent-advisor',
   'intuition-skill-guide',
-  'intuition-update'
+  'intuition-update',
+  'intuition-assemble',
+  'intuition-detail'
+];
+
+// Domain specialist profiles to install (v9) — scanned dynamically
+const specialistsDir = path.join(__dirname, '..', 'specialists');
+const specialists = fs.existsSync(specialistsDir)
+  ? fs.readdirSync(specialistsDir).filter(entry =>
+      fs.statSync(path.join(specialistsDir, entry)).isDirectory()
+    )
+  : [];
+
+// Format producer profiles to install (v9)
+const producers = [
+  'code-writer',
+  'document-writer',
+  'spreadsheet-builder',
+  'presentation-creator',
+  'form-filler',
+  'data-file-writer'
 ];
 
 // Main installation logic
@@ -87,6 +108,20 @@ try {
     log(`Removed old /intuition-execute skill (split into /intuition-engineer + /intuition-build in v8.0)`);
   }
 
+  // --- Specialist and Producer directories (v9) ---
+  const claudeSpecialistsDir = path.join(homeDir, '.claude', 'specialists');
+  const claudeProducersDir = path.join(homeDir, '.claude', 'producers');
+
+  if (!fs.existsSync(claudeSpecialistsDir)) {
+    fs.mkdirSync(claudeSpecialistsDir, { recursive: true });
+    log(`Created ${claudeSpecialistsDir}`);
+  }
+
+  if (!fs.existsSync(claudeProducersDir)) {
+    fs.mkdirSync(claudeProducersDir, { recursive: true });
+    log(`Created ${claudeProducersDir}`);
+  }
+
   // Install each skill
   skills.forEach(skillName => {
     const src = path.join(packageRoot, 'skills', skillName);
@@ -101,12 +136,49 @@ try {
     }
   });
 
+  // Install each specialist profile (dynamically scanned)
+  if (specialists.length === 0) {
+    log(`No specialist profiles found in ${specialistsDir} — skipping specialist install`);
+  }
+  specialists.forEach(specialistName => {
+    const src = path.join(specialistsDir, specialistName);
+    const dest = path.join(claudeSpecialistsDir, specialistName);
+
+    if (fs.existsSync(src)) {
+      copyDirRecursive(src, dest);
+      log(`\u2713 Installed ${specialistName} specialist to ${dest}`);
+    } else {
+      error(`${specialistName} specialist not found at ${src}`);
+      process.exit(1);
+    }
+  });
+
+  // Install each producer profile
+  producers.forEach(producerName => {
+    const src = path.join(packageRoot, 'producers', producerName);
+    const dest = path.join(claudeProducersDir, producerName);
+
+    if (fs.existsSync(src)) {
+      copyDirRecursive(src, dest);
+      log(`\u2713 Installed ${producerName} producer to ${dest}`);
+    } else {
+      error(`${producerName} producer not found at ${src}`);
+      process.exit(1);
+    }
+  });
+
   // Verify installation
-  const allInstalled = skills.every(skillName =>
+  const allSkillsInstalled = skills.every(skillName =>
     fs.existsSync(path.join(claudeSkillsDir, skillName))
   );
+  const allSpecialistsInstalled = specialists.every(name =>
+    fs.existsSync(path.join(claudeSpecialistsDir, name))
+  );
+  const allProducersInstalled = producers.every(name =>
+    fs.existsSync(path.join(claudeProducersDir, name))
+  );
 
-  if (allInstalled) {
+  if (allSkillsInstalled && allSpecialistsInstalled && allProducersInstalled) {
     log(`\u2713 Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start          - Load project context and detect workflow phase`);
@@ -115,15 +187,22 @@ try {
     log(`  /intuition-plan           - Strategic planning (ARCH protocol + design flagging)`);
     log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
     log(`  /intuition-engineer       - Code spec creator (engineering decisions)`);
-    log(`  /intuition-build          - Build manager (subagent delegation)`);
+    log(`  /intuition-assemble       - Team assembler (v9 specialist/producer matching)`);
+    log(`  /intuition-detail         - Domain specialist orchestrator (v9 detail phase)`);
+    log(`  /intuition-build          - Build manager (blueprint + producer delegation)`);
     log(`  /intuition-debugger       - Expert debugger (diagnostic specialist)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
     log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);
     log(`  /intuition-update         - Check for and install package updates`);
+    log(``);
+    log(`Domain specialists (${specialists.length}):`);
+    specialists.forEach(name => log(`  ${name}`));
+    log(`Format producers (${producers.length}):`);
+    producers.forEach(name => log(`  ${name}`));
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {
-    error(`Verification failed - skills not properly installed`);
+    error(`Verification failed - not all components properly installed`);
     process.exit(1);
   }
 

@@ -24,7 +24,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 12. You MUST NOT modify `discovery_brief.md` or `planning_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
-15. You MUST assess every task for design readiness and include a "Design Recommendations" section in the plan. Flag any task where execution cannot proceed without further design exploration (see DESIGN READINESS ASSESSMENT below).
+15. You MUST assess every task for readiness and include a Section 6.5 in the plan. In v8 mode, this is "Design Recommendations" flagging tasks for design exploration. In v9 mode, this is "Detail Assessment" classifying every task by domain and depth.
 16. When planning on a branch, you MUST read the parent context's plan.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 17. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT draft options, present findings, or write any output document while a research agent is still running.
 
@@ -209,6 +209,18 @@ The selected tier governs:
 - Which sections appear in the final plan
 - How deep ARCH coverage must go before Homestretch unlocks
 
+## Workflow Mode Selection
+
+After depth tier selection, determine the workflow mode:
+
+Ask via AskUserQuestion: "Which workflow mode should this plan use?"
+- Header: "Workflow Mode"
+- Options:
+  - "Domain specialist mode (v9)" — description: "Dynamic specialist teams with domain-specific blueprints. Best for multi-domain projects (legal + code + marketing), document-heavy work, or when deliverables span multiple formats."
+  - "Code engineering mode (v8)" — description: "Design exploration + code specs pipeline. Best for pure code projects with a single engineering focus."
+
+Store the selected mode. It determines which Section 6.5 format and Section 10 format to use.
+
 # PHASE 3: REACH & CHOICES (variable turns) [ARCH: R + C]
 
 Goal: Identify what the plan touches (Reach) and resolve every major decision (Choices).
@@ -301,7 +313,9 @@ After explicit approval:
 - **Standard**: Sections 1, 2, 3, 6, 6.5, 7, 8, 10
 - **Comprehensive**: All sections (1-10, including 6.5)
 
-Section 6.5 is Design Recommendations — ALWAYS included regardless of tier.
+Section 6.5 is ALWAYS included regardless of tier:
+- V8 mode: "Design Recommendations"
+- V9 mode: "Detail Assessment"
 Section 2.5 is Parent Context — included for ALL tiers when on a branch.
 
 ## Section Specifications
@@ -349,7 +363,9 @@ Ordered list forming a valid dependency DAG. Each task:
 
 ```markdown
 ### Task [N]: [Title]
-- **Component**: [which architectural component]
+- **Domain**: [free-text domain descriptor — e.g., "code/backend", "legal/regulatory", "marketing/copy"] (v9 mode only)
+- **Depth**: Deep | Standard | Light (v9 mode only)
+- **Component**: [which architectural component or project area]
 - **Description**: [WHAT to do, not HOW — execution decides HOW]
 - **Acceptance Criteria**:
   1. [Outcome-based criterion — verifiable without prescribing implementation]
@@ -358,6 +374,13 @@ Ordered list forming a valid dependency DAG. Each task:
 - **Dependencies**: [Task numbers] or "None"
 - **Files**: [Specific paths when known] or "TBD — [component area]"
 ```
+
+In v8 mode, omit Domain and Depth fields. In v9 mode, include them for every task. Domain is a free-text descriptor — the plan does NOT reference specialist names. Team assembly matches domains to specialists later.
+
+Depth controls specialist invocation:
+- **Deep** — full exploration → user confirmation gate → specification. For novel territory, multiple valid approaches, or high-stakes decisions.
+- **Standard** — research → 1-2 confirmation questions → blueprint. For clear paths with a few key decisions.
+- **Light** — research → blueprint produced autonomously. For straightforward, pattern-following tasks.
 
 **Acceptance criteria rule:** If a criterion can only be satisfied ONE way, it is over-specified. Criteria describe outcomes ("users can reset passwords via email"), not implementations ("add a resetPassword() method that calls sendEmail()"). The engineer and build phases decide the code-level HOW.
 
@@ -378,14 +401,23 @@ Test types required. Which tasks need tests (reference task numbers). Critical t
 
 Every open question MUST have a Recommended Default. The execution phase uses the default unless the user provides direction. If you cannot write a reasonable default, the question is not ready to be left open — resolve it during dialogue.
 
-### 10. Planning Context for Engineer (always)
-Context and considerations for the engineering phase — NOT instructions. Engineer owns all implementation decisions.
+### 10. Planning Context for Engineer / Detail Phase (always)
+
+**V8 mode: Section 10 is titled "Planning Context for Engineer"** and contains:
 
 - **Sequencing Considerations**: Factors that affect task ordering (NOT a prescribed order — Engineer decides)
 - **Parallelization Opportunities**: Which tasks touch independent surfaces (Engineer validates and decides)
 - **Engineering Questions**: Open implementation questions Engineer must resolve during code spec creation (e.g., "How should error propagation work across Tasks 3-5?" / "Tasks 2 and 6 both touch the auth layer — shared abstraction or independent?")
 - **Constraints**: Hard boundaries Engineer must respect (performance targets, API contracts, backward compatibility)
 - **Risk Context**: What could go wrong and why — Engineer decides mitigation strategy
+
+**V9 mode: Section 10 is titled "Planning Context for Detail Phase"** and contains:
+
+- **Domain-Specific Considerations**: per-domain notes — legal constraints, brand guidelines, data quality issues, performance targets
+- **Cross-Domain Dependencies**: where specialist outputs must coordinate
+- **Sequencing Considerations**: what depends on what across domains
+- **Open Questions**: questions the detail phase must resolve, tagged by domain
+- **Constraints**: hard boundaries per domain
 
 ## Architect-Engineer Boundary
 
@@ -395,11 +427,15 @@ Overlap resolution: Planning specifies public interfaces between components and 
 
 Interim artifacts in `.planning_research/` are working files for planning context management. They are NOT part of the plan-execute contract. Only `plan.md` crosses the handoff boundary.
 
-# DESIGN READINESS ASSESSMENT
+# DESIGN / DETAIL READINESS ASSESSMENT
 
-After drafting the task sequence, evaluate EVERY task for design readiness. A task is "ready for execution" if it is 95% clear — execution can fill in the remaining 5% without making design decisions.
+After drafting the task sequence, assess every task for readiness. The assessment format depends on the selected workflow mode.
 
-## Flagging Criteria
+## V8 Mode: Design Readiness Assessment
+
+Evaluate EVERY task for design readiness. A task is "ready for execution" if it is 95% clear — execution can fill in the remaining 5% without making design decisions.
+
+### Flagging Criteria
 
 Flag a task as **DESIGN REQUIRED** if ANY of these apply:
 
@@ -415,7 +451,7 @@ Do NOT flag tasks that are:
 - Well-understood implementations with clear precedent in the codebase
 - Simple enough that a competent engineer needs no design input
 
-## Design Recommendations Output
+### Design Recommendations Output (v8)
 
 Include this section in the plan AFTER the Task Sequence (Section 6) and BEFORE Testing Strategy (Section 7):
 
@@ -434,6 +470,45 @@ Include this section in the plan AFTER the Task Sequence (Section 6) and BEFORE 
 
 When presenting the draft plan in Phase 4, explicitly call out which items you're recommending for design and why. The user confirms or adjusts during plan approval.
 
+## V9 Mode: Detail Assessment
+
+In v9 mode, every task gets a domain assignment and depth classification instead of a binary design/ready flag.
+
+### Depth Classification Criteria
+
+Assign **Deep** depth if ANY of these apply:
+- Novel territory with no existing pattern to follow
+- Multiple valid approaches where the choice has lasting consequences
+- User-facing decisions requiring stakeholder input
+- Complex cross-domain interactions needing explicit definition
+- High-stakes decisions where getting it wrong is costly to reverse
+
+Assign **Standard** depth if:
+- The approach is mostly clear but has 1-2 key decisions
+- Existing patterns exist but need adaptation
+- Confirmation is needed but not deep exploration
+
+Assign **Light** depth if:
+- Straightforward application of existing patterns
+- Mechanical or configuration-level work
+- Well-understood with clear precedent
+
+### Detail Assessment Output (v9)
+
+Include this section in the plan AFTER the Task Sequence (Section 6):
+
+```markdown
+### 6.5 Detail Assessment
+
+| Task(s) | Domain | Depth | Rationale |
+|---------|--------|-------|-----------|
+| Task 3, 4 | legal/regulatory | Deep — design exploration required | Novel regulatory territory, multiple valid approaches |
+| Task 7 | code/api | Standard — confirmation needed | Follows existing patterns, one key decision |
+| Task 1, 2 | code/frontend | Light — autonomous | Straightforward pattern application |
+```
+
+When presenting the draft plan in Phase 4, explicitly call out the depth assignments and domain groupings. The user confirms or adjusts during plan approval.
+
 # EXECUTABLE PLAN CHECKLIST
 
 Validate ALL before presenting the draft:
@@ -447,8 +522,11 @@ Validate ALL before presenting the draft:
 - [ ] Interface contracts provided where components interact (Comprehensive)
 - [ ] Risks have mitigations (Standard+)
 - [ ] Planning Context for Engineer includes engineering questions, not prescriptive instructions
-- [ ] Design Recommendations section included with every task assessed
-- [ ] Each DESIGN REQUIRED flag has a specific rationale (not generic)
+- [ ] Section 6.5 included with every task assessed (Design Recommendations in v8, Detail Assessment in v9)
+- [ ] (v8 only) Each DESIGN REQUIRED flag has a specific rationale (not generic)
+- [ ] (v9 only) Every task has Domain and Depth fields
+- [ ] (v9 only) Detail Assessment table (Section 6.5) covers every task
+- [ ] (v9 only) Section 10 includes domain-specific considerations and cross-domain dependencies
 
 If any check fails, fix it before presenting.
 

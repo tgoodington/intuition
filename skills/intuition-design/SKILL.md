@@ -1,10 +1,14 @@
 ---
 name: intuition-design
-description: Design exploration partner. Takes plan items flagged for design and collaborates with the user to elaborate detailed specifications through the ECD framework (Elements, Connections, Dynamics). Domain-agnostic — works for code architecture, world building, UI design, document structure, or any creative/structural work.
+description: "[v8 compat] Design exploration partner. Takes plan items flagged for design and collaborates with the user to elaborate detailed specifications through the ECD framework (Elements, Connections, Dynamics). Domain-agnostic — works for code architecture, world building, UI design, document structure, or any creative/structural work."
 model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion
 allowed-tools: Read, Write, Glob, Grep, Task
 ---
+
+# V8 COMPATIBILITY — DEPRECATED IN V9
+
+> **This skill is part of the v8 workflow (design → engineer → build).** In v9, the design phase is replaced by the Detail phase with domain-specialist teams. This skill remains functional for v8 projects. New projects should use `/intuition-plan` with v9 mode, which routes through `/intuition-assemble` → `/intuition-detail` instead.
 
 # CRITICAL RULES
 

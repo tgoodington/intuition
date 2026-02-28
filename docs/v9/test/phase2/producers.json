@@ -1,0 +1,32 @@
+[
+  {
+    "name": "code-writer",
+    "output_formats": ["source"],
+    "tooling_required": []
+  },
+  {
+    "name": "document-writer",
+    "output_formats": ["markdown", "docx"],
+    "tooling_required_for": { "docx": ["python>=3.8", "python-docx>=0.8.11"] }
+  },
+  {
+    "name": "spreadsheet-builder",
+    "output_formats": ["csv", "xlsx"],
+    "tooling_required_for": { "xlsx": ["python>=3.8", "openpyxl>=3.1.0"] }
+  },
+  {
+    "name": "presentation-creator",
+    "output_formats": ["markdown", "pptx"],
+    "tooling_required_for": { "pptx": ["python>=3.8", "python-pptx>=0.6.21"] }
+  },
+  {
+    "name": "form-filler",
+    "output_formats": ["markdown", "pdf"],
+    "tooling_required_for": { "pdf": ["python>=3.8", "fpdf2>=2.7.0"] }
+  },
+  {
+    "name": "data-file-writer",
+    "output_formats": ["json", "yaml", "xml"],
+    "tooling_required": []
+  }
+]

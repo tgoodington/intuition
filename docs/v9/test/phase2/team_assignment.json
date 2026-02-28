@@ -1,0 +1,61 @@
+{
+  "specialist_assignments": [
+    {
+      "specialist": "legal-analyst",
+      "tasks": [
+        {"task_id": "T1", "depth": "Deep"},
+        {"task_id": "T4", "depth": "Light"}
+      ],
+      "rationale": "Legal Analyst covers both lease drafting (Deep) and compliance checklist (Light) via domain_tags: legal, contracts, compliance, regulatory, lease, landlord-tenant."
+    },
+    {
+      "specialist": "financial-analyst",
+      "tasks": [
+        {"task_id": "T2", "depth": "Standard"},
+        {"task_id": "T5", "depth": "Light"}
+      ],
+      "rationale": "Financial Analyst handles rental market analysis (Standard) and expense tracking (Light) via domain_tags: financial, analysis, modeling, pricing, expenses, spreadsheets."
+    }
+  ],
+  "producer_assignments": [
+    {
+      "specialist": "legal-analyst",
+      "producer": "document-writer",
+      "output_format": "markdown",
+      "tasks_output_files": [
+        "deliverables/01_lease_agreement.md",
+        "deliverables/04_compliance_checklist.md"
+      ]
+    },
+    {
+      "specialist": "financial-analyst",
+      "producer": "spreadsheet-builder",
+      "output_format": "xlsx",
+      "tasks_output_files": [
+        "deliverables/02_rental_analysis.xlsx",
+        "deliverables/05_expense_tracker.xlsx"
+      ]
+    }
+  ],
+  "execution_order": [
+    {
+      "phase": 1,
+      "specialists": ["legal-analyst", "financial-analyst"],
+      "rationale": "Task 1 (lease) and Task 4 (compliance) have no dependencies; Task 2 (market analysis) has no dependencies. Execute in parallel."
+    },
+    {
+      "phase": 2,
+      "specialists": ["financial-analyst"],
+      "rationale": "Task 5 (expense tracker) depends on Task 2 (rental analysis) completion. Same-specialist sequencing."
+    }
+  ],
+  "dependencies": [],
+  "unmatched_tasks": [
+    {
+      "task_id": "T3",
+      "title": "Create Property Listing Copy",
+      "domain": "marketing/copy",
+      "reason": "No specialist available with marketing or copy-writing domain_tags. Available specialists cover: legal, financial, technical documentation, and database architecture."
+    }
+  ]
+}

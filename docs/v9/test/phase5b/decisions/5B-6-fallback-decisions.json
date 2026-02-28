@@ -1,0 +1,40 @@
+{
+  "specialist": "code-architect",
+  "gate_started": "2026-02-27T16:00:00Z",
+  "gate_completed": "2026-02-27T16:03:00Z",
+  "assumptions": [],
+  "decisions": [
+    {
+      "id": "D1",
+      "title": "Scope of Audit",
+      "context": "Existing tests are unit-level only. No integration tests. Options range from vuln-only to full audit.",
+      "options": ["A: Vulnerabilities only (recommended)", "B: Vulnerabilities + license compliance", "C: Vulnerabilities + license compliance + version staleness"],
+      "chosen": "A",
+      "user_input": null
+    },
+    {
+      "id": "D2",
+      "title": "Transitive Dependency Depth",
+      "context": "340 transitive dependencies in the tree. Direct-only covers 20 packages.",
+      "options": ["A: Full tree (recommended)", "B: Direct only"],
+      "chosen": "A",
+      "user_input": null
+    },
+    {
+      "id": "D3",
+      "title": "Output Verbosity",
+      "context": "npm audit output is verbose and hard to read. Need to balance detail with readability.",
+      "options": ["A: Summary with expandable details (recommended)", "B: Full verbose", "C: Executive summary only"],
+      "chosen": "A",
+      "user_input": null
+    },
+    {
+      "id": "D4",
+      "title": "Remediation Suggestions",
+      "context": "Users need actionable output. Fix commands risk suggesting breaking changes.",
+      "options": ["A: Include fix commands (recommended)", "B: Flag issues only"],
+      "chosen": "B",
+      "user_input": null
+    }
+  ]
+}
