@@ -150,6 +150,113 @@ hooks:
 
 The hook validates every matching tool call before execution within that agent.
 
+## SPECIALIST REQUEST DETECTION
+
+When invoked, check if a specialist request file exists from `/intuition-assemble`:
+
+1. Read `docs/project_notes/.project-memory-state.json` to get `active_context`
+2. Resolve context_path: if `active_context == "trunk"` → `docs/project_notes/trunk/`, else `docs/project_notes/branches/{active_context}/`
+3. Check if `{context_path}specialist_request.md` exists
+
+If the file exists, read it. It contains unmatched tasks that need specialist profiles, the existing specialist roster, and a plan summary. Use this as your starting brief — but still confirm your approach with the user before creating files. You are advising, not executing blindly.
+
+When designing new specialists, also evaluate whether the existing producers (glob `~/.claude/producers/*/*.producer.md`) can handle the specialist's output format. If no existing producer covers the needed output type, create a new producer alongside the specialist. Read an existing producer profile first to match the format.
+
+After creating the specialist profiles (and any producers), remind the user: "Re-run `/intuition-assemble` to pick up the new specialists."
+
+## REFERENCE: SPECIALIST PROFILES (INTUITION V9)
+
+Specialist profiles are domain-expert configurations used by Intuition's detail phase. They are NOT agents — they are structured knowledge documents loaded by the `/intuition-detail` skill.
+
+### Location
+- `~/.claude/specialists/{name}/{name}.specialist.md` — user-level (persists across projects, survives npm updates)
+- `.claude/specialists/{name}/{name}.specialist.md` — project-level
+
+User-level is preferred for generated specialists so they're reusable across projects.
+
+### Format
+
+Specialist profiles use YAML frontmatter + markdown body:
+
+```yaml
+---
+name: kebab-case-name
+display_name: Human Readable Name
+domain: primary-domain
+description: >
+  What this specialist does. 2-3 sentences covering scope.
+
+exploration_methodology: ECD
+supported_depths: [Deep, Standard, Light]
+default_depth: Standard
+
+domain_tags:
+  - tag1
+  - tag2
+  - tag3
+
+research_patterns:
+  - "Find existing [domain] files and configurations"
+  - "Locate [domain] patterns in the codebase"
+
+blueprint_sections:
+  - "Section Name 1"
+  - "Section Name 2"
+
+default_producer: code-writer
+default_output_format: code
+
+review_criteria:
+  - "All acceptance criteria addressable from the blueprint"
+  - "No ambiguous implementation decisions left for the producer"
+  - "[Domain-specific quality check]"
+mandatory_reviewers: []
+
+model: opus
+reviewer_model: sonnet
+tools: [Read, Write, Glob, Grep]
+---
+```
+
+### Body Structure
+
+The markdown body has three sections. The Detail skill owns invocation framing — specialist profiles contain ONLY domain expertise, no boilerplate about the two-invocation pattern.
+
+**Stage 1: Exploration Protocol** — Domain-specific research guidance:
+- Research focus areas (what to look for in the codebase)
+- ECD exploration questions (Elements, Connections, Dynamics) specific to the domain
+- Assumptions vs Key Decisions classification with domain-specific examples
+- Domain-specific output guidance
+
+**Stage 2: Specification Protocol** — Blueprint production:
+- Universal 9-section envelope format (Task Reference, Research Findings, Approach, Decisions Made, Deliverable Specification, Acceptance Mapping, Integration Points, Open Items, Producer Handoff)
+- Domain-specific deliverable subsections within Section 5
+
+**Review Protocol** — Quality verification:
+- Domain-specific review checks applied to producer output
+- Returns PASS or FAIL with specific evidence
+
+### Key Design Principle
+
+Read 2-3 existing specialist profiles (glob `~/.claude/specialists/*/*.specialist.md`) before creating new ones. Match the format, depth, and style of existing profiles. The `domain_tags` field is critical — it's what `/intuition-assemble` uses for matching tasks to specialists.
+
+## REFERENCE: PRODUCER PROFILES (INTUITION V9)
+
+Producers are output-format specialists that render blueprints into deliverables. A specialist designs the blueprint; a producer executes it.
+
+### Location
+- `~/.claude/producers/{name}/{name}.producer.md` — user-level
+- `.claude/producers/{name}/{name}.producer.md` — project-level
+
+### Bundled Producers
+code-writer (source/markdown/yaml/json/toml), document-writer (docx/pdf/md), spreadsheet-builder (xlsx/csv), presentation-creator (pptx/pdf), form-filler (pdf), data-file-writer (json/yaml/csv/xml/toml)
+
+### When to Create a New Producer
+Only when the specialist's output format isn't covered by any existing producer. Most specialists use `code-writer` or `document-writer`. Create a new producer only for genuinely novel output types (e.g., audio configs, CAD files, specialized binary formats).
+
+### Format
+Read an existing producer profile (glob `~/.claude/producers/*/*.producer.md`) before creating a new one. Key frontmatter fields: `name`, `type: producer`, `display_name`, `description`, `output_formats` (list), `tooling` (per-format required/optional tools), `model`, `tools`, `capabilities`, `input_requirements`. Body has: Critical Rules, Input Protocol, Production Protocol, Review Checklist.
+
 ## COMMON PATTERNS
 
 ### Read-Only Researcher
