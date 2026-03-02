@@ -118,6 +118,8 @@ Spawn an opus Task subagent. The system prompt combines a research-planning fram
      [Natural language description]
      ```
 
+     IMPORTANT: A 'Known Research' section is included in your context. This contains findings from the planning phase that overlap with your domain. Do NOT request research that duplicates what is already known — build on it. Only request research for gaps, unknowns, or areas that need deeper investigation than the planning phase provided.
+
      Do NOT begin your full analysis yet. Focus only on identifying what information you need."
 
   2. **Domain expertise (from specialist profile):**
@@ -127,6 +129,7 @@ Spawn an opus Task subagent. The system prompt combines a research-planning fram
 - **Task context** includes:
   - Plan tasks assigned to this specialist (descriptions, acceptance criteria, dependencies)
   - Research patterns from the specialist profile frontmatter
+  - Known Research section from the detail brief (planning-phase findings relevant to this specialist — the specialist should build on this, not re-research it)
   - Prior blueprint contents (if any — read each path and include full text)
   - Plan Section 10 context from the detail brief
 

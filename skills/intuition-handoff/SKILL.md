@@ -259,6 +259,14 @@ v9 mode only. Triggers when planning is complete, `{context_path}team_assignment
 - **Acceptance Criteria**: {from plan}
 - **Dependencies**: {from plan}
 
+## Known Research
+{Extract from plan.md the sections relevant to THIS specialist's domain and assigned tasks:}
+{- Section 2 (Discovery Summary) — full content, always include}
+{- Section 4 (Risk Analysis) — risks relevant to this specialist's tasks}
+{- Section 7 (Architectural Decisions) — decisions touching this specialist's domain}
+{- Any other plan sections that contain research findings relevant to the assigned tasks}
+{Omit sections with no relevance to this specialist. If the plan has no research relevant to this specialist, write "No prior research overlaps with this specialist's domain."}
+
 ## Prior Blueprints
 None (first specialist in execution order)
 
@@ -307,6 +315,7 @@ v9 mode only. Triggers when the current specialist's blueprint is complete and m
    - **Current Specialist**: name, display_name, domain (from next specialist's profile)
    - **Assigned Tasks**: task details from plan
    - **Specialist Profile Path**: absolute path to the next specialist's profile
+   - **Known Research**: same extraction as Transition 2.5v9 — plan sections relevant to this specialist's domain and tasks (Section 2 always, Sections 4/7 filtered by relevance). Omit sections with no relevance.
    - **Prior Blueprints**: paths to ALL completed blueprints in `{context_path}/blueprints/` (the next specialist may need to reference them)
    - **Plan Context**: section 10 content
    - **Detail Queue**: all specialists with status (completed/in_progress/pending)
