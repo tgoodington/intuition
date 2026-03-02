@@ -2,13 +2,13 @@
 name: intuition-assemble
 description: Team assembler for v9 workflows. Scans specialist and producer registries, matches plan tasks to domain experts, checks prerequisites, and writes team_assignment.json. Runs after planning, before detail phase.
 model: sonnet
-tools: Read, Write, Glob, Grep, AskUserQuestion, Bash, Task
+tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
 allowed-tools: Read, Write, Glob, Grep, Bash
 ---
 
 # Assemble - Team Assembly Protocol
 
-You assemble specialist and producer teams for v9 workflows. You scan registries, match plan tasks to domain experts via a constrained LLM pass, check prerequisites, get user confirmation, and write team_assignment.json.
+You assemble specialist and producer teams for v9 workflows. You scan registries, match plan tasks to domain experts by domain_tags overlap, check prerequisites, get user confirmation, and write team_assignment.json.
 
 ## CRITICAL RULES
 
@@ -21,7 +21,7 @@ You assemble specialist and producer teams for v9 workflows. You scan registries
 7. You MUST write `team_assignment.json` to context_path.
 8. You MUST generate `detail_brief.md` for the first specialist in execution order.
 9. You MUST update `.project-memory-state.json` with the detail phase state.
-10. You MUST NOT make domain judgments — the LLM matching pass handles matching, and `/intuition-agent-advisor` handles specialist creation.
+10. You MUST NOT make domain judgments beyond domain_tags overlap — match mechanically, and `/intuition-agent-advisor` handles specialist creation.
 11. You MUST route to `/intuition-detail` after completion.
 
 ## CONTEXT RESOLUTION
@@ -63,22 +63,20 @@ Same three-tier pattern using `producers/` directories and `*.producer.md` files
 
 If zero producers found, HALT with the same pattern message referencing producer directories.
 
-### Step 4: Team Assembly (Constrained LLM Matching Pass)
+### Step 4: Team Assembly (Inline Matching)
 
-Spawn a haiku Task subagent. Provide it:
-- Available specialists (name + domain_tags for each)
-- Available producers (name + output_formats for each)
-- Plan tasks (task_id, title, domain, depth, dependencies for each)
+Match tasks to specialists directly. Do NOT spawn a subagent for this — you perform the matching yourself.
 
-Instruct the subagent to:
-- Match tasks to specialists by domain_tags overlap with task Domain field
-- Group tasks by assigned specialist
-- Assign producers via each specialist's default_producer field
-- Create execution_order phases (independent specialists parallel, dependent ones sequential)
-- Flag unmatched tasks
-- Check output_format compatibility between specialist default_output_format and producer output_formats
+**Matching procedure:**
 
-The subagent MUST return ONLY valid JSON matching this schema:
+1. For each plan task, compare the task's `Domain` field against every specialist's `domain_tags` array. A specialist matches if ANY of its domain_tags overlaps with the task domain (case-insensitive).
+2. If multiple specialists match a task, prefer the one with the most domain_tags overlap. If still tied, pick the first alphabetically.
+3. Group matched tasks by specialist.
+4. Assign producers: for each specialist, look up its `default_producer` field and find the matching producer profile. Verify the specialist's `default_output_format` is in the producer's `output_formats` list.
+5. Build execution_order phases: specialists with no cross-specialist dependencies run in Phase 1 (parallel). Specialists that depend on another specialist's blueprint run in later phases (sequential after their dependency).
+6. Flag any tasks where NO specialist has a matching domain_tag as unmatched.
+
+**Build the assembly result as a JSON object matching this schema:**
 
 ```json
 {
@@ -115,8 +113,6 @@ Schema notes:
 - `dependencies` is for CROSS-SPECIALIST dependencies only; same-specialist task sequencing is handled via execution_order phases
 - `execution_order` includes rationale for each phase
 
-If the subagent returns invalid JSON, retry once with a stricter prompt. If it fails again, HALT with the error.
-
 ### Step 5: Prerequisite Checking
 
 For each producer in `producer_assignments`:
@@ -131,29 +127,49 @@ For each producer in `producer_assignments`:
 
 ### Step 6: Present Full Team for Confirmation
 
-Present the COMPLETE picture to the user — both matched and unmatched tasks — via AskUserQuestion:
+Present the team proposal using AskUserQuestion with the `markdown` preview feature. Build a grid showing the full assignment picture.
+
+**Build the preview grid** as a markdown string:
 
 ```
-Team assembly results:
+## Team Assignment
 
-Matched:
-- [specialist display_name] -> Tasks [T1, T3] (depth: Deep/Standard/Light per task)
-- [specialist display_name] -> Tasks [T2] (depth: Standard)
+| Task | Specialist | Depth | Phase |
+|------|-----------|-------|-------|
+| T1: [title] | [display_name] | Deep | 1 |
+| T2: [title] | [display_name] | Standard | 1 |
+| T3: [title] | [display_name] | Light | 2 |
+| T4: [title] | ⚠ UNMATCHED | — | — |
 
-Unmatched (no specialist available):
-- Task T4: [title] (domain: [domain])
-- Task T7: [title] (domain: [domain])
+## Producers
+| Specialist | Producer | Format |
+|-----------|----------|--------|
+| [display_name] | [producer] | [format] |
 
-Producers: [producer] for [format], ...
-Execution: Phase 1 (parallel: ...), Phase 2 (after: ...)
-Dependencies: [specialist] reads from [specialist] blueprint
+## Execution Order
+Phase 1: [specialists] (parallel)
+Phase 2: [specialists] (after Phase 1)
+
+## Dependencies
+[specialist] reads blueprint from [specialist]
 ```
 
-If there are unmatched tasks, options: "Approve matched tasks — create specialists for the rest" / "Assign unmatched tasks manually" / "Skip unmatched tasks"
+Unmatched tasks appear in the grid with `⚠ UNMATCHED` in the Specialist column.
 
-If there are NO unmatched tasks, options: "Approve team" / "I want to adjust assignments"
+**Present via AskUserQuestion** with the grid as `markdown` on EVERY option:
 
-If user wants adjustments, walk through changes interactively (which tasks to reassign, which specialists to swap), then re-present the updated team. Repeat until approved.
+If there are unmatched tasks, use these options:
+1. "Approve matched — create specialists for the rest" — description: "Proceeds with matched tasks and generates a specialist request for unmatched ones."
+2. "Assign unmatched manually" — description: "Choose which existing specialist handles each unmatched task."
+3. "Skip unmatched tasks" — description: "Proceed without the unmatched tasks."
+
+If there are NO unmatched tasks, use these options:
+1. "Approve team" — description: "Lock in the proposed assignments and continue."
+2. "Adjust assignments" — description: "Reassign tasks between specialists before proceeding."
+
+All options get the SAME markdown preview grid.
+
+If user chooses to adjust, walk through changes interactively (which tasks to reassign, which specialists to swap), then rebuild the grid and re-present with a new AskUserQuestion. Repeat until approved.
 
 ### Step 7: Handle Unmatched Tasks
 
@@ -264,7 +280,6 @@ Output: "Team assembled. Detail brief prepared for **[First Specialist Display N
 - **User rejects team**: Allow adjustments, re-present. Do not write anything until approved.
 - **Prerequisites missing**: Halt with exact install commands. Do not proceed to team confirmation.
 - **Plan has no Section 6.5**: Halt — this is not a v9 plan.
-- **Subagent returns invalid JSON**: Retry once with stricter prompt, then halt with error details.
 - **Re-run after specialist creation**: If `{context_path}specialist_request.md` exists from a prior run, note this in the team presentation ("Previously unmatched tasks — checking if new specialists are now available"). Delete the request file after successful full assembly.
 
 ## VOICE
