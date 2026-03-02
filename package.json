@@ -25,6 +25,8 @@
   "files": [
     "bin/",
     "skills/",
+    "specialists/",
+    "producers/",
     "scripts/",
     "docs/",
     "README.md",
