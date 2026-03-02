@@ -234,26 +234,20 @@ Non-promoted assumptions: record with `status: "accepted"`, `user_override: null
 
 ### Phase 2: Decisions
 
-Count the total decisions extracted from stage1.md.
+Present all decisions in batched AskUserQuestion calls, up to **4 decisions per call** (the tool's maximum). Each decision is a separate question within the call, so the user sees them as tabs.
 
-**1-7 decisions — present individually:**
-
-For each decision, use AskUserQuestion:
+**Build each question:**
 - Question: include the decision title, brief context, and risk if wrong
 - Header: "D{N}"
 - Options: each option from Stage 1 (recommended option FIRST with "(Recommended)" appended), plus any others listed. Include a brief rationale description for each option. "Other" is provided automatically by AskUserQuestion.
 
-**8+ decisions — triage first:**
+**Batching:**
+- 1-4 decisions: one AskUserQuestion call with all decisions as separate questions
+- 5-8 decisions: two calls (first 4, then remaining)
+- 9-12 decisions: three calls (4, 4, remaining)
+- Continue the pattern for more
 
-Present a summary showing all decisions with specialist recommendations. Use AskUserQuestion with `multiSelect: true`:
-- Question: "Which decisions do you want to discuss? The rest will use the specialist's recommendation."
-- Header: "Decisions"
-- Options: list the 3-4 highest-risk decisions as individual options (based on the "Risk if wrong" severity)
-
-For non-selected decisions: record with `chosen` set to the recommended option letter, `user_input: null`.
-For selected decisions: present individually using the same format as the 1-7 path above.
-
-**After EACH decision is resolved:** Read decisions.json from disk, add the decision entry with fields: `id`, `title`, `context` (enough background from Stage 1 that Stage 2 can act on this decision without re-reading stage1.md), `options`, `chosen`, `user_input`. Write the full file back.
+**After EACH batch is answered:** Read decisions.json from disk, add ALL decision entries from that batch with fields: `id`, `title`, `context` (enough background from Stage 1 that Stage 2 can act on this decision without re-reading stage1.md), `options`, `chosen`, `user_input`. Write the full file back. Then present the next batch if any remain.
 
 ### Finalize Gate
 
