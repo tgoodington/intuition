@@ -19,10 +19,9 @@ You assemble specialist and producer teams for v9 workflows. You scan registries
 5. You MUST check prerequisites for all selected producers before proceeding.
 6. You MUST halt with install instructions if any required tool is missing.
 7. You MUST write `team_assignment.json` to context_path.
-8. You MUST generate `detail_brief.md` for the first specialist in execution order.
-9. You MUST update `.project-memory-state.json` with the detail phase state.
-10. You MUST NOT make domain judgments beyond domain_tags overlap — match mechanically, and `/intuition-agent-advisor` handles specialist creation.
-11. You MUST route to `/intuition-detail` after completion.
+8. You MUST NOT update `.project-memory-state.json` — handoff owns all state writes.
+9. You MUST NOT make domain judgments beyond domain_tags overlap — match mechanically, and `/intuition-agent-advisor` handles specialist creation.
+10. You MUST route to `/intuition-handoff` after completion.
 
 ## CONTEXT RESOLUTION
 
@@ -207,7 +206,7 @@ for tasks that could not be matched to any existing specialist in the registry.
 
 Then output: "Some tasks need new specialist profiles. Run `/intuition-agent-advisor` to create them, then re-run `/intuition-assemble`."
 
-STOP here. Do NOT proceed to Steps 8-11. Do NOT write team_assignment.json or update state.
+STOP here. Do NOT proceed to Steps 8-9. Do NOT write team_assignment.json.
 
 **If "Assign unmatched tasks manually":** Ask user which specialist (from the available list) to assign each unmatched task to. Update specialist_assignments accordingly. Continue to Step 8.
 
@@ -217,59 +216,9 @@ STOP here. Do NOT proceed to Steps 8-11. Do NOT write team_assignment.json or up
 
 Write the finalized assembly output to `{context_path}team_assignment.json`.
 
-### Step 9: Generate Detail Brief
+### Step 9: Route User
 
-Write `{context_path}detail_brief.md` for the FIRST specialist in execution_order phase 1:
-
-```markdown
-# Detail Brief
-
-## Current Specialist
-- **Name**: {specialist name}
-- **Display Name**: {display_name from profile}
-- **Domain**: {domain from profile}
-- **Profile Path**: {absolute path to the specialist profile file}
-
-## Assigned Tasks
-{For each task assigned to this specialist:}
-### Task {task_id}: {title}
-- **Depth**: {depth}
-- **Description**: {from plan}
-- **Acceptance Criteria**: {from plan}
-- **Dependencies**: {from plan}
-
-## Prior Blueprints
-None (first specialist in execution order)
-
-## Plan Context
-{Relevant content from plan.md Section 10, if present}
-
-## Detail Queue
-{All specialists with status:}
-- [in_progress] {first specialist display_name}
-- [pending] {second specialist display_name}
-- [pending] ...
-```
-
-### Step 10: Update State
-
-Update `.project-memory-state.json` for the active context's workflow:
-- Set `status` to `"detail"`
-- Set `planning.completed` to `true` with timestamp, `approved` to `true`
-- Set `detail.started` to `true`, `detail.completed` to `false`
-- Set `detail.team_assignment` to `"team_assignment.json"`
-- Populate `detail.specialists` array from specialist_assignments. Each entry:
-  - `name`: specialist name
-  - `status`: `"pending"` (except first specialist: `"in_progress"`)
-  - `stage`: `"stage1"`
-  - `blueprint_path`: null
-  - `decisions_path`: null
-- Set `detail.current_specialist` to the first specialist name
-- Set `detail.execution_phase` to `1`
-
-### Step 11: Route User
-
-Output: "Team assembled. Detail brief prepared for **[First Specialist Display Name]**. Run `/clear` then `/intuition-detail` to begin specialist consultation."
+Output: "Team assembled and saved to `team_assignment.json`. Run `/clear` then `/intuition-handoff` to transition to the detail phase."
 
 ## EDGE CASES
 

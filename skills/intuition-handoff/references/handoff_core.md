@@ -18,7 +18,7 @@ As part of every handoff, extract user profile learnings and update the global u
 
 ### Discovery → Planning Handoff (User Profile Focus)
 
-**From discovery_output.json**, extract `user_profile_learnings`:
+**From prompt_output.json**, extract `user_profile_learnings`:
 
 ```json
 {
@@ -37,7 +37,7 @@ As part of every handoff, extract user profile learnings and update the global u
 
 **Update `.claude/USER_PROFILE.json`:**
 1. Read existing `.claude/USER_PROFILE.json` (may be empty initially)
-2. Merge in new learnings from `discovery_output.json`:
+2. Merge in new learnings from `prompt_output.json`:
    - If a field is `null` in profile and has value in learnings, add it
    - If field is populated in profile, only overwrite if discovery_confidence is "high"
    - Always update `metadata.last_updated` timestamp
@@ -96,7 +96,7 @@ Check `.project-memory-state.json` to determine current state:
       "started": true,
       "completed": true,
       "completed_at": "2025-02-02T...",
-      "output_files": ["discovery_brief.md", "discovery_output.json"]
+      "output_files": ["prompt_brief.md", "prompt_output.json"]
     },
     "planning": {
       "started": false,
@@ -111,10 +111,10 @@ Check `.project-memory-state.json` to determine current state:
 ### Step 1: Read Outputs
 
 ```
-discovery_brief.md
+prompt_brief.md
   └─ Human-readable summary of discovery
 
-discovery_output.json
+prompt_output.json
   └─ Structured data for handoff:
      {
        "key_facts_to_add": [...],
@@ -127,11 +127,11 @@ discovery_output.json
 
 ### Step 2: Extract and Structure Findings
 
-From `discovery_output.json`, extract:
+From `prompt_output.json`, extract:
 
 **Key Facts** (for key_facts.md):
 ```
-Example from discovery_output.json:
+Example from prompt_output.json:
 {
   "category": "User Base",
   "fact": "Scaling to support 10,000 concurrent users",
@@ -165,7 +165,7 @@ if they represent architectural choices.
 
 **Suggested Decisions** (for decisions.md):
 ```
-discovery_output.json might suggest:
+prompt_output.json might suggest:
 {
   "suggested_decisions": [
     {
@@ -223,7 +223,7 @@ operations, with write operations on primary instance.
 **Update issues.md:**
 - Log the discovery work completed
 - Format: Date - Brief description - Status
-- Include discovery_brief.md link
+- Include prompt_brief.md link
 
 Example:
 ```markdown
@@ -232,7 +232,7 @@ Example:
 - **Status**: Completed
 - **Description**: Explored user base growth, authentication patterns,
   scalability needs
-- **Discovery Brief**: docs/project_notes/discovery_brief.md
+- **Discovery Brief**: docs/project_notes/prompt_brief.md
 - **Key Findings**:
   - Must scale to 10k concurrent users
   - Prefer JWT-based auth
@@ -271,7 +271,7 @@ Create a brief that synthesizes discovery for planning. Structure:
 - Risk: [Y] - Should be explored during planning
 
 ## References
-- Discovery Brief: docs/project_notes/discovery_brief.md
+- Discovery Brief: docs/project_notes/prompt_brief.md
 - Relevant Decisions: ADR-001, ADR-002
 
 ## Notes for Planner
@@ -406,7 +406,7 @@ Create a brief for execution. Structure:
 
 ## References
 - Full Plan: docs/project_notes/plan.md
-- Discovery Brief: docs/project_notes/discovery_brief.md
+- Discovery Brief: docs/project_notes/prompt_brief.md
 - Relevant Decisions: ADR-001, ADR-002, ...
 
 ## Notes for Executor
@@ -485,7 +485,7 @@ implementation."
 **Consequences:**
 [Benefits and trade-offs]
 
-**Discovered During**: Discovery phase (discovery_brief.md)
+**Discovered During**: Discovery phase (prompt_brief.md)
 **Confidence**: High/Medium/Low
 ```
 
@@ -506,12 +506,12 @@ implementation."
 
 ## Edge Cases
 
-### What if discovery_output.json doesn't exist?
+### What if prompt_output.json doesn't exist?
 
 ```
-1. Check if discovery_brief.md exists
+1. Check if prompt_brief.md exists
 2. If yes: Read brief manually and extract key insights
-3. Summarize into a simple discovery_output.json structure
+3. Summarize into a simple prompt_output.json structure
 4. Proceed with handoff
 5. Note: Less structured, but handoff still works
 ```

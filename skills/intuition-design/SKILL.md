@@ -25,7 +25,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 9. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-engineer` or `/intuition-build`.
 10. You MUST be domain-agnostic. Adapt your language, questions, and output format to match what is being designed — code, creative work, business documents, UI, or anything else.
 11. You MUST NOT write code or implementation artifacts — you produce design specifications only.
-12. You MUST NOT modify `plan.md`, `discovery_brief.md`, or `design_brief.md`.
+12. You MUST NOT modify `plan.md`, `prompt_brief.md`, or `design_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
 15. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT continue the dialogue, draft specs, or write any output document while a research agent is still running.
@@ -113,7 +113,7 @@ Execute all of the following before your first user-facing message.
 Read these files:
 - `{context_path}/design_brief.md` — REQUIRED. Contains the current item, plan context, and design rationale. If missing, stop: "No design brief found. Run `/intuition-handoff` first."
 - `{context_path}/plan.md` — for full task context and acceptance criteria.
-- `{context_path}/discovery_brief.md` — for original problem context.
+- `{context_path}/prompt_brief.md` — for original problem context.
 
 From the design brief, extract:
 - Current item name and description

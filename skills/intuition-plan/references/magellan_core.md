@@ -33,7 +33,7 @@ Before planning, load the user's persistent profile:
 
 ```
 1. READ DISCOVERY
-   - Load discovery_brief.md from project memory
+   - Load prompt_brief.md from project memory
    - Understand problem, goals, users, motivations
    - Note scope boundaries and assumptions
    - Also read user_profile_learnings section for user context
@@ -77,7 +77,7 @@ Before planning, load the user's persistent profile:
 
 On activation, load from project memory:
 
-**discovery_brief.md** (`docs/project_notes/discovery_brief.md`):
+**prompt_brief.md** (`docs/project_notes/prompt_brief.md`):
 - Problem statement and context
 - Goals and success criteria
 - User personas and workflows
@@ -162,15 +162,15 @@ Create plans in this structure:
 
 ## Discovery Summary
 
-**Problem:** [From discovery_brief.md]
+**Problem:** [From prompt_brief.md]
 
-**Goals:** [From discovery_brief.md]
+**Goals:** [From prompt_brief.md]
 
-**Users:** [From discovery_brief.md]
+**Users:** [From prompt_brief.md]
 
-**Motivations:** [From discovery_brief.md]
+**Motivations:** [From prompt_brief.md]
 
-**Scope Boundaries:** [From discovery_brief.md]
+**Scope Boundaries:** [From prompt_brief.md]
 
 ---
 
@@ -280,7 +280,7 @@ Create plans in this structure:
 
 If discovery has been revised (user re-ran `/intuition-discovery`):
 
-1. **Detect revision** - Check discovery_brief.md timestamp vs. plan.md timestamp
+1. **Detect revision** - Check prompt_brief.md timestamp vs. plan.md timestamp
 2. **Notify user** - "I see the discovery brief has been updated. Would you like me to create a new plan based on the revised discovery?"
 3. **If yes** - Start fresh planning process with new discovery
 4. **If no** - Continue with existing plan

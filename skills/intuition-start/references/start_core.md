@@ -110,7 +110,7 @@ this work through a genuine conversation.
 ```
 
 ### Brief Generated
-- `discovery_brief.md`: Minimal/empty (just a header and invitation)
+- `prompt_brief.md`: Minimal/empty (just a header and invitation)
 - OR: Skip creating brief (let Waldo create it)
 
 ---
@@ -120,11 +120,11 @@ this work through a genuine conversation.
 ### Detection
 - `discovery.started == true`
 - `discovery.completed == false`
-- `docs/project_notes/discovery_brief.md` may or may not exist yet
+- `docs/project_notes/prompt_brief.md` may or may not exist yet
 
 ### Action
 1. Note that discovery is underway
-2. Load any existing discovery_brief.md if present
+2. Load any existing prompt_brief.md if present
 3. Acknowledge progress
 4. Suggest continuing
 
@@ -133,10 +133,10 @@ this work through a genuine conversation.
 ```
 Welcome back! I see you're in the discovery phase.
 
-[If discovery_brief.md exists]:
+[If prompt_brief.md exists]:
 Progress so far:
 - Last updated: [timestamp]
-- Brief saved at: docs/project_notes/discovery_brief.md
+- Brief saved at: docs/project_notes/prompt_brief.md
 
 Run /intuition-discovery to continue our conversation.
 ```
@@ -156,11 +156,11 @@ Run /intuition-discovery to continue exploring what you're building.
 ### Detection
 - `discovery.completed == true`
 - `planning.started == false`
-- `docs/project_notes/discovery_brief.md` exists
+- `docs/project_notes/prompt_brief.md` exists
 - `docs/project_notes/planning_brief.md` exists (created by handoff)
 
 ### Action
-1. Read `discovery_brief.md` and `planning_brief.md`
+1. Read `prompt_brief.md` and `planning_brief.md`
 2. Extract and summarize key information
 3. Load relevant architectural decisions from `decisions.md`
 4. Generate a fresh planning brief (or note the existing one)
@@ -168,7 +168,7 @@ Run /intuition-discovery to continue exploring what you're building.
 
 ### Data to Extract
 
-**From discovery_brief.md:**
+**From prompt_brief.md:**
 ```
 Problem: [extract from "## Problem" section]
 Goals: [extract from "## Goals" section]
@@ -263,7 +263,7 @@ Relevant Decisions:
 ```
 Welcome back! I see you're in the planning phase.
 
-Discovery: ✓ Complete (docs/project_notes/discovery_brief.md)
+Discovery: ✓ Complete (docs/project_notes/prompt_brief.md)
 Plan In Progress: 🔄 (docs/project_notes/plan.md)
   - [X] tasks identified
   - Scope: [Simple/Moderate/Complex]
@@ -436,7 +436,7 @@ Identify most limiting or important facts.
 Summarize for user (don't read the whole file).
 ```
 
-### Read discovery_brief.md
+### Read prompt_brief.md
 ```
 Extract from these sections:
 - ## Problem
@@ -513,7 +513,7 @@ Ready to plan? Run:
 
 ### What if files are missing?
 ```
-IF discovery_brief.md doesn't exist but discovery.completed == true:
+IF prompt_brief.md doesn't exist but discovery.completed == true:
   → "Discovery was completed but brief not saved.
      Ready to plan? Run /intuition-plan"
 
@@ -524,7 +524,7 @@ IF planning_brief.md doesn't exist but planning.started == true:
 
 ### What if state.json is corrupted?
 ```
-1. Check for main files (discovery_brief.md, plan.md)
+1. Check for main files (prompt_brief.md, plan.md)
 2. Infer phase from which files exist
 3. Ask user: "I'm not sure where you are. What would you like to do?"
 ```

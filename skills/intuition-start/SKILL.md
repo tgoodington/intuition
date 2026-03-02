@@ -136,7 +136,7 @@ ELSE (a context is in-progress):
 **"Any context is complete"** = trunk.status == "complete" OR any branch has status == "complete".
 **"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building","detail"].
 
-**Fallback** (state corrupted): Infer from files under context_path — discovery_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done). Ask user if ambiguous.
+**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done). Ask user if ambiguous.
 
 ## ROUTING TABLE (Step 5)
 
@@ -146,7 +146,7 @@ Output one line of status, then the next command.
 |-------|-------------|-------|
 | first_time | "No project memory found." | `/intuition-prompt` |
 | prompt_in_progress | "Prompt refinement in progress." | `/intuition-prompt` |
-| ready_for_planning | "Discovery complete." | Run `/clear` then `/intuition-plan` |
+| ready_for_planning | "Prompt complete." | Run `/clear` then `/intuition-plan` |
 | planning_in_progress | "Planning in progress." | `/intuition-plan` |
 | ready_for_assemble | "Planning complete (v9)." | Run `/clear` then `/intuition-assemble` |
 | detail_in_progress | "Detail phase in progress." | See DETAIL ROUTING below |

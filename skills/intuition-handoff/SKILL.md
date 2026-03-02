@@ -23,7 +23,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 7. You MUST NOT evaluate or critique phase outputs. Process and document, never judge.
 8. You MUST NOT skip the user profile merge step during prompt→planning transitions.
 9. You MUST suggest the correct next skill after completing the transition.
-10. You MUST NOT modify discovery_brief.md, plan.md, design_spec_*.md, code_specs.md, or other phase output files — they are read-only inputs.
+10. You MUST NOT modify prompt_brief.md, plan.md, design_spec_*.md, code_specs.md, or other phase output files — they are read-only inputs.
 11. You MUST manage the design loop: track which items are designed, route to next item or to engineer when all are done.
 
 ## CONTEXT PATH RESOLUTION
@@ -76,7 +76,10 @@ IF context_workflow.status == "prompt" AND workflow.prompt.completed == true
 
 IF context_workflow.status == "planning" AND workflow.planning.completed == true:
    IF v9 mode AND NOT (workflow.detail exists AND workflow.detail.started == true):
-      → TRANSITION: Plan → Assemble (Transition 2v9)
+      IF {context_path}team_assignment.json exists:
+         → TRANSITION: Assemble → Detail (Transition 2.5v9)
+      ELSE:
+         → TRANSITION: Plan → Assemble (Transition 2v9)
    ELSE IF v8 mode AND workflow.design.started == false AND workflow.engineering.started == false:
       → TRANSITION: Planning → Design (Transition 2) OR Planning → Engineer (Transition 2B)
 
@@ -185,19 +188,19 @@ Fires when handoff detects `version == "4.0"` OR (`execution` phase exists but n
 
 ## V3 STATE MIGRATION
 
-Fires when handoff detects `version == "3.0"` OR missing `active_context`. Create `docs/project_notes/trunk/`. Move existing workflow artifacts (`discovery_brief.md`, `discovery_output.json`, `planning_brief.md`, `plan.md`, `design_brief.md`, `design_spec_*.md`, `execution_brief.md`, `.planning_research/`) from `docs/project_notes/` into `trunk/` — skip missing files. Restructure state: wrap existing `status` + `workflow` into `trunk` object, add `active_context: "trunk"`, `branches: {}`, rename `execution` → `build`, add `engineering` phase, set `version: "5.0"`. Preserve `initialized`, `last_handoff`, `last_handoff_transition`. Write state. Report what was migrated and confirm v5.0 upgrade. Leave shared files (`key_facts.md`, `decisions.md`, `issues.md`, `bugs.md`) at `docs/project_notes/`.
+Fires when handoff detects `version == "3.0"` OR missing `active_context`. Create `docs/project_notes/trunk/`. Move existing workflow artifacts (`prompt_brief.md`, `prompt_output.json`, `planning_brief.md`, `plan.md`, `design_brief.md`, `design_spec_*.md`, `execution_brief.md`, `.planning_research/`) from `docs/project_notes/` into `trunk/` — skip missing files. Restructure state: wrap existing `status` + `workflow` into `trunk` object, add `active_context: "trunk"`, `branches: {}`, rename `execution` → `build`, add `engineering` phase, set `version: "5.0"`. Preserve `initialized`, `last_handoff`, `last_handoff_transition`. Write state. Report what was migrated and confirm v5.0 upgrade. Leave shared files (`key_facts.md`, `decisions.md`, `issues.md`, `bugs.md`) at `docs/project_notes/`.
 
 ## TRANSITION 1: PROMPT → PLANNING
 
-Read `{context_path}discovery_brief.md` and `{context_path}discovery_output.json` (if exists — fall back to extracting from brief manually).
+Read `{context_path}prompt_brief.md` and `{context_path}prompt_output.json` (if exists — fall back to extracting from brief manually).
 
 **Extract and Structure:** Key facts → `key_facts.md`, constraints → `key_facts.md` (constraints category), suggested decisions → ADRs in `decisions.md`, assumptions → reference in brief only, follow-up items → `issues.md`.
 
-**User Profile Merge:** If `discovery_output.json` has `user_profile_learnings` AND `.claude/USER_PROFILE.json` exists: read profile, merge (null fields get new values, populated fields overwrite only if confidence "high"), save. Skip if no USER_PROFILE.json.
+**User Profile Merge:** If `prompt_output.json` has `user_profile_learnings` AND `.claude/USER_PROFILE.json` exists: read profile, merge (null fields get new values, populated fields overwrite only if confidence "high"), save. Skip if no USER_PROFILE.json.
 
-**Generate Planning Brief:** Write `{context_path}planning_brief.md` with: Discovery Summary (1-2 paragraphs), Problem Statement, Goals & Success Criteria, Key Constraints, Architectural Context, Assumptions & Risks (with confidence levels), References (discovery_brief path, ADR numbers).
+**Generate Planning Brief:** Write `{context_path}planning_brief.md` with: Discovery Summary (1-2 paragraphs), Problem Statement, Goals & Success Criteria, Key Constraints, Architectural Context, Assumptions & Risks (with confidence levels), References (prompt_brief path, ADR numbers).
 
-Update state: set `status` to `"planning"`, mark `prompt.completed = true` with timestamp, set `planning.started = true`. Route: "Discovery processed. Planning brief saved to `{context_path}planning_brief.md`. Run `/clear` then `/intuition-plan` to create a structured plan."
+Update state: set `status` to `"planning"`, mark `prompt.completed = true` with timestamp, set `planning.started = true`. Route: "Prompt output processed. Planning brief saved to `{context_path}planning_brief.md`. Run `/clear` then `/intuition-plan` to create a structured plan."
 
 ## TRANSITION 2: PLANNING → DESIGN (Initial Setup)
 
@@ -224,6 +227,67 @@ v9 mode only. Triggers when planning completes and the plan contains a `### 6.5 
 1. **Extract and structure** from plan.md: architectural decisions → `docs/project_notes/decisions.md`, risks/dependencies → note for brief, planning insights → `docs/project_notes/issues.md`.
 2. **Update state**: Set `status` to `"planning"`, mark `planning.completed = true` with timestamp, `approved = true`.
 3. **Route user**: "Plan processed. Run `/clear` then `/intuition-assemble` to build the specialist team and begin the detail phase."
+
+## TRANSITION 2.5v9: ASSEMBLE → DETAIL
+
+v9 mode only. Triggers when planning is complete, `{context_path}team_assignment.json` exists, and detail has not started. This means assemble has finished and the team is ready.
+
+### Protocol
+
+1. **Read team assignment**: Read `{context_path}team_assignment.json`. Extract specialist_assignments, execution_order, and producer_assignments.
+
+2. **Read specialist profiles**: For each specialist in specialist_assignments, read their profile to get `display_name` and `domain`.
+
+3. **Determine first specialist**: From execution_order phase 1, pick the first specialist alphabetically (or the only one if solo).
+
+4. **Generate detail brief**: Write `{context_path}detail_brief.md` with:
+
+```markdown
+# Detail Brief
+
+## Current Specialist
+- **Name**: {specialist name}
+- **Display Name**: {display_name from profile}
+- **Domain**: {domain from profile}
+- **Profile Path**: {absolute path to the specialist profile file}
+
+## Assigned Tasks
+{For each task assigned to this specialist:}
+### Task {task_id}: {title}
+- **Depth**: {depth}
+- **Description**: {from plan}
+- **Acceptance Criteria**: {from plan}
+- **Dependencies**: {from plan}
+
+## Prior Blueprints
+None (first specialist in execution order)
+
+## Plan Context
+{Relevant content from plan.md Section 10, if present}
+
+## Detail Queue
+{All specialists with status:}
+- [in_progress] {first specialist display_name}
+- [pending] {second specialist display_name}
+- [pending] ...
+```
+
+5. **Update state**:
+   - Set `status` to `"detail"`
+   - Set `detail.started` to `true`, `detail.completed` to `false`
+   - Set `detail.team_assignment` to `"team_assignment.json"`
+   - Populate `detail.specialists` array from specialist_assignments. Each entry:
+     - `name`: specialist name
+     - `tasks`: task list from assignment
+     - `status`: `"pending"` (except first specialist: `"in_progress"`)
+     - `stage`: `"stage1"`
+     - `stage1_path`: null
+     - `decisions_path`: null
+     - `blueprint_path`: null
+   - Set `detail.current_specialist` to the first specialist name
+   - Set `detail.execution_phase` to `1`
+
+6. **Route user**: "Team assignment processed. Detail brief prepared for **[First Specialist Display Name]**. Run `/clear` then `/intuition-detail` to begin specialist consultation."
 
 ## TRANSITION 3v9: SPECIALIST → SPECIALIST (Next Specialist)
 
@@ -338,7 +402,7 @@ All shared memory files live at `docs/project_notes/` (never context_path).
 
 ## EDGE CASES
 
-- **Missing discovery_output.json**: Extract insights from discovery_brief.md manually.
+- **Missing prompt_output.json**: Extract insights from prompt_brief.md manually.
 - **Poor output quality**: Process as-is. Note concerns in brief. Do NOT fix outputs.
 - **New constraints from planning**: Update key_facts.md, create ADR if architectural.
 - **Interrupted handoff**: Check what's updated, continue from there, don't duplicate.

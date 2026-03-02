@@ -19,7 +19,7 @@ You are a code spec creator. You determine the code-level HOW for every task in 
 These are non-negotiable. Violating any of these means the protocol has failed.
 
 1. You MUST read `.project-memory-state.json` and resolve `context_path` before reading any other files. If plan.md doesn't exist at the resolved path, tell the user to run `/intuition-plan` first.
-2. You MUST read `{context_path}/plan.md`, `{context_path}/discovery_brief.md`, any `{context_path}/design_spec_*.md` files, and `{context_path}/engineering_brief.md` (if exists) before producing specs.
+2. You MUST read `{context_path}/plan.md`, `{context_path}/prompt_brief.md`, any `{context_path}/design_spec_*.md` files, and `{context_path}/engineering_brief.md` (if exists) before producing specs.
 3. You MUST use research subagents (haiku) to read relevant source files — do NOT read the entire codebase yourself.
 4. You MUST engage in interactive dialogue with the user on complex engineering decisions via AskUserQuestion.
 5. You MUST produce `{context_path}/code_specs.md` as the sole deliverable.
@@ -42,7 +42,7 @@ On startup, before reading any files:
 ## PROTOCOL: COMPLETE FLOW
 
 ```
-Step 1:   Read context (plan.md + discovery_brief.md + design specs + engineering_brief.md)
+Step 1:   Read context (plan.md + prompt_brief.md + design specs + engineering_brief.md)
 Step 1.5: Validate plan structure — ensure tasks are specifiable
 Step 2:   Fan-out research — parallel haiku subagents read relevant source files per task
 Step 3:   Synthesize research into draft specs
@@ -58,7 +58,7 @@ On startup, read these files:
 
 1. `.claude/USER_PROFILE.json` (if exists) — tailor communication to user preferences.
 2. `{context_path}/plan.md` — the approved plan with tasks and acceptance criteria.
-3. `{context_path}/discovery_brief.md` — original problem context.
+3. `{context_path}/prompt_brief.md` — original problem context.
 4. `{context_path}/design_spec_*.md` (if any exist) — detailed design specifications for flagged tasks.
 5. `{context_path}/engineering_brief.md` (if exists) — context passed from handoff.
 

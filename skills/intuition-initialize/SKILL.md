@@ -111,7 +111,7 @@ For each file, use the Read tool to read the template, then use Write to create 
 | `references/key_facts_template.md` | `docs/project_notes/key_facts.md` |
 | `references/issues_template.md` | `docs/project_notes/issues.md` |
 
-Do NOT create workflow output files (discovery_brief.md, plan.md, etc.). Those are created by their respective skills.
+Do NOT create workflow output files (prompt_brief.md, plan.md, etc.). Those are created by their respective skills.
 
 ## STEP 3: CREATE STATE FILE
 

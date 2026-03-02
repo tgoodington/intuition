@@ -14,15 +14,15 @@
 
 ## Discovery Summary
 
-**Problem:** [From discovery_brief.md]
+**Problem:** [From prompt_brief.md]
 
-**Goals:** [From discovery_brief.md]
+**Goals:** [From prompt_brief.md]
 
-**Users:** [From discovery_brief.md]
+**Users:** [From prompt_brief.md]
 
-**Motivations:** [From discovery_brief.md]
+**Motivations:** [From prompt_brief.md]
 
-**Scope Boundaries:** [From discovery_brief.md]
+**Scope Boundaries:** [From prompt_brief.md]
 
 ---
 
