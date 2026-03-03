@@ -1,7 +1,7 @@
 ---
 name: intuition-handoff
 description: Universal phase transition orchestrator. Processes phase outputs, updates project memory, generates fresh briefs for next agent. Manages the design loop for multi-item design cycles and v9 team assembly for specialist workflows.
-model: haiku
+model: sonnet
 tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
 allowed-tools: Read, Write, Glob, Grep, Bash
 ---
@@ -102,29 +102,40 @@ IF context_workflow.status == "engineering" AND workflow.engineering.completed =
    → TRANSITION: Engineer → Build (Transition 5) — v8 only
 
 IF context_workflow.status == "building" AND workflow.build.completed == true:
-   → TRANSITION: Build → Complete (Transition 6)
+   IF v9 mode AND workflow.test.started == false:
+      Read {context_path}/team_assignment.json
+      IF any producer_assignments entry has producer == "code-writer":
+         → TRANSITION: Build → Test (Transition 6.5v9)
+      ELSE:
+         → TRANSITION: Build → Complete (Transition 6)
+   ELSE IF v8 mode:
+      → TRANSITION: Build → Complete (Transition 6)
+
+IF context_workflow.status == "testing" AND workflow.test.completed == true:
+   → TRANSITION: Test → Complete (Transition 7)
 
 IF no clear transition detected:
    → ASK USER: "Which phase just completed?" (use AskUserQuestion)
 ```
 
-## STATE SCHEMA (v6.0)
+## STATE SCHEMA (v7.0)
 
 This is the authoritative schema for `.project-memory-state.json`:
 
 ```json
 {
   "initialized": true,
-  "version": "6.0",
+  "version": "7.0",
   "active_context": "trunk",
   "trunk": {
-    "status": "none | prompt | planning | design | engineering | building | detail | complete",
+    "status": "none | prompt | planning | design | engineering | building | testing | detail | complete",
     "workflow": {
       "prompt": { "started": false, "completed": false, "started_at": null, "completed_at": null, "output_files": [] },
       "planning": { "started": false, "completed": false, "completed_at": null, "approved": false },
       "design": { "started": false, "completed": false, "completed_at": null, "items": [], "current_item": null },
       "engineering": { "started": false, "completed": false, "completed_at": null },
       "build": { "started": false, "completed": false, "completed_at": null },
+      "test": { "started": false, "completed": false, "completed_at": null, "skipped": false },
       "detail": { "started": false, "completed": false, "completed_at": null, "team_assignment": null, "specialists": [], "current_specialist": null, "execution_phase": 1 }
     }
   },
@@ -136,7 +147,7 @@ This is the authoritative schema for `.project-memory-state.json`:
 
 ### Branch Entry Schema
 
-Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure (including `engineering`, `build`, and `detail` phases).
+Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure (including `engineering`, `build`, `test`, and `detail` phases).
 
 ### Design Items Schema
 
@@ -173,14 +184,18 @@ Triggered when start routes to handoff with branch creation intent. User has pro
    - `created_at`: ISO timestamp
    - `purpose`: user-provided sentence
    - `status`: "none"
-   - `workflow`: identical structure to trunk's workflow (all false/null/empty — including `engineering`, `build`, and `detail` phases)
+   - `workflow`: identical structure to trunk's workflow (all false/null/empty — including `engineering`, `build`, `test`, and `detail` phases)
 4. **Set `active_context`** to the new branch key.
 5. **Write updated state**. Set `last_handoff_transition` to "branch_creation".
 6. **Route user**: "Branch **[display_name]** created. Run `/clear` then `/intuition-prompt` to define what this branch will accomplish."
 
 ## V5 STATE MIGRATION
 
-Fires when handoff detects `version == "5.0"`. For trunk and every branch: if `workflow.detail` does not exist, add `"detail": { "started": false, "completed": false, "completed_at": null, "team_assignment": null, "specialists": [], "current_specialist": null, "execution_phase": 1 }` after `build` in the workflow object. Set `version: "6.0"`, preserve all other fields, write state. Report: "Migrated state from v5.0 to v6.0 (added detail phase for v9 specialist workflow)." Then continue with the original transition.
+Fires when handoff detects `version == "5.0"`. For trunk and every branch: if `workflow.detail` does not exist, add `"detail": { "started": false, "completed": false, "completed_at": null, "team_assignment": null, "specialists": [], "current_specialist": null, "execution_phase": 1 }` after `build` in the workflow object. Also add `"test": { "started": false, "completed": false, "completed_at": null, "skipped": false }` after `build`. Set `version: "7.0"`, preserve all other fields, write state. Report: "Migrated state from v5.0 to v7.0 (added detail phase + test phase)." Then continue with the original transition.
+
+## V6 STATE MIGRATION
+
+Fires when handoff detects `version == "6.0"`. For trunk and every branch: if `workflow.test` does not exist, add `"test": { "started": false, "completed": false, "completed_at": null, "skipped": false }` after `build` in the workflow object. Set `version: "7.0"`, preserve all other fields, write state. Report: "Migrated state from v6.0 to v7.0 (added test phase for post-build quality gate)." Then continue with the original transition.
 
 ## V4 STATE MIGRATION
 
@@ -381,7 +396,65 @@ Write `{context_path}build_brief.md` with: Plan Summary (1-2 paragraphs), Object
 
 Update state: set `status` to `"building"`, mark `engineering.completed = true` with timestamp, set `build.started = true`. Route: "Code specs processed. Build brief saved to `{context_path}build_brief.md`. Run `/clear` then `/intuition-build` to begin implementation."
 
+## TRANSITION 6.5v9: BUILD → TEST
+
+v9 mode only. Triggers when build completes and `team_assignment.json` contains at least one `producer_assignments` entry with `producer == "code-writer"`.
+
+### Protocol
+
+1. **Read build_report.md**: Extract files modified, task results, deviations from blueprints.
+
+2. **Extract to memory files**: Same extraction as Transition 6 — bugs → `bugs.md`, lessons/deviations → `key_facts.md`, work completed → `issues.md`. Do NOT mark build as the final step.
+
+3. **Generate test brief**: Write `{context_path}/test_brief.md`:
+
+```markdown
+# Test Brief
+
+## Build Summary
+- **Status**: [from build_report]
+- **Tasks completed**: [count and list]
+- **Files modified**: [list from build_report]
+
+## Code Producers Used
+[For each producer_assignments entry where producer == "code-writer":]
+- **Specialist**: [specialist name]
+- **Tasks**: [task IDs]
+- **Output files**: [from build_report]
+
+## Acceptance Criteria
+[For each code-writer task, extract acceptance criteria from plan.md]
+
+## Decision Log References
+- Specialist decision logs: [paths to {context_path}/scratch/*-decisions.json]
+- Project decisions: docs/project_notes/decisions.md
+
+## Blueprint References
+[Paths to blueprints for code-writer tasks in {context_path}/blueprints/]
+
+## Known Issues
+[From build_report — any issues, deviations, or flagged items]
+```
+
+4. **Update state**: Set `status` to `"testing"`, mark `build.completed = true` with timestamp, set `test.started = true`.
+
+5. **Route**: "Build complete. Code was produced — test phase needed. Run `/clear` then `/intuition-test`."
+
+## TRANSITION 7: TEST → COMPLETE
+
+Triggers when `context_workflow.status == "testing"` and `workflow.test.completed == true`.
+
+### Protocol
+
+1. **Read test_report.md**: Read `{context_path}/test_report.md`. If missing, warn user but proceed with build_report only.
+
+2. **Extract to memory files**: Implementation fixes → `docs/project_notes/bugs.md`, test coverage insights → `docs/project_notes/key_facts.md`, escalated issues → `docs/project_notes/issues.md`.
+
+3. **Fall through to Transition 6 completion protocol**: Proceed with the full Transition 6 protocol below (build_report reading, generated specialist saving, git commit offer, state updates). When coming from test, also read test_report.md during the completion extraction and mark `test.completed = true` with timestamp.
+
 ## TRANSITION 6: BUILD → COMPLETE
+
+This transition also serves as the completion protocol for Transition 7 fallthrough. When coming from test (status == "testing"), also read `{context_path}/test_report.md` and include test results in memory extraction. Mark `test.completed = true` with timestamp if applicable. When coming from build with no code-writer (v9) or any v8 build, mark `test.skipped = true`.
 
 Read `{context_path}/build_report.md` — REQUIRED (warn user if missing, proceed with what's available). Extract: bugs → `bugs.md`, lessons/deviations → `key_facts.md`, work completed → `issues.md`.
 
@@ -424,6 +497,9 @@ All shared memory files live at `docs/project_notes/` (never context_path).
 - **v9 specialist dependency blueprint missing**: Skip to next eligible specialist. If none are eligible, halt and ask user.
 - **v9 conflict detection finds issues**: Present all conflicts, ask user to resolve before build. Do not auto-resolve.
 - **v9 completeness gate fails**: Report exact failures per blueprint. User must fix blueprints (re-run detail) before build.
+- **v9 build with no code-writer**: Skip test, mark `test.skipped = true`, direct to Transition 6 completion.
+- **Test report missing at Transition 7**: Warn user, proceed with build report only for memory extraction.
+- **Test skipped by user**: Set `test.skipped = true`, `test.completed = true`, proceed to completion.
 
 ## VOICE
 

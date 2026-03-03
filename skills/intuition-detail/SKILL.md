@@ -50,6 +50,8 @@ Step 8: Confirm blueprint, route to handoff
 Read `{context_path}/detail_brief.md` from disk. Extract:
 - **Current specialist**: name and profile path
 - **Assigned tasks**: task IDs, depths, descriptions, acceptance criteria, dependencies
+- **Decision classifications**: `[USER]`/`[SPEC]`/`[SILENT]` decisions per task (from plan's Decisions field)
+- **Decision policy**: from plan Section 10 Decision Policy — either `conservative` (hands-on posture) or `aggressive` (delegator posture)
 - **Prior blueprints**: paths to blueprints from earlier specialists (may be empty)
 - **Plan context**: section 10 content for engineering/specialist guidance
 
@@ -118,7 +120,11 @@ Spawn an opus Task subagent. The system prompt combines a research-planning fram
      [Natural language description]
      ```
 
+     Research budget: You may request at most {cap} research items (Deep tasks: 3, Standard tasks: 2). If you need to investigate more areas, combine related questions into broader queries. Prioritize research that fills gaps — do not re-investigate what's in the Known Research section.
+
      IMPORTANT: A 'Known Research' section is included in your context. This contains findings from the planning phase that overlap with your domain. Do NOT request research that duplicates what is already known — build on it. Only request research for gaps, unknowns, or areas that need deeper investigation than the planning phase provided.
+
+     The plan classifies key decisions for your tasks as [USER] (user decides), [SPEC] (you decide and document), or [SILENT] (handle autonomously). During your research planning, note which of your investigation areas relate to [USER] decisions — those need full options and tradeoffs prepared for the user. [SPEC] decisions need your best recommendation with documented rationale. [SILENT] decisions need no special treatment.
 
      Do NOT begin your full analysis yet. Focus only on identifying what information you need."
 
@@ -139,7 +145,9 @@ After 1a returns, write the specialist's research plan output to `{context_path}
 
 #### Stage 1b: Domain Research (Parallel Haiku Agents)
 
-Parse the specialist's research plan output. For each `### R{N}:` entry, spawn a haiku Task subagent (subagent_type: `Explore`):
+Parse the specialist's research plan output. Enforce the depth-based research cap: Deep tasks allow 3 entries max, Standard tasks allow 2. If the specialist's plan contains more entries than the cap, take ONLY the first {cap} entries and log a warning to the user: "Research plan had {N} items, capped at {cap} per depth policy."
+
+For each `### R{N}:` entry (up to the cap), spawn a haiku Task subagent (subagent_type: `Explore`):
 - **Task**: the natural language description from the research plan entry
 - **Instruction suffix**: "Search the project codebase thoroughly. Report: file paths found, key patterns observed, relevant code snippets, and any constraints or conventions discovered. Be specific — include exact paths, field names, and data types."
 
@@ -164,7 +172,7 @@ Write your complete output to `{context_path}/scratch/{specialist-name}-stage1.m
 - `## Research Findings` — facts discovered from the research results above
 - `## ECD Analysis` (or your domain-equivalent exploration heading)
 - `## Assumptions` — each as `### A{N}: [Title]` with `- **Default**:` and `- **Rationale**:` fields
-- `## Key Decisions` — each as `### D{N}: [Title]` with `- **Options**:`, `- **Recommendation**:`, and `- **Risk if wrong**:` fields
+- `## Key Decisions` — each as `### D{N}: [Title]` with `- **Tier**:` ([USER], [SPEC], [SILENT], or [UNCLASSIFIED] for decisions you discovered that aren't in the plan), `- **Options**:`, `- **Recommendation**:`, and `- **Risk if wrong**:` fields
 - `## Risks Identified`
 - `## Recommended Approach`
 
@@ -193,8 +201,23 @@ If NOT resuming from crash recovery (no existing decisions.json), create the ini
   "specialist": "{specialist-name}",
   "gate_started": "{ISO timestamp}",
   "gate_completed": null,
+  "decision_policy": "conservative|aggressive",
   "assumptions": [],
   "decisions": []
+}
+```
+
+Each decision entry uses this structure:
+```json
+{
+  "id": "D1",
+  "title": "...",
+  "tier": "USER|SPEC|SILENT",
+  "classified_by": "plan|detail",
+  "context": "...",
+  "options": ["..."],
+  "chosen": "...",
+  "user_input": "..."
 }
 ```
 
@@ -232,9 +255,13 @@ Non-promoted assumptions: record with `status: "accepted"`, `user_override: null
 
 **After EACH assumption is resolved:** Read decisions.json from disk, add the assumption entry, Write the full file back. The file on disk is the source of truth.
 
-### Phase 2: Decisions
+### Phase 2: Decisions (Tier-Routed)
 
-Present all decisions in batched AskUserQuestion calls, up to **4 decisions per call** (the tool's maximum). Each decision is a separate question within the call, so the user sees them as tabs.
+Separate decisions by tier from Stage 1 output. Each `### D{N}:` entry should have a `- **Tier**:` field ([USER], [SPEC], [SILENT], or [UNCLASSIFIED]).
+
+#### Phase 2a: [USER] Decisions — Ask the User
+
+Present all `[USER]` decisions in batched AskUserQuestion calls, up to **4 decisions per call** (the tool's maximum). Each decision is a separate question within the call, so the user sees them as tabs.
 
 **Build each question:**
 - Question: include the decision title, brief context, and risk if wrong
@@ -247,11 +274,52 @@ Present all decisions in batched AskUserQuestion calls, up to **4 decisions per 
 - 9-12 decisions: three calls (4, 4, remaining)
 - Continue the pattern for more
 
-**After EACH batch is answered:** Read decisions.json from disk, add ALL decision entries from that batch with fields: `id`, `title`, `context` (enough background from Stage 1 that Stage 2 can act on this decision without re-reading stage1.md), `options`, `chosen`, `user_input`. Write the full file back. Then present the next batch if any remain.
+**After EACH batch is answered:** Read decisions.json from disk, add ALL decision entries from that batch with fields: `id`, `title`, `tier: "USER"`, `classified_by: "plan"`, `context`, `options`, `chosen`, `user_input`. Write the full file back. Then present the next batch if any remain.
+
+#### Phase 2b: [SPEC] Decisions — Display Summary, Auto-Record
+
+Do NOT ask the user about these. Instead, display a summary:
+
+```
+The specialist will handle these decisions:
+
+- D{N}: [Title] → [Recommendation] ([one-line rationale])
+- ...
+```
+
+Then record each in decisions.json with `tier: "SPEC"`, `classified_by: "plan"`, `chosen` = the specialist's recommendation, `user_input: null`.
+
+#### Phase 2c: [UNCLASSIFIED] Decisions — Classify Then Route
+
+For decisions the specialist discovered during Stage 1 that weren't pre-classified in the plan (marked [UNCLASSIFIED]):
+
+1. Apply the 2x2 heuristic (see CLASSIFYING UNCLASSIFIED DECISIONS below)
+2. Apply the decision policy from the detail brief (`conservative` or `aggressive`) for borderline cases
+3. Route the classified decision: if [USER] → add to the Phase 2a AskUserQuestion batch; if [SPEC] or [SILENT] → handle as in Phase 2b
+4. Mark with `classified_by: "detail"` in decisions.json
+
+[SILENT] decisions (from plan or newly classified): record silently in decisions.json with `tier: "SILENT"`, `chosen` = specialist recommendation, `user_input: null`. Do NOT surface to the user.
 
 ### Finalize Gate
 
 After all assumptions and decisions are resolved: Read decisions.json from disk, set `gate_completed` to the current ISO timestamp, Write back.
+
+## CLASSIFYING UNCLASSIFIED DECISIONS
+
+When Stage 1 surfaces decisions not pre-classified in the plan, apply the 2x2:
+
+| | Hard to reverse | Easy to reverse |
+|---|---|---|
+| **Human-facing** | [USER] | [USER] |
+| **Internal** | [SPEC] | [SILENT] |
+
+"Human-facing" = touches what the end user sees, feels, or interacts with (guided by Commander's Intent from the plan).
+
+Then apply the decision policy from the detail brief:
+- **Conservative**: treat borderline cases as [USER]
+- **Aggressive**: treat borderline cases as [SPEC]
+
+Mark these decisions with `"classified_by": "detail"` in decisions.json.
 
 ## STEP 7: STAGE 2 — SPECIFICATION SUBAGENT
 

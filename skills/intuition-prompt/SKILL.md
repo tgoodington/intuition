@@ -24,16 +24,17 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 8. You MUST NOT open a response with a compliment. No "Great!", "Smart!", "That's compelling!" Show you heard them through substance, not praise.
 9. You MUST read `.project-memory-state.json` to determine the active context path before writing any files. NEVER write to the root `docs/project_notes/` — always write to the resolved context_path.
 
-## PROTOCOL: FOUR-PHASE FLOW
+## PROTOCOL: FIVE-PHASE FLOW
 
 ```
 Phase 1: CAPTURE   (1 turn)    — User states their vision raw
-Phase 2: REFINE    (3-4 turns) — Dependency-ordered sharpening
-Phase 3: REFLECT   (1 turn)    — Mirror back structured understanding
-Phase 4: CONFIRM   (1 turn)    — Draft brief, approve, write files, route to handoff
+Phase 2: REFINE    (3-5 turns) — Dependency-ordered sharpening (includes INTENT)
+Phase 3: REFLECT   (1 turn)    — Mirror back structured understanding + commander's intent
+Phase 4: POSTURE   (1 turn)    — User declares decision authority per area
+Phase 5: CONFIRM   (1 turn)    — Draft brief, approve, write files, route to handoff
 ```
 
-Target: 5-7 total turns. Every turn directly refines the output artifact.
+Target: 6-9 total turns. Every turn directly refines the output artifact.
 
 ## STARTUP: CONTEXT PATH RESOLUTION
 
@@ -91,11 +92,19 @@ This is the core of the skill. Each turn targets ONE gap using a dependency-orde
 ### Refinement Order
 
 ```
-1. SCOPE      → What is IN and what is OUT?
-2. SUCCESS    → How do you know it worked? What's observable/testable?
-3. CONSTRAINTS → What can't change? Technology, team, timeline, budget?
-4. ASSUMPTIONS → What are we taking as given? How confident are we?
+1. SCOPE       → What is IN and what is OUT?
+2. INTENT      → What does the end-user experience when this is done and working?
+3. SUCCESS     → How do you know it worked? What's observable/testable?
+4. CONSTRAINTS → What can't change? Technology, team, timeline, budget?
+5. ASSUMPTIONS → What are we taking as given? How confident are we?
 ```
+
+**INTENT captures the experiential outcome** — not metrics, but feel:
+- What the end-user experiences when interacting with the finished product
+- What the output/interface looks like and feels like in practice
+- Non-negotiable experiential qualities (fast, simple, invisible, delightful, etc.)
+
+INTENT grounds the brief in what success *feels like*, which downstream phases use to distinguish user-facing decisions from technical internals.
 
 ### Decision Logic Per Turn
 
@@ -104,13 +113,15 @@ Before each question, run this internal check:
 ```
 Is SCOPE clear enough to plan against?
   NO  → Ask a scope question
-  YES → Is SUCCESS defined with observable criteria?
-    NO  → Ask a success criteria question
-    YES → Are binding CONSTRAINTS surfaced?
-      NO  → Ask a constraints question
-      YES → Are key ASSUMPTIONS identified?
-        NO  → Ask an assumptions question
-        YES → Move to REFLECT
+  YES → Is INTENT defined (experiential outcome, look/feel, non-negotiable qualities)?
+    NO  → Ask an intent question
+    YES → Is SUCCESS defined with observable criteria?
+      NO  → Ask a success criteria question
+      YES → Are binding CONSTRAINTS surfaced?
+        NO  → Ask a constraints question
+        YES → Are key ASSUMPTIONS identified?
+          NO  → Ask an assumptions question
+          YES → Move to REFLECT
 ```
 
 If the user's initial CAPTURE response already covers some dimensions, skip them. Do not ask about what's already clear.
@@ -135,7 +146,7 @@ By turn 3-4 of REFINE, you should be asking about what the solution DOES, not wh
 
 ## PHASE 3: REFLECT
 
-After REFINE completes, mirror back the entire refined understanding in one structured response. This is NOT the formal brief — it's a checkpoint so the user sees their vision sharpened before it becomes an artifact.
+After REFINE completes, mirror back the entire refined understanding in one structured response. This is NOT the formal brief — it's a checkpoint so the user sees their vision sharpened before it becomes an artifact. Include the Commander's Intent synthesis so the user can see how you've distilled their experiential vision before the posture question.
 
 Use AskUserQuestion:
 
@@ -143,6 +154,11 @@ Use AskUserQuestion:
 Question: "Here's what I've captured from our conversation:
 
 **Problem:** [2-3 sentence restatement with causal structure]
+
+**Commander's Intent:**
+- Desired end state: [What success feels/looks like to the end user — experiential, not metrics]
+- Non-negotiables: [The 2-3 experiential qualities that would make the user reject the result]
+- Boundaries: [Constraints on the solution space, not prescribed solutions]
 
 **Success looks like:** [bullet list of observable outcomes]
 
@@ -164,9 +180,37 @@ Options:
 - "We missed something important"
 ```
 
-If they want adjustments, address them (1-2 more turns max), then re-present. If they confirm, move to CONFIRM.
+If they want adjustments, address them (1-2 more turns max), then re-present. If they confirm, move to POSTURE.
 
-## PHASE 4: CONFIRM
+## PHASE 4: POSTURE
+
+After the user approves the REFLECT summary, present the major elements from the brief and ask which areas they want decision authority over during the build.
+
+Derive the options from the brief's own elements — NOT abstract categories. Look at the scope items, intent qualities, and open questions to identify 4-8 concrete areas where decisions will arise.
+
+Use AskUserQuestion with multiSelect:
+
+```
+Question: "Now that we've locked the brief, which of these areas do you want final say on during the build?"
+
+Header: "Decisions"
+multiSelect: true
+Options (derive from brief — examples):
+- "[Concrete area from scope/intent, e.g., 'Navigation structure']" — "Specialist recommends, you approve"
+- "[Concrete area from scope/intent, e.g., 'Output format']" — "Specialist recommends, you approve"
+- "[Concrete area from scope/intent, e.g., 'Error messaging']" — "Specialist recommends, you approve"
+- "Just handle everything" — "Team has full autonomy — surface only major surprises"
+```
+
+**Interpretation rules:**
+- Selected items → **"I decide"** (always surface with full options)
+- Unselected items (when some ARE selected) → **"Show me options"** (specialist recommends, user approves)
+- "Just handle everything" selected → ALL items become **"Team handles"** (full autonomy)
+- If the user selects specific items AND "Just handle everything" → ignore "Just handle everything", use the specific selections
+
+Record the result as the Decision Posture Map. Then move to CONFIRM.
+
+## PHASE 5: CONFIRM
 
 Write the output files and route to handoff.
 
@@ -177,6 +221,11 @@ Write the output files and route to handoff.
 
 ## Problem Statement
 [2-3 sentences. What is broken or missing, for whom, and why it matters now. Include causal structure.]
+
+## Commander's Intent
+**Desired end state:** [What success feels/looks like to the end user — experiential, not metrics]
+**Non-negotiables:** [The 2-3 experiential qualities that would make the user reject the result]
+**Boundaries:** [Constraints on the solution space, not prescribed solutions]
 
 ## Success Criteria
 - [Observable, testable outcome 1]
@@ -205,6 +254,11 @@ Write the output files and route to handoff.
 - [Build decision the planning phase should investigate]
 - [Technical unknown that affects architecture]
 - [Assumption that needs validation]
+
+## Decision Posture
+| Area | Posture | Notes |
+|------|---------|-------|
+| [element from brief] | I decide / Show me options / Team handles | [any context] |
 ```
 
 ### Write `{context_path}/prompt_output.json`
@@ -217,6 +271,11 @@ Write the output files and route to handoff.
     "problem_statement": "...",
     "success_criteria": "..."
   },
+  "commander_intent": {
+    "desired_end_state": "...",
+    "non_negotiables": ["..."],
+    "boundaries": ["..."]
+  },
   "scope": {
     "in": ["..."],
     "out": ["..."]
@@ -224,6 +283,9 @@ Write the output files and route to handoff.
   "constraints": ["..."],
   "assumptions": [
     { "assumption": "...", "confidence": "high|medium|low", "basis": "..." }
+  ],
+  "decision_posture": [
+    { "area": "...", "posture": "i_decide|show_options|team_handles", "notes": "..." }
   ],
   "research_performed": [],
   "open_questions": ["..."]

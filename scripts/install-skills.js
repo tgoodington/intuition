@@ -49,6 +49,7 @@ const skills = [
   'intuition-design',
   'intuition-engineer',
   'intuition-build',
+  'intuition-test',
   'intuition-debugger',
   'intuition-initialize',
   'intuition-agent-advisor',
@@ -190,6 +191,7 @@ try {
     log(`  /intuition-assemble       - Team assembler (v9 specialist/producer matching)`);
     log(`  /intuition-detail         - Domain specialist orchestrator (v9 detail phase)`);
     log(`  /intuition-build          - Build manager (blueprint + producer delegation)`);
+    log(`  /intuition-test           - Test orchestrator (post-build quality gate)`);
     log(`  /intuition-debugger       - Expert debugger (diagnostic specialist)`);
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);

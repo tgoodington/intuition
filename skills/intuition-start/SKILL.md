@@ -58,16 +58,20 @@ After reading `.project-memory-state.json`:
 
 ```
 IF state.version == "3.0" OR state.active_context is missing:
-  → OUTPUT: "This project uses an incompatible state schema. Run /intuition-initialize to upgrade to v6.0."
+  → OUTPUT: "This project uses an incompatible state schema. Run /intuition-initialize to upgrade to v7.0."
   → STOP
 
 IF state has "execution" instead of "build" (v4.0):
-  → OUTPUT: "State uses v4.0 schema. Run /intuition-handoff to migrate to v6.0."
+  → OUTPUT: "State uses v4.0 schema. Run /intuition-handoff to migrate to v7.0."
   → STOP
 
 IF state.version == "5.0" (missing detail object):
-  → OUTPUT: "State uses v5.0 schema (no v9 detail phase support). Run /intuition-handoff to migrate to v6.0."
+  → OUTPUT: "State uses v5.0 schema (no v9 detail/test phase support). Run /intuition-handoff to migrate to v7.0."
   → NON-BLOCKING: Continue with v8 routing. v9 features unavailable until migrated.
+
+IF state.version == "6.0" (missing test object):
+  → OUTPUT: "State uses v6.0 schema (no test phase support). Run /intuition-handoff to migrate to v7.0."
+  → NON-BLOCKING: Continue with routing. Test phase unavailable until migrated.
 ```
 
 ## CONTEXT PATH RESOLUTION (Step 3)
@@ -129,14 +133,22 @@ ELSE (a context is in-progress):
   ELSE IF workflow.build.completed == false:
     → build_in_progress
 
+  ELSE IF workflow.test exists AND workflow.test.started == true
+       AND workflow.test.completed == false:
+    → test_in_progress
+
+  ELSE IF workflow.build.completed == true AND workflow.test exists
+       AND workflow.test.started == false:
+    → ready_for_test
+
   ELSE:
     → post_completion
 ```
 
 **"Any context is complete"** = trunk.status == "complete" OR any branch has status == "complete".
-**"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building","detail"].
+**"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building","testing","detail"].
 
-**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done). Ask user if ambiguous.
+**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done), build_report.md (build done), test_report.md (test done). Ask user if ambiguous.
 
 ## ROUTING TABLE (Step 5)
 
@@ -155,9 +167,13 @@ Output one line of status, then the next command.
 | engineering_in_progress | "Engineering in progress." | `/intuition-engineer` |
 | ready_for_build | "Code specs ready." | Run `/clear` then `/intuition-build` |
 | build_in_progress | "Build in progress." | `/intuition-build` |
+| ready_for_test | "Build complete, testing pending." | Run `/clear` then `/intuition-handoff` |
+| test_in_progress | "Test phase in progress." | `/intuition-test` |
 | post_completion | See POST-COMPLETION below | — |
 
 **DESIGN ROUTING:** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" → `/intuition-design`. If an item just completed and others remain → `/intuition-handoff`. If ambiguous, ask the user.
+
+**TEST ROUTING NOTE:** `ready_for_test` routes to handoff (not test) because the test_brief hasn't been generated yet — handoff creates it during Transition 6.5v9.
 
 **DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If a specialist just completed and others remain → `/intuition-handoff`. If all specialists completed but build not started → `/intuition-handoff`. If ambiguous, ask the user.
 
@@ -174,7 +190,7 @@ Project Status:
 ├── Branch: [display_name] (from [created_from]): [status label]
 ```
 
-Status labels: "Not started" | "Prompting..." | "Planning..." | "Assembling..." | "Detailing..." | "Designing..." | "Engineering..." | "Building..." | "Complete"
+Status labels: "Not started" | "Prompting..." | "Planning..." | "Assembling..." | "Detailing..." | "Designing..." | "Engineering..." | "Building..." | "Testing..." | "Complete"
 
 **If any context is in-progress:** Route to that context's next skill instead of showing choices.
 

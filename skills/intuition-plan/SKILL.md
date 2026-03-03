@@ -24,7 +24,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 12. You MUST NOT modify `prompt_brief.md` or `planning_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically and propose alternatives when warranted.
-15. You MUST assess every task for readiness and include a Section 6.5 in the plan. In v8 mode, this is "Design Recommendations" flagging tasks for design exploration. In v9 mode, this is "Detail Assessment" classifying every task by domain and depth.
+15. You MUST assess every task for readiness and include a Detail Assessment (Section 6.5) classifying every task by domain and depth.
 16. When planning on a branch, you MUST read the parent context's plan.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 17. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT draft options, present findings, or write any output document while a research agent is still running.
 
@@ -66,7 +66,7 @@ Phase 1:   INTAKE           (1 turn)     Read context, launch research, greet, b
 Phase 2:   ACTORS & SCOPE   (1-2 turns)  Map stakeholders, identify tensions [ARCH: A]
 Phase 2.5: DEPTH SELECTION  (1 turn)     User chooses planning depth tier
 Phase 3:   REACH & CHOICES  (variable)   Scope components, resolve decisions [ARCH: R + C]
-Phase 4:   HOMESTRETCH      (1-2 turns)  Draft blueprint, validate, present [ARCH: H]
+Phase 4:   HOMESTRETCH      (1-3 turns)  Draft blueprint, validate, present, decision review [ARCH: H]
 Phase 5:   FORMALIZATION    (1 turn)     Save plan.md, route to handoff
 ```
 
@@ -91,7 +91,7 @@ Read these files:
 - `{context_path}/planning_brief.md` — optional, may contain handoff context.
 - `.claude/USER_PROFILE.json` — optional, for tailoring communication style.
 
-From the prompt brief, extract: core problem, success criteria, stakeholders, constraints, scope, assumptions, and research insights.
+From the prompt brief, extract: core problem, success criteria, stakeholders, constraints, scope, assumptions, research insights, commander's intent, and decision posture.
 
 ## Step 2: Launch orientation research
 
@@ -209,18 +209,6 @@ The selected tier governs:
 - Which sections appear in the final plan
 - How deep ARCH coverage must go before Homestretch unlocks
 
-## Workflow Mode Selection
-
-After depth tier selection, determine the workflow mode:
-
-Ask via AskUserQuestion: "Which workflow mode should this plan use?"
-- Header: "Workflow Mode"
-- Options:
-  - "Domain specialist mode (v9)" — description: "Dynamic specialist teams with domain-specific blueprints. Best for multi-domain projects (legal + code + marketing), document-heavy work, or when deliverables span multiple formats."
-  - "Code engineering mode (v8)" — description: "Design exploration + code specs pipeline. Best for pure code projects with a single engineering focus."
-
-Store the selected mode. It determines which Section 6.5 format and Section 10 format to use.
-
 # PHASE 3: REACH & CHOICES (variable turns) [ARCH: R + C]
 
 Goal: Identify what the plan touches (Reach) and resolve every major decision (Choices).
@@ -293,6 +281,24 @@ Run the Executable Plan Checklist (below). Fix any failures before presenting.
 
 Present a summary: total tasks, key decisions that shaped the plan, judgment calls you made, notable risks. Ask via AskUserQuestion: "Does this plan look right?" Options: "Approve as-is" / "Needs changes".
 
+## Step 4b: Decision review
+
+After the user approves the plan content (Step 4), present all `[USER]` and `[SPEC]` decisions in a single summary and ask via AskUserQuestion:
+
+"Here are the decisions I'd surface to you during detail/build work. Want to reclassify any?"
+
+- Header: "Decisions"
+- Options:
+  - "Looks right"
+  - "I want to reclassify some"
+  - "Give me more control" — shifts all `[SPEC]` → `[USER]`
+  - "Give the team more autonomy" — shifts all `[USER]` on easy-to-reverse items → `[SPEC]`
+
+If they want to reclassify, address specific changes (1 turn max), then proceed.
+If no tasks have classified decisions, skip this step entirely.
+
+This is the ONE exception to "one question per turn" — it happens on a separate turn after plan approval.
+
 ## Step 5: Iterate
 
 If changes requested, make them and present again. Repeat until explicitly approved.
@@ -303,7 +309,7 @@ After explicit approval:
 
 1. Write the final plan to `{context_path}/plan.md`.
 2. Tell the user: "Plan saved to `{context_path}/plan.md`. Next step: Run `/intuition-handoff` to transition to the next phase."
-3. ALWAYS route to `/intuition-handoff`. NEVER suggest `/intuition-execute`.
+3. ALWAYS route to `/intuition-handoff`.
 
 # PLAN.MD OUTPUT FORMAT (Plan-Execute Contract v1.0)
 
@@ -313,9 +319,7 @@ After explicit approval:
 - **Standard**: Sections 1, 2, 3, 6, 6.5, 7, 8, 10
 - **Comprehensive**: All sections (1-10, including 6.5)
 
-Section 6.5 is ALWAYS included regardless of tier:
-- V8 mode: "Design Recommendations"
-- V9 mode: "Detail Assessment"
+Section 6.5 (Detail Assessment) is ALWAYS included regardless of tier.
 Section 2.5 is Parent Context — included for ALL tiers when on a branch.
 
 ## Section Specifications
@@ -363,8 +367,8 @@ Ordered list forming a valid dependency DAG. Each task:
 
 ```markdown
 ### Task [N]: [Title]
-- **Domain**: [free-text domain descriptor — e.g., "code/backend", "legal/regulatory", "marketing/copy"] (v9 mode only)
-- **Depth**: Deep | Standard | Light (v9 mode only)
+- **Domain**: [free-text domain descriptor — e.g., "code/backend", "legal/regulatory", "marketing/copy"]
+- **Depth**: Deep | Standard | Light
 - **Component**: [which architectural component or project area]
 - **Description**: [WHAT to do, not HOW — execution decides HOW]
 - **Acceptance Criteria**:
@@ -372,10 +376,15 @@ Ordered list forming a valid dependency DAG. Each task:
   2. [Outcome-based criterion]
   [minimum 2 per task]
 - **Dependencies**: [Task numbers] or "None"
+- **Decisions**: (include only when classified decision points exist)
+  - `[USER]` [decision description] — [one-line rationale]
+  - `[SPEC]` [decision description] — [one-line rationale]
 - **Files**: [Specific paths when known] or "TBD — [component area]"
 ```
 
-In v8 mode, omit Domain and Depth fields. In v9 mode, include them for every task. Domain is a free-text descriptor — the plan does NOT reference specialist names. Team assembly matches domains to specialists later.
+`[SILENT]` decisions are NOT listed — they are silent by definition. Omit the Decisions field entirely for tasks with no classified decision points (pure mechanical work).
+
+Domain and Depth are included for every task. Domain is a free-text descriptor — the plan does NOT reference specialist names. Team assembly matches domains to specialists later.
 
 Depth controls specialist invocation:
 - **Deep** — full exploration → user confirmation gate → specification. For novel territory, multiple valid approaches, or high-stakes decisions.
@@ -401,78 +410,26 @@ Test types required. Which tasks need tests (reference task numbers). Critical t
 
 Every open question MUST have a Recommended Default. The execution phase uses the default unless the user provides direction. If you cannot write a reasonable default, the question is not ready to be left open — resolve it during dialogue.
 
-### 10. Planning Context for Engineer / Detail Phase (always)
-
-**V8 mode: Section 10 is titled "Planning Context for Engineer"** and contains:
-
-- **Sequencing Considerations**: Factors that affect task ordering (NOT a prescribed order — Engineer decides)
-- **Parallelization Opportunities**: Which tasks touch independent surfaces (Engineer validates and decides)
-- **Engineering Questions**: Open implementation questions Engineer must resolve during code spec creation (e.g., "How should error propagation work across Tasks 3-5?" / "Tasks 2 and 6 both touch the auth layer — shared abstraction or independent?")
-- **Constraints**: Hard boundaries Engineer must respect (performance targets, API contracts, backward compatibility)
-- **Risk Context**: What could go wrong and why — Engineer decides mitigation strategy
-
-**V9 mode: Section 10 is titled "Planning Context for Detail Phase"** and contains:
+### 10. Planning Context for Detail Phase (always)
 
 - **Domain-Specific Considerations**: per-domain notes — legal constraints, brand guidelines, data quality issues, performance targets
 - **Cross-Domain Dependencies**: where specialist outputs must coordinate
 - **Sequencing Considerations**: what depends on what across domains
 - **Open Questions**: questions the detail phase must resolve, tagged by domain
 - **Constraints**: hard boundaries per domain
+- **Decision Policy**: summary of the user's posture (hands-on vs. delegator) and any global overrides from the decision review step
 
-## Architect-Engineer Boundary
-
-The planning phase decides WHAT to build, WHERE it lives in the architecture, and WHY each decision was made. The engineering phase decides HOW to build it at the code level — internal implementation, code patterns, file decomposition within components. Engineer produces `code_specs.md` documenting its engineering decisions, then Build implements against those specs.
-
-Overlap resolution: Planning specifies public interfaces between components and known file paths. Engineer owns everything internal to a component and determines paths for new files marked TBD.
+The planning phase decides WHAT. The detail and build phases decide HOW.
 
 Interim artifacts in `.planning_research/` are working files for planning context management. They are NOT part of the plan-execute contract. Only `plan.md` crosses the handoff boundary.
 
-# DESIGN / DETAIL READINESS ASSESSMENT
+# DETAIL READINESS ASSESSMENT
 
-After drafting the task sequence, assess every task for readiness. The assessment format depends on the selected workflow mode.
+After drafting the task sequence, assess every task for readiness.
 
-## V8 Mode: Design Readiness Assessment
+## Detail Assessment
 
-Evaluate EVERY task for design readiness. A task is "ready for execution" if it is 95% clear — execution can fill in the remaining 5% without making design decisions.
-
-### Flagging Criteria
-
-Flag a task as **DESIGN REQUIRED** if ANY of these apply:
-
-- **Novel territory**: No existing pattern in the project to follow. The implementation approach needs to be invented, not just applied.
-- **Multiple valid approaches**: There are 2+ reasonable ways to build this, and the choice has lasting consequences. Execution shouldn't make this call.
-- **User-facing decisions**: The task involves layout, creative direction, user experience, tone, or aesthetic choices the user should weigh in on.
-- **Complex interactions**: The task touches multiple components and the interfaces between them need explicit definition before implementation.
-- **Ambiguous scope**: The task description says WHAT but the HOW has genuine options that affect quality, performance, or maintainability.
-
-Do NOT flag tasks that are:
-- Straightforward application of existing patterns
-- Mechanical wiring, boilerplate, or configuration
-- Well-understood implementations with clear precedent in the codebase
-- Simple enough that a competent engineer needs no design input
-
-### Design Recommendations Output (v8)
-
-Include this section in the plan AFTER the Task Sequence (Section 6) and BEFORE Testing Strategy (Section 7):
-
-```markdown
-### Design Recommendations
-
-| Task(s) | Item Name | Recommendation | Rationale |
-|---------|-----------|---------------|-----------|
-| Task 3, 4 | [Descriptive Name] | DESIGN REQUIRED | [Specific reason — what's unclear] |
-| Task 7 | [Descriptive Name] | DESIGN REQUIRED | [Specific reason] |
-| Task 1, 2 | [Name] | Ready for execution | [Why it's clear enough] |
-| Task 5, 6 | [Name] | Ready for execution | [Why it's clear enough] |
-
-**Design items group related tasks that share a design surface.** A single design session covers all tasks in the group. Items are named descriptively (e.g., "Behavior Tree AI System" not "Tasks 3-4").
-```
-
-When presenting the draft plan in Phase 4, explicitly call out which items you're recommending for design and why. The user confirms or adjusts during plan approval.
-
-## V9 Mode: Detail Assessment
-
-In v9 mode, every task gets a domain assignment and depth classification instead of a binary design/ready flag.
+Every task gets a domain assignment and depth classification.
 
 ### Depth Classification Criteria
 
@@ -493,7 +450,7 @@ Assign **Light** depth if:
 - Mechanical or configuration-level work
 - Well-understood with clear precedent
 
-### Detail Assessment Output (v9)
+### Detail Assessment Output
 
 Include this section in the plan AFTER the Task Sequence (Section 6):
 
@@ -509,6 +466,29 @@ Include this section in the plan AFTER the Task Sequence (Section 6):
 
 When presenting the draft plan in Phase 4, explicitly call out the depth assignments and domain groupings. The user confirms or adjusts during plan approval.
 
+# DECISION CLASSIFICATION
+
+Use this reference during Phase 4 drafting to classify decision points in each task.
+
+## Tiers
+
+- `[USER]` — User decides. Surfaced during detail/build with full options.
+- `[SPEC]` — Specialist decides, user informed. Specialist picks and documents rationale.
+- `[SILENT]` — Team handles autonomously. No notification. Not listed in plan.
+
+## 2x2 Heuristic
+
+| | Hard to reverse | Easy to reverse |
+|---|---|---|
+| **Human-facing** | `[USER]` | `[USER]` |
+| **Internal** | `[SPEC]` | `[SILENT]` |
+
+## Classification Rules
+
+- Use **Commander's Intent** to determine "human-facing" — anything touching the desired end state, non-negotiables, or experiential qualities is human-facing. Without intent signals, default conservative (`[USER]`).
+- Use **Decision Posture Map** to override — areas marked "I decide" always get `[USER]`, areas marked "Team handles" can get `[SILENT]` even if human-facing + easy to reverse.
+- Cap: 2-3 classified decisions per task max. Only decisions where the tier assignment matters — not every micro-choice.
+
 # EXECUTABLE PLAN CHECKLIST
 
 Validate ALL before presenting the draft:
@@ -521,12 +501,13 @@ Validate ALL before presenting the draft:
 - [ ] Technology decisions explicitly marked Locked or Recommended (Standard+)
 - [ ] Interface contracts provided where components interact (Comprehensive)
 - [ ] Risks have mitigations (Standard+)
-- [ ] Planning Context for Engineer includes engineering questions, not prescriptive instructions
-- [ ] Section 6.5 included with every task assessed (Design Recommendations in v8, Detail Assessment in v9)
-- [ ] (v8 only) Each DESIGN REQUIRED flag has a specific rationale (not generic)
-- [ ] (v9 only) Every task has Domain and Depth fields
-- [ ] (v9 only) Detail Assessment table (Section 6.5) covers every task
-- [ ] (v9 only) Section 10 includes domain-specific considerations and cross-domain dependencies
+- [ ] Planning Context for Detail Phase includes domain considerations, not prescriptive instructions
+- [ ] Detail Assessment (Section 6.5) included with every task assessed
+- [ ] Every task has Domain and Depth fields
+- [ ] Detail Assessment table (Section 6.5) covers every task
+- [ ] Section 10 includes domain-specific considerations and cross-domain dependencies
+- [ ] Tasks with decision points have Decisions field with `[USER]`/`[SPEC]` classifications
+- [ ] Decision classifications use Commander's Intent to determine human-facing boundary
 
 If any check fails, fix it before presenting.
 

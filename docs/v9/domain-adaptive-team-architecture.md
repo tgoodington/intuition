@@ -805,9 +805,9 @@ Three-layer review per deliverable (see Section 6):
 | 2 | Plan → Detail | **Runs team assembly.** Scans registries, runs constrained haiku matching, prerequisite checks, writes `team_assignment.json`, generates first specialist brief. |
 | 3 | Specialist → Specialist | **Replaces design→design loop.** Tracks completed blueprints, routes to next specialist per dependency order, passes prior blueprints as context. |
 | 4 | Detail → Build | **New: conflict check + completeness gate.** Runs haiku conflict detection, validates all blueprints, generates build brief. |
-| 5 | Build → Complete | **Extended.** Reads build report, includes domain field, review chain results, external dependency flags. Offers git commit/push. Routes to `/intuition-start`. |
+| 5 | Build → Complete | **Extended.** Reads build report, includes domain field, review chain results, external dependency flags. Offers git commit/push. Routes to `/intuition-start`. v9 with code-writer routes through test phase first (Transition 6.5v9 → 7). |
 
-### State Schema (v6.0)
+### State Schema (v7.0)
 
 ```json
 {
@@ -851,9 +851,9 @@ Replaces the current `design` and `engineering` state objects.
 
 ## 13. Shipped Rosters
 
-### 13.1 Domain Specialists (15)
+### 13.1 Domain Specialists (14)
 
-**Code/Technical (6):**
+**Code/Technical (5):**
 | Name | Domain | Default Depth |
 |------|--------|---------------|
 | database-architect | database | Standard |
@@ -861,7 +861,6 @@ Replaces the current `design` and `engineering` state objects.
 | frontend-component | frontend/ui | Standard |
 | security-auditor | security | Deep |
 | devops-infrastructure | devops/infra | Standard |
-| test-strategist | testing | Standard |
 
 **Professional/Business (5):**
 | Name | Domain | Default Depth |
@@ -975,14 +974,14 @@ Key architectural decisions made during roundtable and rationale:
 - **Validate:** Non-code deliverables produced correctly
 
 ### Phase 6: Full Roster + Registry
-- All 15 specialist profiles
+- All 14 specialist profiles (test-strategist absorbed into test skill)
 - Directory scanning resolution
 - Dynamic fallback generation
 - Save-to-user-pool flow
 
 ### Phase 7: Integration + Migration
-- State schema v6.0
-- All handoff transitions updated
+- State schema v7.0 (v6.0 added detail, v7.0 added test)
+- All handoff transitions updated (including test transitions 6.5v9 and 7)
 - Plan skill updated with Domain/Depth fields
 - Design + Engineer skills deprecated
 - Full end-to-end test
@@ -1009,7 +1008,7 @@ Key architectural decisions made during roundtable and rationale:
 - `intuition-plan` — Sections 6, 6.5, 10 updated
 - `intuition-handoff` — New transitions 2, 3, 4 replacing current design/engineer transitions
 - `intuition-build` — Blueprint-based input, producer delegation, three-layer review chain
-- State schema — v5.0 → v6.0 (detail object replaces design + engineering)
+- State schema — v5.0 → v7.0 (detail + test objects added, design + engineering deprecated)
 
 ### Backward Compatibility
 - Existing v8.x projects continue working until explicitly migrated

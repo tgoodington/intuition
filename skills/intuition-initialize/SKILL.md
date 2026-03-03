@@ -15,7 +15,7 @@ You create the `docs/project_notes/` directory structure, initialize memory file
 1. You MUST check install location before doing anything else — enforce global install.
 2. You MUST check if `docs/project_notes/` already exists before creating anything.
 3. You MUST use template files from `references/` directory for all initial content. Read each template with the Read tool, then Write to the target path.
-4. You MUST create `.project-memory-state.json` using the v6.0 schema from `references/state_template.json`. Do NOT use older schemas.
+4. You MUST create `.project-memory-state.json` using the v7.0 schema from `references/state_template.json`. Do NOT use older schemas.
 5. You MUST auto-create all configuration files (CLAUDE.md, INTUITION.md, AGENTS.md, settings, profile) if they do not exist. Do NOT ask — just create them.
 6. You MUST NOT overwrite existing files. If a file already exists, skip it silently.
 7. You MUST NOT invoke other skills. You only set up infrastructure.
@@ -27,7 +27,7 @@ You create the `docs/project_notes/` directory structure, initialize memory file
 Step 0: Check install location — enforce global install
 Step 1: Detect existing setup
 Step 2: Create memory directory and files from templates
-Step 3: Create .project-memory-state.json with v6.0 schema
+Step 3: Create .project-memory-state.json with v7.0 schema
 Step 4: Update CLAUDE.md with workflow protocols
 Step 4.5: Create INTUITION.md framework overview
 Step 5: Create configuration files (AGENTS.md, settings, user profile)
@@ -117,12 +117,12 @@ Do NOT create workflow output files (prompt_brief.md, plan.md, etc.). Those are 
 
 Read `references/state_template.json` and write to `docs/project_notes/.project-memory-state.json`.
 
-The state file uses the v6.0 schema:
+The state file uses the v7.0 schema:
 
 ```json
 {
   "initialized": true,
-  "version": "6.0",
+  "version": "7.0",
   "active_context": "trunk",
   "trunk": {
     "status": "none",
@@ -156,6 +156,12 @@ The state file uses the v6.0 schema:
         "started": false,
         "completed": false,
         "completed_at": null
+      },
+      "test": {
+        "started": false,
+        "completed": false,
+        "completed_at": null,
+        "skipped": false
       },
       "detail": {
         "started": false,
