@@ -261,6 +261,17 @@ Separate decisions by tier from Stage 1 output. Each `### D{N}:` entry should ha
 
 #### Phase 2a: [USER] Decisions — Ask the User
 
+#### Plain-Language Presentation Rule
+
+When presenting [USER] decisions to the user, translate specialist findings into plain language. Assume the user has zero domain background. For each decision:
+- Explain WHAT the decision affects in terms of the end result they'll see or experience
+- Explain each option's practical consequence — not its technical mechanism
+- State the specialist's recommendation and WHY in one plain sentence
+
+Do NOT parrot specialist jargon. If the specialist says "use a clustered index on the composite key," present it as: "The database can organize this table's data to make your most common lookup fast, but it means other lookups will be slightly slower. The specialist recommends this because [reason]."
+
+The same rule applies to assumptions in Phase 1 — present defaults in terms of what the user will experience, not how the system implements it.
+
 Present all `[USER]` decisions in batched AskUserQuestion calls, up to **4 decisions per call** (the tool's maximum). Each decision is a separate question within the call, so the user sees them as tabs.
 
 **Build each question:**

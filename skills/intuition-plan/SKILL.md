@@ -213,6 +213,27 @@ The selected tier governs:
 
 Goal: Identify what the plan touches (Reach) and resolve every major decision (Choices).
 
+## Decision Boundary Test
+
+Before presenting any decision question to the user, apply this gate:
+
+1. **Does this decision change the task breakdown?** If removing one option would add, remove, or fundamentally restructure tasks — it's plan-level. Resolve it here.
+2. **Does this decision ripple across multiple tasks?** If the answer constrains or reshapes work in 2+ tasks — it's plan-level. Resolve it here.
+
+If NEITHER condition is met, the decision is specialist-level. Do NOT resolve it during planning. Instead:
+- Note it as a `[USER]` or `[SPEC]` decision on the relevant task (using the 2x2 heuristic)
+- Add it to Section 10 as an open question tagged by domain
+- Move on to the next planning-level concern
+
+When in doubt, defer. A specialist with loaded domain expertise will make a better-informed decision than the planning phase can. Over-resolving during planning robs the detail phase of its purpose.
+
+**Examples:**
+- "Structured state model vs text-based manipulation" → changes how 3+ tasks are structured → **plan-level, resolve here**
+- "What happens when no valid path exists" → single task's error handling → **specialist-level, defer**
+- "How should output be formatted" → single task's rendering detail → **specialist-level, defer**
+
+3. **Explain for the creative director.** When presenting a plan-level decision, assume the user has zero domain background. Explain what each option means in plain language — what it does, what it costs, and why you recommend one. If you cannot explain the trade-off without jargon, you don't understand it well enough to ask yet.
+
 For each major decision domain identified from the prompt brief, orientation research, and dialogue:
 
 1. **Identify** the decision needed. State it clearly.

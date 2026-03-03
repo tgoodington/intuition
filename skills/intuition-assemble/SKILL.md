@@ -153,14 +153,39 @@ Phase 2: [specialists] (after Phase 1)
 [specialist] reads blueprint from [specialist]
 ```
 
-Unmatched tasks appear in the grid with `⚠ UNMATCHED` in the Specialist column.
+### Unmatched Task Analysis
 
-**Present via AskUserQuestion** with the grid as `markdown` on EVERY option:
+For each unmatched task, identify the **closest existing specialist** by comparing the task's domain, description, and acceptance criteria against every specialist's `domain_tags` and `domain` field. Pick the specialist with the most relevant overlap, even if no tags matched exactly.
+
+Assess whether the closest specialist is a **reasonable stretch** or a **poor fit**:
+- **Reasonable stretch**: The specialist's domain covers adjacent territory. Example: a `frontend-component` specialist handling a UI layout task tagged `code/design-system`. The specialist lacks the exact tag but has the skills.
+- **Poor fit**: The task's domain is genuinely outside any specialist's expertise. Example: a `legal/regulatory` task when no specialist has legal, compliance, or policy tags.
+
+In the grid, replace `⚠ UNMATCHED` with a suggestion:
+
+```
+| T4: [title] | 💡 [display_name]? (closest match) | [depth] | — |
+```
+
+Below the grid, add an **Unmatched Analysis** section:
+
+```
+## Unmatched Tasks — Recommendations
+
+**T4: [title]** (domain: [domain])
+Closest: [display_name] — [1-sentence reason why they're the closest match]
+Recommendation: [Assign to closest / Create new specialist]
+[If assign: "Their [relevant tags] cover enough of this task's needs."]
+[If create: "This domain is outside any current specialist's expertise — a dedicated profile would produce better results."]
+```
+
+**Present via AskUserQuestion** with the grid + analysis as `markdown` on EVERY option:
 
 If there are unmatched tasks, use these options:
-1. "Approve matched — create specialists for the rest" — description: "Proceeds with matched tasks and generates a specialist request for unmatched ones."
-2. "Assign unmatched manually" — description: "Choose which existing specialist handles each unmatched task."
-3. "Skip unmatched tasks" — description: "Proceed without the unmatched tasks."
+1. "Accept suggestions" — description: "Assign stretches to their closest specialist, create new specialists for poor fits."
+2. "Assign all to existing specialists" — description: "Choose which existing specialist handles each unmatched task."
+3. "Create specialists for all unmatched" — description: "Route all unmatched tasks to agent-advisor for new specialist profiles."
+4. "Skip unmatched tasks" — description: "Proceed without the unmatched tasks."
 
 If there are NO unmatched tasks, use these options:
 1. "Approve team" — description: "Lock in the proposed assignments and continue."
@@ -172,9 +197,7 @@ If user chooses to adjust, walk through changes interactively (which tasks to re
 
 ### Step 7: Handle Unmatched Tasks
 
-This step only runs if there were unmatched tasks and the user chose to create new specialists.
-
-**If "Approve matched tasks — create specialists for the rest":**
+This step only runs if there are unmatched tasks that need new specialists (either from "Accept suggestions" with poor fits, or "Create specialists for all unmatched").
 
 Write `{context_path}specialist_request.md` with the following content:
 
@@ -186,13 +209,14 @@ for tasks that could not be matched to any existing specialist in the registry.
 
 ## Unmatched Tasks
 
-{For each unmatched task:}
+{For each task routed to specialist creation:}
 ### Task {task_id}: {title}
 - **Domain**: {domain from plan}
 - **Depth**: {depth}
 - **Description**: {full description from plan}
 - **Acceptance Criteria**: {from plan}
 - **Dependencies**: {from plan}
+- **Closest existing specialist**: {display_name} — {why they're insufficient}
 
 ## Existing Specialist Roster
 
@@ -208,9 +232,7 @@ Then output: "Some tasks need new specialist profiles. Run `/intuition-agent-adv
 
 STOP here. Do NOT proceed to Steps 8-9. Do NOT write team_assignment.json.
 
-**If "Assign unmatched tasks manually":** Ask user which specialist (from the available list) to assign each unmatched task to. Update specialist_assignments accordingly. Continue to Step 8.
-
-**If "Skip unmatched tasks":** Mark tasks as skipped. They will not appear in the team assignment. Continue to Step 8.
+For tasks assigned to existing specialists (stretches the user accepted or manual assignments): add them to `specialist_assignments` normally. If ALL unmatched tasks were assigned to existing specialists (none need creation), skip the specialist request file and continue to Step 8.
 
 ### Step 8: Write team_assignment.json
 
@@ -218,7 +240,7 @@ Write the finalized assembly output to `{context_path}team_assignment.json`.
 
 ### Step 9: Route User
 
-Output: "Team assembled and saved to `team_assignment.json`. Run `/clear` then `/intuition-handoff` to transition to the detail phase."
+Output: "Team assembled and saved to `team_assignment.json`. Run `/intuition-handoff` to transition to the detail phase."
 
 ## EDGE CASES
 

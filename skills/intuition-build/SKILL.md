@@ -243,6 +243,8 @@ If a producer makes a choice during implementation that:
 
 Then: pause the task and escalate to the user via AskUserQuestion. Present the choice made, alternatives, and why it matters. NEVER silently accept an unclassified human-facing decision.
 
+When escalating to the user, explain the decision in plain language. Assume zero domain background. State what the producer chose, what the alternatives were, and what the user will see or experience differently depending on the choice. Do NOT present raw technical details — translate into practical consequences.
+
 For internal/technical unanticipated decisions: log in the build report, no escalation needed.
 
 ## STEP 6: SECURITY GATE
