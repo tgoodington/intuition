@@ -50,12 +50,13 @@ Step 8: Route to /intuition-handoff
 
 ## RESUME LOGIC
 
-Check for existing artifacts before starting:
+Check for existing artifacts before starting. Use `{context_path}/scratch/test_strategy.md` (written by this skill in Step 3) as the primary resume marker — NOT the presence of test files (which may have been created by the build phase).
 
-1. **test_report.md exists** — report "Test report already exists. Routing to handoff." Skip to Step 8.
-2. **Test files exist but no report** — report "Found test files from previous session. Re-running tests." Skip to Step 6.
-3. **test_brief.md exists but no test files** — fresh start from Step 2.
-4. **No test_brief.md** — STOP: "No test brief found. Run `/intuition-handoff` first to generate the test brief."
+1. **`{context_path}/test_report.md` exists** — report "Test report already exists. Routing to handoff." Skip to Step 8.
+2. **`{context_path}/scratch/test_strategy.md` exists AND test files exist but no report** — report "Found test strategy and test files from previous session. Re-running tests." Skip to Step 6.
+3. **`{context_path}/scratch/test_strategy.md` exists but no test files** — report "Found test strategy from previous session. Re-creating tests." Skip to Step 5.
+4. **`{context_path}/test_brief.md` exists but no `test_strategy.md`** — fresh start from Step 2.
+5. **No `{context_path}/test_brief.md`** — STOP: "No test brief found. Run `/intuition-handoff` first to generate the test brief."
 
 ## STEP 1: READ CONTEXT
 
@@ -74,6 +75,12 @@ From build_report.md, extract:
 - **Task results** — which tasks passed/failed build review
 - **Deviations** — any blueprint deviations that may need test coverage
 - **Decision compliance** — any flagged decision issues
+- **Test Deliverables Deferred** — test specs/files that specialists recommended but build skipped (if this section exists)
+
+From blueprints, extract any test recommendations:
+- Test cases specialists suggested in their blueprints
+- Edge cases or coverage areas they flagged
+- Test-related deliverables from Producer Handoff sections
 
 From decisions files, build a decision index:
 - Map each `[USER]` decision to its chosen option
@@ -139,14 +146,35 @@ Follow project conventions discovered in Step 2:
 - If no config → target 80% line coverage for modified files
 - Focus coverage on decision-heavy code paths (where `[USER]` and `[SPEC]` decisions were implemented)
 
+### Acceptance Criteria Path Coverage
+
+For every acceptance criterion in plan.md that describes observable behavior ("displays X", "uses Y for Z", "produces output containing W"):
+
+1. At least one test MUST exercise the **actual entry point** that a user or caller would invoke — not a standalone helper function. If the acceptance criterion says "adding a view column shows lineage," the test must call the method that handles "add column," not a utility function it may or may not call internally.
+2. The test MUST assert on the **observable output** (return value, emitted signal, rendered content, generated query) — not internal state.
+3. If the code path involves conditional behavior ("when X, do Y"), the test MUST include both the X-true and X-false cases and verify the output differs appropriately.
+
+Tests that only exercise isolated helper functions satisfy unit coverage but do NOT satisfy acceptance criteria coverage. Both are needed.
+
+### Specialist Test Recommendations
+
+Before finalizing the test plan, review specialist test recommendations from two sources:
+- **Blueprint test recommendations**: Test cases, edge cases, and coverage areas that specialists flagged in their blueprints
+- **Deferred test deliverables**: Test specs/files from build_report.md's "Test Deliverables Deferred" section (and/or test_brief.md's "Specialist Test Recommendations" section)
+
+Specialists have domain expertise about what should be tested. Incorporate relevant recommendations into your test plan, but you are not bound to follow them exactly. You own the test strategy — use specialist input as advisory, not prescriptive.
+
 ### Output
 
-Build an internal test plan containing:
+Write the test strategy to `{context_path}/scratch/test_strategy.md`. This serves as both an audit trail and a resume marker for crash recovery.
+
+The test strategy document MUST contain:
 - Test files to create (path, type, target source file)
 - Test cases per file (name, type, what it validates)
 - Mock requirements per file
 - Framework command to run tests
 - Estimated test count and distribution
+- Which specialist recommendations were incorporated (and which were skipped, with rationale)
 
 ## STEP 4: USER CONFIRMATION
 
@@ -301,7 +329,7 @@ Write `{context_path}/test_report.md`:
 ## STEP 8: ROUTE TO HANDOFF
 
 ```
-"Tests complete. Run /clear then /intuition-handoff to process results and close out this workflow cycle."
+"Tests complete. Run /intuition-handoff to process results and close out this workflow cycle."
 ```
 
 ALWAYS route to `/intuition-handoff`. Test is NOT the final step.

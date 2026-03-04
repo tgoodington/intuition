@@ -347,6 +347,18 @@ Ensure the `{context_path}/blueprints/` directory exists (create via Bash `mkdir
 
 After the subagent returns, verify the blueprint was written and contains the expected sections. At minimum check for these headings: Task Reference, Research Findings, Approach, Decisions Made, Deliverable Specification, Acceptance Mapping, Integration Points, Open Items, Producer Handoff.
 
+### Acceptance Criteria Traceability Check
+
+After verifying section headings, perform a traceability check:
+
+1. Read each plan task's acceptance criteria from the detail brief.
+2. Read the blueprint's Acceptance Mapping section (Section 6).
+3. For EACH acceptance criterion in the plan: verify it maps to at least one concrete operation in the Deliverable Specification (Section 5). An "operation" is a discrete, testable behavior — not a vague reference to the data involved.
+4. **Split compound criteria**: If a plan acceptance criterion contains multiple behavioral verbs (e.g., "display lineage AND use source table for join resolution"), each verb phrase MUST map to a separate operation in the Deliverable Specification. A single implementation step that only addresses one verb phrase is not sufficient coverage.
+5. If any acceptance criterion lacks a corresponding operation in the Deliverable Specification, report the gap to the user: "Blueprint for [specialist] is missing implementation details for: [list unmapped criteria]. The Stage 2 subagent should be re-run or the blueprint manually amended before proceeding to build."
+
+Do NOT skip this check. A blueprint that passes section-heading validation but fails traceability will produce partial implementations.
+
 If the blueprint is missing or incomplete, report the specific issue and stop.
 
 ## STEP 8: CONFIRM AND ROUTE

@@ -432,6 +432,15 @@ v9 mode only. Triggers when build completes and `team_assignment.json` contains 
 ## Blueprint References
 [Paths to blueprints for code-writer tasks in {context_path}/blueprints/]
 
+## Specialist Test Recommendations
+[From build_report "Test Deliverables Deferred" section — any test specs/files that specialists recommended but build skipped. Include the blueprint source for each so test can read the full context.]
+
+| Blueprint Source | Deferred File | Description |
+|-----------------|---------------|-------------|
+| [specialist-name.md] | [file path] | [what the specialist recommended] |
+
+[If build_report has no "Test Deliverables Deferred" section or it says "No test deliverables found", write "No specialist test recommendations."]
+
 ## Known Issues
 [From build_report — any issues, deviations, or flagged items]
 ```

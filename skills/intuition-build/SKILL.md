@@ -28,6 +28,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 12. You MUST NOT make domain decisions — match output to blueprints.
 13. You MUST NOT skip user confirmation.
 14. You MUST NOT manage state.json — handoff owns state transitions.
+15. You MUST skip test-related deliverables in blueprints (test files, test specs, test configurations). Log skipped test deliverables in build_report.md under a "Test Deliverables Deferred" section so the test phase can review them.
 
 **TOOL DISTINCTION — READ THIS CAREFULLY:**
 - `TaskCreate / TaskUpdate / TaskList / TaskGet` = YOUR internal task board for tracking plan items.
@@ -141,12 +142,13 @@ Use TaskCreate for each plan item:
 For each task per `team_assignment.json` execution order (parallelize tasks within the same phase):
 
 1. Find the blueprint for that task's specialist in `{context_path}/blueprints/`.
-2. Load the producer profile from the registry. Scan in order:
+2. **Filter test deliverables**: Read the blueprint's Producer Handoff section (Section 9). Check each output file — if its path contains `/test`, `test_`, `.test.`, `.spec.`, or the blueprint explicitly labels it as a test deliverable, exclude that file from delegation. Log each excluded file as a deferred test deliverable (specialist name, file path, description). If ALL output files for this task are test files, skip the entire producer delegation for this task and move to the next task.
+3. Load the producer profile from the registry. Scan in order:
    - Project: `.claude/producers/{producer-name}/{producer-name}.producer.md`
    - User: `~/.claude/producers/{producer-name}/{producer-name}.producer.md`
    - Framework-shipped: scan the `producers/` directory at the package root
-3. Construct the delegation prompt using the producer profile as system instructions and the blueprint as task context.
-4. Spawn the producer as a Task subagent using the model declared in the producer profile.
+4. Construct the delegation prompt using the producer profile as system instructions and the blueprint as task context. Only include non-test output files in the delegation.
+5. Spawn the producer as a Task subagent using the model declared in the producer profile.
 
 **Producer delegation format:**
 ```
@@ -203,6 +205,14 @@ Check the deliverable yourself against plan.md acceptance criteria:
 - Verify [USER] decisions from decisions.json match the deliverable (user's chosen option was implemented, not the specialist's alternative).
 - Verify [SPEC] decisions have documented rationale in the blueprint.
 - Flag any producer choices that don't trace to a classified decision — these are unanticipated decisions.
+
+**Blueprint fidelity check — CRITICAL:**
+- The producer MUST implement what the blueprint specifies, nothing more, nothing less.
+- If the producer implemented behavior NOT described in the blueprint's Deliverable Specification, flag it as a deviation even if it seems reasonable. Undocumented behavior is a build defect.
+- If the blueprint's Deliverable Specification describes an operation but the code does not implement it, that is a gap — even if related code exists. Specifically: for conditional behaviors ("when X, do Y"), identify the exact code branch and confirm the output changes. Do not accept "relevant data is referenced" as evidence that the behavior was implemented.
+- Compare the code's actual output against the blueprint's expected output examples (if provided in the Deliverable Specification). If the code produces different output than the blueprint shows, that is a deviation requiring explanation.
+
+Log all deviations (additions and omissions) in the build report's "Deviations from Blueprint" section, even if they seem minor.
 
 - If FAIL → send feedback back to the producer with specific acceptance criteria gaps. Do NOT proceed to Layer 3.
 - If PASS → proceed to Layer 3.
@@ -298,6 +308,15 @@ Write the build report to `{context_path}/build_report.md` AND display a summary
 ## Files Modified
 - path/to/file — [what changed]
 
+## Test Deliverables Deferred
+[Test-related deliverables from blueprints that were skipped during build. The test phase will use these as advisory input for its own test strategy.]
+
+| Blueprint Source | Deferred File | Description |
+|-----------------|---------------|-------------|
+| [specialist-name.md] | [file path] | [what the specialist recommended] |
+
+[If no test deliverables were found in any blueprint, write "No test deliverables found in blueprints."]
+
 ## Issues & Resolutions
 - [Any problems encountered and how they were resolved]
 
@@ -314,7 +333,7 @@ Present a concise version: task count, pass/fail status, files produced count, r
 After reporting results:
 
 ```
-"Build complete. Run /clear then /intuition-handoff to process results,
+"Build complete. Run /intuition-handoff to process results,
 update project memory, and close out this workflow cycle."
 ```
 

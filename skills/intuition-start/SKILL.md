@@ -158,16 +158,16 @@ Output one line of status, then the next command.
 |-------|-------------|-------|
 | first_time | "No project memory found." | `/intuition-prompt` |
 | prompt_in_progress | "Prompt refinement in progress." | `/intuition-prompt` |
-| ready_for_planning | "Prompt complete." | Run `/clear` then `/intuition-plan` |
+| ready_for_planning | "Prompt complete." | `/intuition-handoff` |
 | planning_in_progress | "Planning in progress." | `/intuition-plan` |
-| ready_for_assemble | "Planning complete (v9)." | Run `/clear` then `/intuition-assemble` |
+| ready_for_assemble | "Planning complete (v9)." | `/intuition-handoff` |
 | detail_in_progress | "Detail phase in progress." | See DETAIL ROUTING below |
 | design_in_progress | "Design exploration in progress." | See DESIGN ROUTING below |
-| ready_for_engineering | "Planning complete (v8)." | Run `/clear` then `/intuition-engineer` |
+| ready_for_engineering | "Planning complete (v8)." | `/intuition-handoff` |
 | engineering_in_progress | "Engineering in progress." | `/intuition-engineer` |
-| ready_for_build | "Code specs ready." | Run `/clear` then `/intuition-build` |
+| ready_for_build | "Code specs ready." | `/intuition-handoff` |
 | build_in_progress | "Build in progress." | `/intuition-build` |
-| ready_for_test | "Build complete, testing pending." | Run `/clear` then `/intuition-handoff` |
+| ready_for_test | "Build complete, testing pending." | `/intuition-handoff` |
 | test_in_progress | "Test phase in progress." | `/intuition-test` |
 | post_completion | See POST-COMPLETION below | — |
 
@@ -177,7 +177,7 @@ Output one line of status, then the next command.
 
 **DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If a specialist just completed and others remain → `/intuition-handoff`. If all specialists completed but build not started → `/intuition-handoff`. If ambiguous, ask the user.
 
-Include `/clear` only for "ready_for" phases (transitioning between skills). Omit `/clear` for "in_progress" phases (resuming the same skill).
+For "ready_for" phases, route to `/intuition-handoff` (which manages `/clear` and phase transitions). For "in_progress" phases, route directly to the active skill.
 
 ## POST-COMPLETION
 
