@@ -1,6 +1,6 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "9.2.0",
+  "version": "9.2.1",
   "description": "Domain-adaptive workflow system for Claude Code: prompt, outline, assemble specialist teams, detail with domain experts, build with format producers, test code output. Supports v8 compat (design, engineer, build) and v9 specialist workflows with 14 domain specialists and 6 format producers.",
   "keywords": [
     "claude-code",
