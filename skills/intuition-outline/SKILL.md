@@ -110,6 +110,7 @@ Prompt:
 5. Grep for common entry points: 'main', 'index', 'app', 'server' in source files.
 6. Check for test infrastructure: Glob('**/*.test.*') or Glob('**/*.spec.*') or Glob('**/test/**').
 7. Check for build config: Glob('**/tsconfig*') or Glob('**/webpack*') or Glob('**/vite*') or similar.
+8. Check for large data files: Glob('**/*.xlsx') or Glob('**/*.xls') or Glob('**/*.csv') or Glob('**/*.sqlite') or Glob('**/*.db') or Glob('**/*.json'). For any matches, run Bash to check file sizes (e.g., ls -lh on the matched paths). Flag any file over 1 MB.
 
 Report on:
 (1) Top-level directory structure with purpose of each directory
@@ -117,6 +118,7 @@ Report on:
 (3) Entry points
 (4) Test infrastructure (framework, location, patterns)
 (5) Build system and tooling
+(6) Large data files: list any data files over 1 MB with their path, size, and format. If none found, state 'No large data files detected.'
 
 Under 500 words. Facts only, no speculation."
 
@@ -233,6 +235,21 @@ When in doubt, defer. A specialist with loaded domain expertise will make a bett
 - "How should output be formatted" → single task's rendering detail → **specialist-level, defer**
 
 3. **Explain for the creative director.** When presenting a outline-level decision, assume the user has zero domain background. Explain what each option means in plain language — what it does, what it costs, and why you recommend one. If you cannot explain the trade-off without jargon, you don't understand it well enough to ask yet.
+
+## Resource-Aware Planning
+
+When orientation research (or the prompt brief) reveals large data files (xlsx, large CSVs, SQLite databases, large JSON files, etc.) that agents will need to query or analyze during detail/build:
+
+1. **Recognize the risk.** Agent subprocesses operate in memory with limited context windows. A large xlsx or binary file can cause crashes, timeouts, or garbled reads. This is not hypothetical — it has caused production failures.
+2. **Plan a preprocessing task.** Add an early task (before any task that depends on the data) to extract the data into agent-friendly formats:
+   - xlsx/xls → CSV per sheet + Python data cache (pickle or JSON summary)
+   - Large CSV → filtered/chunked CSVs or summary statistics
+   - SQLite/DB → targeted SQL query scripts that export relevant subsets to CSV
+   - Large JSON → flattened/filtered extracts
+3. **The preprocessing task should produce scripts, not just instructions.** Acceptance criteria: runnable script(s) that transform the source file into smaller, agent-readable outputs. Downstream tasks reference the extracted outputs, NOT the original large file.
+4. **Note in Section 10** that downstream specialists should work against extracted data, not raw source files.
+
+If no large data files are detected, skip this entirely.
 
 For each major decision domain identified from the prompt brief, orientation research, and dialogue:
 
@@ -529,6 +546,7 @@ Validate ALL before presenting the draft:
 - [ ] Section 10 includes domain-specific considerations and cross-domain dependencies
 - [ ] Tasks with decision points have Decisions field with `[USER]`/`[SPEC]` classifications
 - [ ] Decision classifications use Commander's Intent to determine human-facing boundary
+- [ ] Large data files (if detected in orientation) have a preprocessing task before any dependent work
 
 If any check fails, fix it before presenting.
 
