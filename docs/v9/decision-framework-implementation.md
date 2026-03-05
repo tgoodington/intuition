@@ -18,18 +18,18 @@ Changes made:
 - Updated phase flow: 4 phases → 5 phases, 5-7 turns → 6-9 turns
 - Updated REFLECT to include Commander's Intent synthesis before posture question
 
-### Layer 2: Plan Skill — Classify Decisions Per Task
+### Layer 2: Outline Skill — Classify Decisions Per Task
 **Status**: DONE
-**File**: `skills/intuition-plan/SKILL.md`
+**File**: `skills/intuition-outline/SKILL.md`
 
 Changes made:
 - Added `Decisions` field to task template with `[USER]`/`[SPEC]`/`[SILENT]` tier classifications
 - Added 2x2 classification heuristic (human-facing × reversibility) as Section 10 reference
 - Added Decision Policy output (conservative/aggressive) based on Commander's Intent + Posture Map
-- Added post-plan confirmation step: "Want to reclassify any decisions?" with shift options
+- Added post-outline confirmation step: "Want to reclassify any decisions?" with shift options
 - Added decision classification checklist item
 
-Each plan task gets a `Decisions` field with classified decision points using three tiers:
+Each outline task gets a `Decisions` field with classified decision points using three tiers:
 
 | Label | Meaning | Appelo Equivalent |
 |-------|---------|-------------------|
@@ -69,7 +69,7 @@ Changes made (build):
 - New "Unanticipated Decision Escalation" rule: human-facing unclassified decisions pause+escalate
 
 **Detail / Specialists:**
-- Follow `[USER]`/`[SPEC]`/`[SILENT]` labels from plan
+- Follow `[USER]`/`[SPEC]`/`[SILENT]` labels from outline
 - Stage 1a: explicitly separate "technical questions I'll resolve" from "experience questions needing principal input"
 - User gate surfaces `[USER]` decisions with full options + tradeoffs
 - `[SPEC]` decisions logged with rationale
@@ -94,14 +94,14 @@ Changes made (build):
 Uses the existing `decisions.json` file that detail already writes. Added `tier` and `classified_by` fields to each decision entry, plus `decision_policy` at the root. Build reads this for compliance verification. No new file needed.
 
 ### D2: Default for Unclassified Decisions
-**Status**: RESOLVED — posture-calibrated (conservative/aggressive from plan Section 10)
+**Status**: RESOLVED — posture-calibrated (conservative/aggressive from outline Section 10)
 
-Detail reads the Decision Policy from plan Section 10. If the user's posture leans hands-on (many "I decide" areas), unclassified decisions default to `[USER]`. If delegator posture, default to `[SPEC]`. Encoded as `"decision_policy": "conservative"` or `"aggressive"` in decisions.json.
+Detail reads the Decision Policy from outline Section 10. If the user's posture leans hands-on (many "I decide" areas), unclassified decisions default to `[USER]`. If delegator posture, default to `[SPEC]`. Encoded as `"decision_policy": "conservative"` or `"aggressive"` in decisions.json.
 
 ### D3: Cross-Specialist Decisions
 **Status**: RESOLVED — first specialist owns, deferred to handoff for v2
 
-When handoff passes prior blueprints to the next specialist, it already includes cross-specialist context. The plan's Decisions field tags the owning task. If a decision spans tasks assigned to different specialists, the first specialist to encounter it owns the classification.
+When handoff passes prior blueprints to the next specialist, it already includes cross-specialist context. The outline's Decisions field tags the owning task. If a decision spans tasks assigned to different specialists, the first specialist to encounter it owns the classification.
 
 ### D4: Learning Over Time
 **Status**: DEFERRED (not v1)

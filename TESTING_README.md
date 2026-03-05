@@ -38,7 +38,7 @@ This directory now contains comprehensive documentation for understanding and te
 ### Skill References
 - **skills/intuition-discovery/references/waldo_core.md** - Waldo v3 implementation
 - **skills/intuition-handoff/references/handoff_core.md** - Handoff orchestration
-- **skills/intuition-plan/references/magellan_core.md** - Planning logic
+- **skills/intuition-outline/references/magellan_core.md** - Planning logic
 - **skills/intuition-execute/references/faraday_core.md** - Execution logic
 
 ## Testing Path
@@ -86,7 +86,7 @@ This directory now contains comprehensive documentation for understanding and te
 - `skills/intuition-discovery/references/waldo_core.md` - Complete redesign
 - `skills/intuition-discovery/SKILL.md` - Updated description
 - `skills/intuition-handoff/references/handoff_core.md` - Profile integration
-- `skills/intuition-plan/references/magellan_core.md` - Profile reading
+- `skills/intuition-outline/references/magellan_core.md` - Profile reading
 - `skills/intuition-execute/references/faraday_core.md` - Profile reading
 - `package.json` - Version 3.0.0
 
@@ -113,8 +113,8 @@ Waldo now launches research agents immediately, then engages as a knowledgeable 
 ### File-Based Handoffs
 All skill communication happens through files (not APIs):
 - Discovery → `discovery_brief.md` + `discovery_output.json`
-- Handoff → `planning_brief.md` or `execution_brief.md`
-- Planning → `plan.md`
+- Handoff → `outline_brief.md` or `execution_brief.md`
+- Outlining → `outline.md`
 - Execution → Implemented code + updated memory
 
 ### Five-Skill Orchestration
@@ -123,9 +123,9 @@ All skill communication happens through files (not APIs):
   ↓
 /intuition-discovery → Research + dialogue, create discovery outputs
   ↓
-/intuition-handoff → Extract insights, update memory, merge profile, create planning brief
+/intuition-handoff → Extract insights, update memory, merge profile, create outline brief
   ↓
-/intuition-plan → Synthesize plan, personalize based on profile
+/intuition-outline → Synthesize outline, personalize based on profile
   ↓
 /intuition-handoff → Prepare execution brief
   ↓

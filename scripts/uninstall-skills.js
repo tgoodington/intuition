@@ -45,7 +45,7 @@ try {
     'intuition-start',
     'intuition-prompt',
     'intuition-handoff',
-    'intuition-plan',
+    'intuition-outline',
     'intuition-design',
     'intuition-engineer',
     'intuition-build',
@@ -60,7 +60,9 @@ try {
     // Legacy skills (removed in v8.0)
     'intuition-execute',
     // Legacy skills (removed in v6.0)
-    'intuition-discovery'
+    'intuition-discovery',
+    // Legacy skills (renamed in v9.1)
+    'intuition-plan'
   ];
 
   skillsToRemove.forEach(skillName => {

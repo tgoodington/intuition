@@ -3,3 +3,4 @@ node_modules/
 .claude/USER_PROFILE.json
 *.log
 .DS_Store
+docs/project_notes/

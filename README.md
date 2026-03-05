@@ -18,7 +18,7 @@ This installs 12 skills globally to `~/.claude/skills/`. Verify by typing `/` in
 Five phases with handoff transitions between each:
 
 ```
-prompt → plan → [design] → engineer → build
+prompt → outline → [design] → engineer → build
 ```
 
 The first cycle is the **trunk**. After completion, create **branches** for new features or changes.
@@ -29,8 +29,8 @@ The first cycle is the **trunk**. After completion, create **branches** for new 
 /intuition-initialize          # Set up project memory (once per project)
 /intuition-start               # Check status, get routed to next step
 /intuition-prompt              # Describe what you want to build
-/intuition-handoff             # Process → move to planning
-/intuition-plan                # Create the blueprint
+/intuition-handoff             # Process → move to outlining
+/intuition-outline             # Create the blueprint
 /intuition-handoff             # Review design flags
 /intuition-design              # Elaborate flagged items (if any)
 /intuition-handoff             # Prepare for engineering
@@ -40,7 +40,7 @@ The first cycle is the **trunk**. After completion, create **branches** for new 
 /intuition-handoff             # Complete the cycle
 ```
 
-Run `/clear` before each phase skill to keep context clean. Not every project needs design — if the plan is clear enough, handoff skips straight to engineer.
+Run `/clear` before each phase skill to keep context clean. Not every project needs design — if the outline is clear enough, handoff skips straight to engineer.
 
 ## Skills
 
@@ -48,8 +48,8 @@ Run `/clear` before each phase skill to keep context clean. Not every project ne
 
 | Skill | Model | Purpose |
 |-------|-------|---------|
-| `/intuition-prompt` | opus | Refines a rough idea into a planning-ready brief |
-| `/intuition-plan` | opus | Strategic blueprint with tasks, dependencies, design flags |
+| `/intuition-prompt` | opus | Refines a rough idea into an outline-ready brief |
+| `/intuition-outline` | opus | Strategic blueprint with tasks, dependencies, design flags |
 | `/intuition-design` | opus | ECD framework design exploration for flagged items |
 | `/intuition-engineer` | opus | Code-level specs through research + interactive dialogue |
 | `/intuition-build` | sonnet | Delegates implementation, verifies against specs |
@@ -86,14 +86,14 @@ Run `/clear` before each phase skill to keep context clean. Not every project ne
 
 ### Design Loop
 
-The plan flags tasks needing design exploration. Handoff manages a loop: design one item → check for more → design next or advance to engineer.
+The outline flags tasks needing design exploration. Handoff manages a loop: design one item → check for more → design next or advance to engineer.
 
 ### Project Memory
 
 All workflow state and knowledge lives in `docs/project_notes/`:
 - Shared memory: `bugs.md`, `decisions.md`, `key_facts.md`, `issues.md`
 - State: `.project-memory-state.json` (owned by handoff)
-- Phase outputs: briefs, plan, code specs, build report (in context-specific paths)
+- Phase outputs: briefs, outline, code specs, build report (in context-specific paths)
 
 ## Project Structure
 
@@ -102,7 +102,7 @@ intuition/
 ├── skills/
 │   ├── intuition-start/           # Session primer + routing
 │   ├── intuition-prompt/          # Discovery refinement
-│   ├── intuition-plan/            # Strategic planning
+│   ├── intuition-outline/         # Strategic outlining
 │   ├── intuition-design/          # ECD design exploration
 │   ├── intuition-engineer/        # Code spec creation
 │   ├── intuition-build/           # Implementation + verification

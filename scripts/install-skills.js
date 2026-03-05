@@ -45,7 +45,7 @@ const skills = [
   'intuition-start',
   'intuition-prompt',
   'intuition-handoff',
-  'intuition-plan',
+  'intuition-outline',
   'intuition-design',
   'intuition-engineer',
   'intuition-build',
@@ -107,6 +107,13 @@ try {
   if (fs.existsSync(oldExecuteDest)) {
     fs.rmSync(oldExecuteDest, { recursive: true, force: true });
     log(`Removed old /intuition-execute skill (split into /intuition-engineer + /intuition-build in v8.0)`);
+  }
+
+  // Remove old plan skill if it exists (renamed to outline in v9.1)
+  const oldPlanDest = path.join(claudeSkillsDir, 'intuition-plan');
+  if (fs.existsSync(oldPlanDest)) {
+    fs.rmSync(oldPlanDest, { recursive: true, force: true });
+    log(`Removed old /intuition-plan skill (renamed to /intuition-outline in v9.1)`);
   }
 
   // --- Specialist and Producer directories (v9) ---
@@ -185,7 +192,7 @@ try {
     log(`  /intuition-start          - Load project context and detect workflow phase`);
     log(`  /intuition-prompt         - Focused discovery (prompt-engineering refinement)`);
     log(`  /intuition-handoff        - Handoff orchestrator (phase transitions + design loop)`);
-    log(`  /intuition-plan           - Strategic planning (ARCH protocol + design flagging)`);
+    log(`  /intuition-outline        - Strategic outline (ARCH protocol + design flagging)`);
     log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
     log(`  /intuition-engineer       - Code spec creator (engineering decisions)`);
     log(`  /intuition-assemble       - Team assembler (v9 specialist/producer matching)`);

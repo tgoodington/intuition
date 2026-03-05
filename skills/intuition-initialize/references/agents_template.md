@@ -11,7 +11,7 @@ This project uses a multi-agent system coordinated by Intuition (`@tgoodington/i
 | Skill | Model | What it does |
 |-------|-------|-------------|
 | `/intuition-prompt` | opus | Transforms a rough vision into a planning-ready brief through focused iterative refinement |
-| `/intuition-plan` | opus | Strategic architect — maps stakeholders, explores components, evaluates options, creates executable blueprint |
+| `/intuition-outline` | opus | Strategic architect — maps stakeholders, explores components, evaluates options, creates executable blueprint |
 | `/intuition-design` | opus | Elaborates flagged plan items through ECD framework (Elements, Connections, Dynamics) |
 | `/intuition-engineer` | opus | Creates code-level specifications through codebase research and interactive dialogue → `code_specs.md` |
 | `/intuition-build` | sonnet | Delegates implementation to subagents, verifies outputs against code specs and acceptance criteria |
@@ -44,7 +44,7 @@ This project uses a multi-agent system coordinated by Intuition (`@tgoodington/i
 ### Trunk (first cycle)
 
 ```
-/intuition-prompt → handoff → /intuition-plan → handoff →
+/intuition-prompt → handoff → /intuition-outline → handoff →
   [/intuition-design loop] → handoff → /intuition-engineer → handoff →
   /intuition-build → handoff → complete
 ```
@@ -96,8 +96,8 @@ The build phase delegates to these task-based subagents via the Task tool:
 - `issues.md` — Work log with ticket references
 
 **Phase Output Files** (in `{context_path}/`):
-- `planning_brief.md` — Brief for planning (created by handoff)
-- `plan.md` — Structured plan with tasks, design recommendations
+- `outline_brief.md` — Brief for outline (created by handoff)
+- `outline.md` — Structured outline with tasks, design recommendations
 - `design_brief.md` — Brief for current design item (created/updated by handoff)
 - `engineering_brief.md` — Brief for engineering (created by handoff)
 - `code_specs.md` — Code-level specifications (created by engineer)

@@ -9,7 +9,7 @@ The Intuition workflow uses a trunk-and-branch model:
 - **Branches**: Subsequent cycles that build on, extend, or diverge from trunk or other branches.
 - **Debugger**: Post-completion diagnostic specialist for hard problems.
 
-All phases: `/intuition-prompt` → `/intuition-handoff` → `/intuition-plan` → `/intuition-handoff` →
+All phases: `/intuition-prompt` → `/intuition-handoff` → `/intuition-outline` → `/intuition-handoff` →
 `[/intuition-design loop]` → `/intuition-handoff` → `/intuition-engineer` → `/intuition-handoff` →
 `/intuition-build` → `/intuition-handoff` → complete
 
@@ -22,7 +22,7 @@ The project follows a structured workflow with handoff transitions between phase
 **Prompt** — `/intuition-prompt`
 - Transforms a rough vision into a precise, planning-ready brief
 - Framework: Capture → Refine → Reflect → Confirm
-- Output: Planning-ready brief (processed by Handoff into `planning_brief.md`)
+- Output: Planning-ready brief (processed by Handoff into `outline_brief.md`)
 
 **Handoff** — `/intuition-handoff`
 - Processes phase outputs, updates memory files, generates brief for next phase
@@ -30,11 +30,11 @@ The project follows a structured workflow with handoff transitions between phase
 - Manages the design loop (item-by-item design cycles)
 - ONLY component that writes to `.project-memory-state.json`
 
-**Planning** — `/intuition-plan`
+**Outline** — `/intuition-outline`
 - Strategic synthesis and structured execution planning
 - Researches codebase, identifies patterns, creates detailed plan
 - Flags tasks requiring design exploration with rationale
-- Output: `plan.md` with tasks, dependencies, risks, design recommendations
+- Output: `outline.md` with tasks, dependencies, risks, design recommendations
 
 **Design** — `/intuition-design`
 - Detailed design exploration for flagged plan items
@@ -72,8 +72,8 @@ Run `/clear` before each phase skill. After completion, run `/intuition-start` t
 - **.project-memory-state.json** — Workflow phase tracking and session state
 
 **Phase Output Files** (created during workflow, in `{context_path}/`):
-- **planning_brief.md** — Brief for planning phase (created by Handoff)
-- **plan.md** — Structured project plan with design recommendations
+- **outline_brief.md** — Brief for outline phase (created by Handoff)
+- **outline.md** — Structured project outline with design recommendations
 - **design_brief.md** — Brief for current design item (created/updated by Handoff)
 - **engineering_brief.md** — Brief for engineering phase (created by Handoff)
 - **code_specs.md** — Code-level specifications (created by Engineer)
@@ -110,10 +110,10 @@ Run `/clear` before each phase skill. After completion, run `/intuition-start` t
 ### Smart Skill Suggestions
 
 **When prompt refinement is complete:**
-- "Prompt refinement looks complete! Use `/intuition-handoff` to process insights and prepare for planning."
+- "Prompt refinement looks complete! Use `/intuition-handoff` to process insights and prepare for outline."
 
-**When user suggests planning work:**
-- "This sounds like a good candidate for planning. Use `/intuition-handoff` to process the brief, then `/intuition-plan` to develop a structured approach."
+**When user suggests outline work:**
+- "This sounds like a good candidate for planning. Use `/intuition-handoff` to process the brief, then `/intuition-outline` to develop a structured approach."
 
 **When plan is ready and has design items:**
 - "The plan looks ready! Use `/intuition-handoff` to review design recommendations and start the design loop."

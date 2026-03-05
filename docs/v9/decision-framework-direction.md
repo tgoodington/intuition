@@ -62,9 +62,9 @@ Prompt currently produces a brief through iterative refinement. Two additions:
 - "Show me options" — specialist recommends, user approves or redirects
 - "Just handle it" — specialist has full autonomy
 
-The posture map is coarse at this stage — it gets refined as plan decomposes tasks. Prompt can be somewhat longer here; the tradeoff is that more clarity upfront means fewer and faster questions in every downstream phase.
+The posture map is coarse at this stage — it gets refined as outline decomposes tasks. Prompt can be somewhat longer here; the tradeoff is that more clarity upfront means fewer and faster questions in every downstream phase.
 
-### Layer 2: Plan — Classify Decisions Per Task
+### Layer 2: Outline — Classify Decisions Per Task
 
 Plan decomposes work into tasks. Each task gets a `Decisions` field with classified decision points:
 
@@ -83,16 +83,16 @@ Plan decomposes work into tasks. Each task gets a `Decisions` field with classif
 | **Hard to reverse** | `[USER]` always | `[SPEC]` (reported with full reasoning) |
 | **Easy to reverse** | `[USER]` by default, user can downgrade | `[SILENT]` |
 
-Plan uses the Commander's Intent and Decision Posture from the prompt brief to determine what counts as "human-facing" from the user's perspective. Without that signal, plan defaults conservative.
+Outline uses the Commander's Intent and Decision Posture from the prompt brief to determine what counts as "human-facing" from the user's perspective. Without that signal, outline defaults conservative.
 
 **User confirmation**: After presenting the full task breakdown, one question: "Here are the decisions I'd surface to you during detail work. Want to reclassify any?" Shows `[USER]` and `[SPEC]` items only. One pass, not per-task. Capped at ~2-3 decisions per task to prevent overload.
 
 ### Layer 3: Downstream Phases — Follow, Log, Escalate
 
-All phases after plan follow the delegation assignments:
+All phases after outline follow the delegation assignments:
 
 **Detail / Specialists:**
-- Follow `[USER]` / `[SPEC]` / `[SILENT]` labels from plan
+- Follow `[USER]` / `[SPEC]` / `[SILENT]` labels from outline
 - During Stage 1a research planning, explicitly separate "technical questions I'll resolve" from "experience questions I need principal input on"
 - User gate surfaces `[USER]` decisions with full options + tradeoffs
 - `[SPEC]` decisions logged with rationale
@@ -121,7 +121,7 @@ The existing ECD framework (Elements, Connections, Dynamics) maps naturally:
 
 - Decision policies must be serialized into agent spawn prompts (agents can't discover files)
 - Structured decision artifacts (not free-text summaries) for reliable parsing by parent skills
-- Classification belongs in plan (opus), not a separate agent or step
+- Classification belongs in outline (opus), not a separate agent or step
 - Haiku research subagents never classify decisions — they flag potential decision points, opus synthesizes and classifies
 - Decision policy blocks kept under 30 lines to avoid context bloat in agent prompts
 
@@ -131,7 +131,7 @@ The existing ECD framework (Elements, Connections, Dynamics) maps naturally:
 
 2. **Default when unclassified.** Conservative (ask before deciding) vs. aggressive (specialist decides + reports). May be calibrated by the user's posture map — hands-on users get conservative defaults, delegators get aggressive defaults.
 
-3. **Cross-specialist decisions.** When a decision spans multiple specialists (e.g., a database schema choice that affects API design that affects frontend display), who classifies and who decides? Likely needs coordination at the plan or handoff level.
+3. **Cross-specialist decisions.** When a decision spans multiple specialists (e.g., a database schema choice that affects API design that affects frontend display), who classifies and who decides? Likely needs coordination at the outline or handoff level.
 
 4. **Learning over time.** Can the system build precedent? ("Last time you upgraded font choice from SILENT to USER — should I default color/typography decisions to USER going forward?") This is a future enhancement, not a v1 requirement.
 
@@ -139,4 +139,4 @@ The existing ECD framework (Elements, Connections, Dynamics) maps naturally:
 
 ## Roundtable Participants
 
-Direction synthesized from perspectives of: Prompt, Plan, Design, Engineer, Build, Agent-Advisor — run as parallel consultation on 2026-03-03.
+Direction synthesized from perspectives of: Prompt, Outline, Design, Engineer, Build, Agent-Advisor — run as parallel consultation on 2026-03-03.

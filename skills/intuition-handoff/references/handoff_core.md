@@ -8,7 +8,7 @@ Each phase produces valuable output. Your job is to:
 1. Extract the valuable insights from that output
 2. Document them properly in project memory
 3. Prepare the next agent with fresh, relevant context
-4. Maintain the flow from discovery → planning → execution
+4. Maintain the flow from discovery → outline → execution
 
 You're the administrative glue that keeps the symphony coordinated.
 
@@ -16,7 +16,7 @@ You're the administrative glue that keeps the symphony coordinated.
 
 As part of every handoff, extract user profile learnings and update the global user profile:
 
-### Discovery → Planning Handoff (User Profile Focus)
+### Discovery → Outline Handoff (User Profile Focus)
 
 **From prompt_output.json**, extract `user_profile_learnings`:
 
@@ -75,10 +75,10 @@ When invoked, determine which transition is happening:
 
 ```
 IF workflow.discovery.completed == true
-   AND workflow.planning.started == false:
-   → TRANSITION: Discovery → Planning
+   AND workflow.outline.started == false:
+   → TRANSITION: Discovery → Outline
 
-IF workflow.planning.completed == true
+IF workflow.outline.completed == true
    AND workflow.execution.started == false:
    → TRANSITION: Planning → Execution
 
@@ -91,14 +91,14 @@ Check `.project-memory-state.json` to determine current state:
 ```json
 {
   "workflow": {
-    "status": "discovery",  // or "planning", "executing"
+    "status": "discovery",  // or "outline", "executing"
     "discovery": {
       "started": true,
       "completed": true,
       "completed_at": "2025-02-02T...",
       "output_files": ["prompt_brief.md", "prompt_output.json"]
     },
-    "planning": {
+    "outline": {
       "started": false,
       "completed": false
     }
@@ -106,7 +106,7 @@ Check `.project-memory-state.json` to determine current state:
 }
 ```
 
-## Transition 1: Discovery → Planning
+## Transition 1: Discovery → Outline
 
 ### Step 1: Read Outputs
 
@@ -241,10 +241,10 @@ Example:
 
 ### Step 4: Generate Brief for Magellan
 
-Create a brief that synthesizes discovery for planning. Structure:
+Create a brief that synthesizes discovery for outline. Structure:
 
 ```markdown
-# Planning Brief: [Problem Title]
+# Outline Brief: [Problem Title]
 
 ## Discovery Summary
 [1-2 paragraph summary of what was discovered]
@@ -268,29 +268,29 @@ Create a brief that synthesizes discovery for planning. Structure:
 
 ## Assumptions & Risks
 - Assumption: [X] - Confidence: High/Medium/Low
-- Risk: [Y] - Should be explored during planning
+- Risk: [Y] - Should be explored during outline
 
 ## References
 - Discovery Brief: docs/project_notes/prompt_brief.md
 - Relevant Decisions: ADR-001, ADR-002
 
 ## Notes for Planner
-[Any observations that might help planning]
+[Any observations that might help outline]
 ```
 
-**Store as:** `docs/project_notes/planning_brief.md`
+**Store as:** `docs/project_notes/outline_brief.md`
 
 ### Step 5: Update Workflow State
 
 ```json
 {
   "workflow": {
-    "status": "planning",
+    "status": "outline",
     "discovery": {
       "completed": true,
       "completed_at": "2025-02-02T..."
     },
-    "planning": {
+    "outline": {
       "started": true,
       "started_at": "2025-02-02T..."
     }
@@ -301,27 +301,27 @@ Create a brief that synthesizes discovery for planning. Structure:
 ### Step 6: Suggest Next Step
 
 ```
-"Discovery is now part of project memory. I've created a planning brief
-at docs/project_notes/planning_brief.md.
+"Discovery is now part of project memory. I've created an outline brief
+at docs/project_notes/outline_brief.md.
 
-Ready to create a plan? Run /intuition-plan to have Magellan synthesize
+Ready to create an outline? Run /intuition-outline to have Magellan synthesize
 this discovery into a structured approach."
 ```
 
 ---
 
-## Transition 2: Planning → Execution
+## Transition 2: Outline → Execution
 
 ### Step 1: Read Output
 
 ```
-plan.md (from Magellan)
-  └─ Structured plan with tasks, dependencies, risks
+outline.md (from Magellan)
+  └─ Structured outline with tasks, dependencies, risks
 ```
 
 ### Step 2: Extract Relevant Info
 
-From `plan.md`, identify:
+From `outline.md`, identify:
 
 **Key Task Information:**
 - Task list and structure
@@ -342,8 +342,8 @@ From `plan.md`, identify:
 ### Step 3: Update Memory Files
 
 **Update issues.md:**
-- Log the planning work
-- Link to plan.md
+- Log the outline work
+- Link to outline.md
 
 Example:
 ```markdown
@@ -352,17 +352,17 @@ Example:
 - **Status**: Planned
 - **Description**: Structured plan for implementing JWT-based user
   authentication across API and frontend
-- **Plan**: docs/project_notes/plan.md
+- **Outline**: docs/project_notes/outline.md
 - **Tasks**: 8 tasks identified, ready for execution
 ```
 
 **Update decisions.md (if needed):**
-- If planning revealed new architectural choices
-- Add ADRs for decisions made during planning
+- If outline revealed new architectural choices
+- Add ADRs for decisions made during outline
 
 **Do NOT modify:**
-- key_facts.md (facts don't change, planning doesn't discover new facts)
-- bugs.md (execution finds bugs, not planning)
+- key_facts.md (facts don't change, outline doesn't discover new facts)
+- bugs.md (execution finds bugs, not outline)
 
 ### Step 4: Generate Brief for Faraday
 
@@ -405,7 +405,7 @@ Create a brief for execution. Structure:
 [Reference to existing ADRs that matter for execution]
 
 ## References
-- Full Plan: docs/project_notes/plan.md
+- Full Outline: docs/project_notes/outline.md
 - Discovery Brief: docs/project_notes/prompt_brief.md
 - Relevant Decisions: ADR-001, ADR-002, ...
 
@@ -421,7 +421,7 @@ Create a brief for execution. Structure:
 {
   "workflow": {
     "status": "executing",
-    "planning": {
+    "outline": {
       "completed": true,
       "completed_at": "2025-02-02T..."
     },
@@ -436,7 +436,7 @@ Create a brief for execution. Structure:
 ### Step 6: Suggest Next Step
 
 ```
-"Planning is now in project memory. I've created an execution brief
+"Outline is now in project memory. I've created an execution brief
 at docs/project_notes/execution_brief.md with everything Faraday needs.
 
 Ready to execute? Run /intuition-execute to have Faraday coordinate
@@ -497,7 +497,7 @@ implementation."
 - **Status**: Completed | In Progress | Blocked
 - **Description**: [1-2 line summary]
 - **Discovery Brief**: [link] (if from discovery)
-- **Plan**: [link] (if from planning)
+- **Outline**: [link] (if from outline)
 - **URL**: [link to ticket if external]
 - **Notes**: [any relevant context]
 ```
@@ -526,12 +526,12 @@ implementation."
 4. User can request re-discovery if needed
 ```
 
-### What if planning revealed new constraints?
+### What if outline revealed new constraints?
 
 ```
 1. Update key_facts.md with new constraints
 2. Create ADR if it represents architectural choice
-3. Note in issues.md that planning revealed this
+3. Note in issues.md that outline revealed this
 4. Include in execution brief for Faraday's awareness
 ```
 
@@ -565,8 +565,8 @@ Example:
 ✓ decisions.md: Added ADR-005 on database strategy
 ✓ issues.md: Logged discovery work completed
 
-I've created planning_brief.md with everything Magellan needs.
-Ready to plan? Run /intuition-plan"
+I've created outline_brief.md with everything Magellan needs.
+Ready to outline? Run /intuition-outline"
 ```
 
 ---
@@ -575,7 +575,7 @@ Ready to plan? Run /intuition-plan"
 
 Before completing handoff:
 
-- [ ] Detected correct transition (Discovery→Planning or Planning→Execution)
+- [ ] Detected correct transition (Discovery→Outline or Outline→Execution)
 - [ ] Read all necessary output files
 - [ ] Extracted insights without losing information
 - [ ] Updated memory files with proper formatting

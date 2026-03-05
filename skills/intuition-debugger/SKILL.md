@@ -17,8 +17,8 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 5. You MUST delegate code changes to subagents for anything beyond trivial fixes (1-3 lines in a single file).
 6. You MUST verify fixes don't break dependent code.
 7. You MUST log every fix to `docs/project_notes/bugs.md`.
-8. You MUST NOT make architectural or design decisions. If the root cause is in the plan or design, tell the user to create a branch and run the full workflow.
-9. You MUST NOT modify plan.md, design specs, prompt_brief.md, or any workflow planning artifacts.
+8. You MUST NOT make architectural or design decisions. If the root cause is in the outline or design, tell the user to create a branch and run the full workflow.
+9. You MUST NOT modify outline.md, design specs, prompt_brief.md, or any workflow outline artifacts.
 10. You MUST classify the bug category (see DIAGNOSTIC SPECIALIZATIONS) — this determines your investigation protocol.
 
 REMINDER: You are a diagnostic specialist, not a general fixer. Build's Code Reviewer and retry logic handle routine implementation issues. You handle the hard problems that survive good engineering.
@@ -48,7 +48,7 @@ Investigation focus: Trace backward from symptom through every intermediate step
 ## Category 2: Cross-Context Failures
 **Branch work breaks trunk, or one context's changes conflict with another's.**
 
-Investigation focus: Read BOTH contexts' plans, design specs, and implementation guides. Identify the shared surface. Determine which context's assumptions are violated and whether the conflict is in code, interface contracts, or timing.
+Investigation focus: Read BOTH contexts' outlines, design specs, and implementation guides. Identify the shared surface. Determine which context's assumptions are violated and whether the conflict is in code, interface contracts, or timing.
 
 ## Category 3: Emergent Behavior
 **Individual components work correctly in isolation but produce wrong results when composed.**
@@ -61,9 +61,9 @@ Investigation focus: Test each component's inputs/outputs independently. Find th
 Investigation focus: Profile before guessing. Use Bash to run profiling tools if available. Identify the bottleneck with evidence. Common culprits: N+1 queries, unnecessary re-renders, missing indexes, synchronous operations that should be async, excessive memory allocation.
 
 ## Category 5: Plan/Design Was Wrong
-**The code correctly implements the plan, but the plan was wrong.**
+**The code correctly implements the plan, but the outline was wrong.**
 
-Investigation focus: Cross-reference the implementation against the prompt brief's original intent. Identify WHERE the plan diverged from what was actually needed. Do NOT fix the code — diagnose the upstream error and route the user to create a branch for replanning.
+Investigation focus: Cross-reference the implementation against the prompt brief's original intent. Identify WHERE the outline diverged from what was actually needed. Do NOT fix the code — diagnose the upstream error and route the user to create a branch for replanning.
 
 # PROTOCOL: 9-STEP FLOW
 
@@ -111,7 +111,7 @@ Resolve `context_path` from selected context:
 
 Read ALL of these before proceeding — do NOT wait for the user's issue description:
 
-- `{context_path}/plan.md` — what was planned
+- `{context_path}/outline.md` — what was outlined
 - `{context_path}/code_specs.md` — engineering decisions (what approach was chosen for each task and why)
 - `{context_path}/build_brief.md` — context passed to the build phase
 - `{context_path}/build_report.md` — what was actually built (task outcomes, files modified, deviations)
@@ -171,7 +171,7 @@ Execute the investigation protocol for the classified category. This is NOT a ch
 - Use Grep to find all call sites. Follow the data, not the control flow.
 
 ### Category 2 (Cross-Context): Compare contexts
-- Read BOTH contexts' plans and implementation guides.
+- Read BOTH contexts' outlines and implementation guides.
 - Launch a Research subagent (haiku) to diff the shared files or interfaces.
 - Identify: which context changed the shared surface, and was it aware of the other context's dependency?
 
@@ -187,8 +187,8 @@ Execute the investigation protocol for the classified category. This is NOT a ch
 
 ### Category 5 (Plan Was Wrong): Cross-reference intent
 - Re-read prompt_brief.md — what was the ORIGINAL intent?
-- Compare against plan.md — where did planning diverge from intent?
-- Compare against implementation — does code match plan?
+- Compare against outline.md — where did planning diverge from intent?
+- Compare against implementation — does code match outline?
 - The answer determines where the fix belongs (code, plan, or discovery).
 
 **For large dependency graphs:** Launch a Research/Explorer subagent (haiku):
@@ -235,9 +235,9 @@ For **Category 5 (Plan Was Wrong):**
 
 **Category:** Plan Was Wrong
 
-**The plan specified:** [what the plan said]
+**The outline specified:** [what the plan said]
 **The intent was:** [what the prompt brief actually needed]
-**The divergence:** [where and why the plan went wrong]
+**The divergence:** [where and why the outline went wrong]
 
 **Recommendation:** Create a branch and re-run the workflow from /intuition-prompt
 to address the upstream error. Code fixes alone won't resolve this.

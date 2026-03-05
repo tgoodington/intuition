@@ -64,7 +64,7 @@ Read these files:
 
 1. `{context_path}/test_brief.md` — REQUIRED. Contains build summary, code producers used, acceptance criteria, decision log references, blueprint references, known issues.
 2. `{context_path}/build_report.md` — REQUIRED. Extract: files modified, task results, deviations from blueprints, decision compliance notes.
-3. `{context_path}/plan.md` — acceptance criteria per task.
+3. `{context_path}/outline.md` — acceptance criteria per task.
 4. ALL files matching `{context_path}/blueprints/*.md` — specialist blueprints with deliverable specifications.
 5. `{context_path}/team_assignment.json` — producer assignments (identify code-writer tasks).
 6. ALL files matching `{context_path}/scratch/*-decisions.json` — decision tiers and chosen options per specialist.
@@ -148,7 +148,7 @@ Follow project conventions discovered in Step 2:
 
 ### Acceptance Criteria Path Coverage
 
-For every acceptance criterion in plan.md that describes observable behavior ("displays X", "uses Y for Z", "produces output containing W"):
+For every acceptance criterion in outline.md that describes observable behavior ("displays X", "uses Y for Z", "produces output containing W"):
 
 1. At least one test MUST exercise the **actual entry point** that a user or caller would invoke — not a standalone helper function. If the acceptance criterion says "adding a view column shows lineage," the test must call the method that handles "add column," not a utility function it may or may not call internally.
 2. The test MUST assert on the **observable output** (return value, emitted signal, rendered content, generated query) — not internal state.
@@ -220,7 +220,7 @@ You are a test writer. Create a test file following these specifications exactly
 
 **Test file path:** [target test file path]
 **Test cases to implement:**
-[List each test case from the plan with: name, type, what it validates, mock requirements]
+[List each test case from the outline with: name, type, what it validates, mock requirements]
 
 Write the complete test file to the specified path. Follow the project's existing test style exactly. Do NOT add test infrastructure (no new packages, no config changes).
 ```
@@ -283,7 +283,7 @@ Write `{context_path}/test_report.md`:
 ```markdown
 # Test Report
 
-**Plan:** [Title from plan.md]
+**Plan:** [Title from outline.md]
 **Date:** [YYYY-MM-DD]
 **Status:** Pass | Partial | Failed
 

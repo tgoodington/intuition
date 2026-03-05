@@ -16,7 +16,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 
 1. You MUST read `.project-memory-state.json` and resolve `context_path` before reading any other files.
 2. You MUST read blueprints from `{context_path}/blueprints/` AND `{context_path}/team_assignment.json` before any delegation. If missing, tell the user to run the detail phase first.
-3. You MUST validate that blueprints exist for ALL plan tasks before proceeding.
+3. You MUST validate that blueprints exist for ALL outline tasks before proceeding.
 4. You MUST confirm the build plan with the user before delegating.
 5. You MUST use TaskCreate to track every plan item as a task with dependencies.
 6. You MUST delegate all production to subagents via the Task tool. NEVER produce deliverables yourself.
@@ -31,7 +31,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 15. You MUST skip test-related deliverables in blueprints (test files, test specs, test configurations). Log skipped test deliverables in build_report.md under a "Test Deliverables Deferred" section so the test phase can review them.
 
 **TOOL DISTINCTION — READ THIS CAREFULLY:**
-- `TaskCreate / TaskUpdate / TaskList / TaskGet` = YOUR internal task board for tracking plan items.
+- `TaskCreate / TaskUpdate / TaskList / TaskGet` = YOUR internal task board for tracking outline items.
 - `Task` = Subagent launcher for delegating actual work.
 - These are DIFFERENT tools for DIFFERENT purposes. Do not confuse them.
 
@@ -56,7 +56,7 @@ After resolving context_path, verify required inputs:
 ## PROTOCOL: COMPLETE FLOW
 
 ```
-Step 1:   Read context (team_assignment.json + blueprints + plan.md)
+Step 1:   Read context (team_assignment.json + blueprints + outline.md)
 Step 1.5: Validate blueprint coverage
 Step 2:   Confirm build plan with user
 Step 3:   Create task board
@@ -74,7 +74,7 @@ Read these files:
 1. `.claude/USER_PROFILE.json` (if exists) — tailor update detail to preferences.
 2. `{context_path}/team_assignment.json` — producer assignments and execution order.
 3. ALL files in `{context_path}/blueprints/*.md` — specialist blueprints.
-4. `{context_path}/plan.md` — approved plan with acceptance criteria.
+4. `{context_path}/outline.md` — approved plan with acceptance criteria.
 5. `{context_path}/build_brief.md` (if exists) — context passed from handoff.
 6. `{context_path}/scratch/*-decisions.json` (all specialist decision logs) — decision tiers and chosen options.
 
@@ -91,7 +91,7 @@ From each blueprint, extract:
 - Producer name, output format, output directory, output files (Section 9: Producer Handoff)
 - Acceptance mapping (Section 6)
 
-From plan.md, extract:
+From outline.md, extract:
 - Acceptance criteria per task
 - Dependencies between tasks
 
@@ -132,9 +132,9 @@ Do NOT delegate any work until the user explicitly approves.
 ## STEP 3: CREATE TASK BOARD
 
 Use TaskCreate for each plan item:
-- Set clear subject and description from the plan's task definitions
+- Set clear subject and description from the outline's task definitions
 - Set activeForm for progress display
-- Use TaskUpdate with addBlockedBy to establish dependencies from plan and execution_order
+- Use TaskUpdate with addBlockedBy to establish dependencies from outline and execution_order
 - Tasks start as `pending`, move to `in_progress` when delegated, `completed` when all review layers pass
 
 ## STEP 4: DELEGATE TO PRODUCERS
@@ -166,7 +166,7 @@ Output files: [from blueprint's Producer Handoff]
 ```
 
 When building on a branch, add to subagent prompts:
-"NOTE: This is branch work. The parent context has existing implementations. Your changes must be compatible with the parent's architecture unless the plan explicitly states otherwise."
+"NOTE: This is branch work. The parent context has existing implementations. Your changes must be compatible with the parent's architecture unless the outline explicitly states otherwise."
 
 **To parallelize:** Make multiple Task tool calls in a SINGLE response for tasks in the same execution phase.
 
@@ -198,8 +198,8 @@ Does this deliverable accurately capture what the blueprint specified? Are the d
 
 ### Layer 2: Builder Verification (you, the build manager)
 
-Check the deliverable yourself against plan.md acceptance criteria:
-- Verify each acceptance criterion from plan.md is satisfied (use the blueprint's Acceptance Mapping section as your guide).
+Check the deliverable yourself against outline.md acceptance criteria:
+- Verify each acceptance criterion from outline.md is satisfied (use the blueprint's Acceptance Mapping section as your guide).
 - Verify completeness against the blueprint's Acceptance Mapping section.
 - Verify output files exist at the declared paths.
 - Verify [USER] decisions from decisions.json match the deliverable (user's chosen option was implemented, not the specialist's alternative).
@@ -248,7 +248,7 @@ Check this deliverable for [domain-specific concerns]. Return: PASS + summary OR
 ### Unanticipated Decision Escalation
 
 If a producer makes a choice during implementation that:
-1. Was not classified in the plan or specialist decisions.json, AND
+1. Was not classified in the outline or specialist decisions.json, AND
 2. Affects what the end user sees or experiences (human-facing per Commander's Intent)
 
 Then: pause the task and escalate to the user via AskUserQuestion. Present the choice made, alternatives, and why it matters. NEVER silently accept an unclassified human-facing decision.

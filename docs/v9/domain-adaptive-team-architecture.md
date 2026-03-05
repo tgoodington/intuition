@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-The current Intuition workflow (v8.0/8.1) uses a fixed five-phase pipeline: Prompt → Plan → Design → Engineer → Build. The design and engineer phases are code-centric — design uses ECD for architectural exploration, engineer produces `code_specs.md`, and build delegates to Code Writer subagents.
+The current Intuition workflow (v8.0/8.1) uses a fixed five-phase pipeline: Prompt → Outline → Design → Engineer → Build. The design and engineer phases are code-centric — design uses ECD for architectural exploration, engineer produces `code_specs.md`, and build delegates to Code Writer subagents.
 
 This proposal generalizes the workflow to handle any domain (legal, marketing, financial, creative, technical) by replacing the fixed design/engineer phases with a **dynamic specialist team** assembled after planning, and replacing Code Writer with **format-specific producers** during build.
 
@@ -21,7 +21,7 @@ This proposal generalizes the workflow to handle any domain (legal, marketing, f
 ### Phase Flow
 
 ```
-Prompt → Handoff → Plan → Handoff (team assembly) → Detail (specialist loop) → Handoff (conflict check + completeness gate) → Build → Handoff → Complete
+Prompt → Handoff → Outline → Handoff (team assembly) → Detail (specialist loop) → Handoff (conflict check + completeness gate) → Build → Handoff → Complete
 ```
 
 ---
@@ -242,7 +242,7 @@ status: draft|approved
 # Blueprint: {Title}
 
 ## 1. Task Reference
-[Plan task numbers, acceptance criteria copied from plan, dependencies]
+[Outline task numbers, acceptance criteria copied from outline, dependencies]
 
 ## 2. Research Findings
 [What the specialist learned from project context — grounding in facts, not assumptions]
@@ -257,7 +257,7 @@ status: draft|approved
 [The domain-specific payload — this is where the specialist's expertise lives. Structure varies by domain but must be detailed enough that the producer makes zero domain-level decisions]
 
 ## 6. Acceptance Mapping
-[How each plan acceptance criterion is addressed by this blueprint. Direct traceability.]
+[How each outline acceptance criterion is addressed by this blueprint. Direct traceability.]
 
 ## 7. Integration Points
 [How this blueprint connects to other blueprints, existing project artifacts, or external systems. Enables conflict detection.]
@@ -297,7 +297,7 @@ Producer creates deliverable
    → Catches: domain errors, misinterpreted specialist intent, missing nuance
         ↓ (only if specialist passes)
 2. Builder Verification (build manager)
-   "Do the plan's acceptance criteria pass?
+   "Do the outline's acceptance criteria pass?
     Is the deliverable complete against the blueprint's acceptance mapping?"
    → Catches: structural gaps, unaddressed acceptance criteria, missing sections
         ↓ (only if builder passes)
@@ -327,7 +327,7 @@ All reviews use adversarial prompting: "Find problems with this deliverable" not
 
 ---
 
-## 7. Plan Phase Changes
+## 7. Outline Phase Changes
 
 ### 7.1 Section 6 — Task Sequence (Updated)
 
@@ -344,7 +344,7 @@ Each task gains two new fields:
 - **Files**: [Specific paths] or "TBD"
 ```
 
-**Domain** is a free-text descriptor. Plan does NOT reference specialist names. Team assembly matches domains to specialists.
+**Domain** is a free-text descriptor. Outline does NOT reference specialist names. Team assembly matches domains to specialists.
 
 **Depth** controls specialist invocation mode:
 - **Deep** — full exploration → user confirmation gate → specification. For novel territory, multiple valid approaches, or high-stakes decisions.
@@ -363,10 +363,10 @@ Each task gains two new fields:
 | Task 1, 2 | code/frontend | Light — autonomous | Straightforward pattern application |
 ```
 
-### 7.3 Section 10 — Planning Context for Detail Phase (Replaces Planning Context for Engineer)
+### 7.3 Section 10 — Outline Context for Detail Phase (Replaces Outline Context for Engineer)
 
 ```markdown
-### 10. Planning Context for Detail Phase
+### 10. Outline Context for Detail Phase
 - **Domain-Specific Considerations**: [per-domain notes — legal constraints, brand guidelines, data quality issues, performance targets]
 - **Cross-Domain Dependencies**: [where specialist outputs must coordinate]
 - **Sequencing Considerations**: [what depends on what across domains]
@@ -374,11 +374,11 @@ Each task gains two new fields:
 - **Constraints**: [hard boundaries per domain]
 ```
 
-### 7.4 What Doesn't Change in Plan
+### 7.4 What Doesn't Change in Outline
 
 - ARCH framework (Actors, Reach, Choices, Homestretch) — already domain-agnostic
-- Sections 1-5, 7-9 of plan.md
-- Plan stays registry-ignorant — never references specialist names or profiles
+- Sections 1-5, 7-9 of outline.md
+- Outline stays registry-ignorant — never references specialist names or profiles
 - Acceptance criteria remain outcome-based, not implementation-prescriptive
 
 ---
@@ -387,7 +387,7 @@ Each task gains two new fields:
 
 ### 8.1 When It Runs
 
-During the plan→detail handoff transition (replacing current transitions 2/2B).
+During the outline→detail handoff transition (replacing current transitions 2/2B).
 
 ### 8.2 Mechanism
 
@@ -395,7 +395,7 @@ Constrained haiku LLM pass:
 
 ```
 Input:
-  - Plan task list with Domain and Depth fields
+  - Outline task list with Domain and Depth fields
   - Available specialist names + domain_tags (from registry scan)
   - Available producer names + output_formats (from registry scan)
 
@@ -467,7 +467,7 @@ intuition-detail skill (foreground, opus)
   │
   ├── STAGE 1: Spawns exploration subagent (opus)
   │     → System prompt = specialist's Stage 1 protocol
-  │     → Context = plan tasks + research patterns + prior blueprints
+  │     → Context = outline tasks + research patterns + prior blueprints
   │     → Writes {context_path}/scratch/{specialist-name}-stage1.md
   │     → Returns summary
   │
@@ -740,7 +740,7 @@ After ALL specialists complete their blueprints, a haiku subagent runs a conflic
 For each blueprint:
 - Section 8 "Open Items" must be empty
 - All mandatory blueprint sections must be present and non-empty
-- Acceptance mapping must address every plan acceptance criterion
+- Acceptance mapping must address every outline acceptance criterion
 - Producer handoff section must reference a valid producer from the registry
 
 If any blueprint fails the gate → escalated to user, build does not start.
@@ -801,8 +801,8 @@ Three-layer review per deliverable (see Section 6):
 | # | Transition | Description |
 |---|-----------|-------------|
 | 0 | Branch creation | No change |
-| 1 | Prompt → Plan | No change |
-| 2 | Plan → Detail | **Runs team assembly.** Scans registries, runs constrained haiku matching, prerequisite checks, writes `team_assignment.json`, generates first specialist brief. |
+| 1 | Prompt → Outline | No change |
+| 2 | Outline → Detail | **Runs team assembly.** Scans registries, runs constrained haiku matching, prerequisite checks, writes `team_assignment.json`, generates first specialist brief. |
 | 3 | Specialist → Specialist | **Replaces design→design loop.** Tracks completed blueprints, routes to next specialist per dependency order, passes prior blueprints as context. |
 | 4 | Detail → Build | **New: conflict check + completeness gate.** Runs haiku conflict detection, validates all blueprints, generates build brief. |
 | 5 | Build → Complete | **Extended.** Reads build report, includes domain field, review chain results, external dependency flags. Offers git commit/push. Routes to `/intuition-start`. v9 with code-writer routes through test phase first (Transition 6.5v9 → 7). |
@@ -903,7 +903,7 @@ Key architectural decisions made during roundtable and rationale:
 | # | Decision | Rationale |
 |---|----------|-----------|
 | D1 | Two separate registries (specialists + producers) | Different lookup patterns, different schemas, cleaner separation |
-| D2 | Plan stays registry-ignorant | Prevents coupling, avoids plan overreach, domain descriptors are sufficient |
+| D2 | Outline stays registry-ignorant | Prevents coupling, avoids outline overreach, domain descriptors are sufficient |
 | D3 | ECD as default exploration methodology with opt-out | Prevents "empty methodology" failure while allowing domain-native alternatives |
 | D4 | Depth-controlled specialist invocation (Deep/Standard/Light) | Preserves divergent exploration for complex tasks without overhead on simple ones |
 | D5 | Two-stage specialist invocation for Deep tasks | Protects the divergent/convergent split that design/engineer currently enforce |
@@ -954,7 +954,7 @@ Key architectural decisions made during roundtable and rationale:
 - **Validate:** Build can delegate and verify from a blueprint
 
 ### Phase 2: Team Assembly Prototype
-- Haiku LLM pass that reads plan annotations + registry, returns JSON
+- Haiku LLM pass that reads outline annotations + registry, returns JSON
 - Prerequisite checking logic
 - **Validate:** Assignments are sensible, prerequisites caught, runs in <5 seconds
 
@@ -982,7 +982,7 @@ Key architectural decisions made during roundtable and rationale:
 ### Phase 7: Integration + Migration
 - State schema v7.0 (v6.0 added detail, v7.0 added test)
 - All handoff transitions updated (including test transitions 6.5v9 and 7)
-- Plan skill updated with Domain/Depth fields
+- Outline skill updated with Domain/Depth fields
 - Design + Engineer skills deprecated
 - Full end-to-end test
 
@@ -1005,7 +1005,7 @@ Key architectural decisions made during roundtable and rationale:
 - `blueprint-conflicts.md` artifact
 
 ### What Gets Modified
-- `intuition-plan` — Sections 6, 6.5, 10 updated
+- `intuition-outline` — Sections 6, 6.5, 10 updated
 - `intuition-handoff` — New transitions 2, 3, 4 replacing current design/engineer transitions
 - `intuition-build` — Blueprint-based input, producer delegation, three-layer review chain
 - State schema — v5.0 → v7.0 (detail + test objects added, design + engineering deprecated)

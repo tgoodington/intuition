@@ -102,13 +102,13 @@ ELSE (a context is in-progress):
   IF workflow.prompt.started == false OR workflow.prompt.completed == false:
     → prompt_in_progress
 
-  ELSE IF workflow.planning.started == false:
-    → ready_for_planning
+  ELSE IF workflow.outline.started == false:
+    → ready_for_outline
 
-  ELSE IF workflow.planning.completed == false:
+  ELSE IF workflow.outline.completed == false:
     → planning_in_progress
 
-  ELSE IF status == "planning" AND workflow.planning.completed == true
+  ELSE IF status == "outline" AND workflow.outline.completed == true
        AND workflow.detail exists:
     IF workflow.detail.started == false:
       → ready_for_assemble
@@ -146,9 +146,9 @@ ELSE (a context is in-progress):
 ```
 
 **"Any context is complete"** = trunk.status == "complete" OR any branch has status == "complete".
-**"No context is in-progress"** = no context has status in ["prompt","planning","design","engineering","building","testing","detail"].
+**"No context is in-progress"** = no context has status in ["prompt","outline","design","engineering","building","testing","detail"].
 
-**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), plan.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done), build_report.md (build done), test_report.md (test done). Ask user if ambiguous.
+**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), outline.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done), build_report.md (build done), test_report.md (test done). Ask user if ambiguous.
 
 ## ROUTING TABLE (Step 5)
 
@@ -158,8 +158,8 @@ Output one line of status, then the next command.
 |-------|-------------|-------|
 | first_time | "No project memory found." | `/intuition-prompt` |
 | prompt_in_progress | "Prompt refinement in progress." | `/intuition-prompt` |
-| ready_for_planning | "Prompt complete." | `/intuition-handoff` |
-| planning_in_progress | "Planning in progress." | `/intuition-plan` |
+| ready_for_outline | "Prompt complete." | `/intuition-handoff` |
+| planning_in_progress | "Planning in progress." | `/intuition-outline` |
 | ready_for_assemble | "Planning complete (v9)." | `/intuition-handoff` |
 | detail_in_progress | "Detail phase in progress." | See DETAIL ROUTING below |
 | design_in_progress | "Design exploration in progress." | See DESIGN ROUTING below |

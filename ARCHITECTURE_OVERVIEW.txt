@@ -55,7 +55,7 @@ STATUS: All v3 features implemented and documented
 │   - discovery_output.json: Structured findings + user_profile_learnings  │
 │   - State: dialogue_mode, research_performed, conversation_history       │
 │                                                                              │
-│ Routes to: /intuition-handoff (NOT directly to plan)                      │
+│ Routes to: /intuition-handoff (NOT directly to outline)                   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -75,16 +75,16 @@ STATUS: All v3 features implemented and documented
 │ │   • Track projects_contributed_to                                     │  │
 │ │   • Update confidence_scores                                          │  │
 │ │ Step 4: Update key_facts.md, decisions.md, issues.md                │  │
-│ │ Step 5: Generate planning_brief.md for Magellan                      │  │
+│ │ Step 5: Generate outline_brief.md for Magellan                      │  │
 │ │ Step 6: Update workflow state                                         │  │
-│ │ Step 7: Route to /intuition-plan                                     │  │
+│ │ Step 7: Route to /intuition-outline                                  │  │
 │ │                                                                         │  │
 │ └─────────────────────────────────────────────────────────────────────────┘  │
 │                                    ↓                                         │
 │ ┌─ PLANNING → EXECUTION ────────────────────────────────────────────────┐   │
 │ │                                                                         │   │
-│ │ Step 1: Extract task structure from plan.md                          │   │
-│ │ Step 2: Update issues.md with planning completion                    │   │
+│ │ Step 1: Extract task structure from outline.md                          │   │
+│ │ Step 2: Update issues.md with outlining completion                   │   │
 │ │ Step 3: Generate execution_brief.md for Faraday                      │   │
 │ │ Step 4: Update workflow state                                         │   │
 │ │ Step 5: Route to /intuition-execute                                  │   │
@@ -94,29 +94,29 @@ STATUS: All v3 features implemented and documented
 │ Key: Handoff is NOT evaluating. It's extracting, documenting, preparing.  │
 │      Administrative glue that keeps the symphony coordinated.             │
 │                                                                              │
-│ Creates: planning_brief.md, execution_brief.md                            │
+│ Creates: outline_brief.md, execution_brief.md                            │
 │ Updates: key_facts.md, decisions.md, issues.md, USER_PROFILE.json,       │
 │          .project-memory-state.json                                        │
-│ Reads: discovery_brief.md, discovery_output.json, plan.md                │
+│ Reads: discovery_brief.md, discovery_output.json, outline.md                │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│           /intuition-plan (Magellan - Strategist & Planner)                │
+│           /intuition-outline (Magellan - Strategist & Planner)             │
 │                                                                              │
-│ Role: Synthesize discovery into structured, executable plan               │
+│ Role: Synthesize discovery into structured, executable outline            │
 │                                                                              │
 │ PERSONALIZATION (v3 NEW):                                                  │
 │   • Reads .claude/USER_PROFILE.json at startup                            │
-│   • Adjusts plan depth based on user's seniority                          │
+│   • Adjusts outline depth based on user's seniority                       │
 │   • Matches communication style to user preference                        │
 │   • Factors in user's authority level and constraints                    │
 │   • Tailors complexity to expertise areas                                │
 │                                                                              │
-│ Creates: plan.md                                                           │
+│ Creates: outline.md                                                           │
 │ Updates: .project-memory-state.json                                        │
-│ Reads: planning_brief.md, existing memory, USER_PROFILE.json, codebase   │
+│ Reads: outline_brief.md, existing memory, USER_PROFILE.json, codebase   │
 │                                                                              │
-│ Output: Structured plan with:                                             │
+│ Output: Structured outline with:                                          │
 │   - Objective and approach                                                │
 │   - Task breakdown with dependencies                                      │
 │   - Acceptance criteria per task                                          │
@@ -139,7 +139,7 @@ STATUS: All v3 features implemented and documented
 │   • Adapts to learning style when explaining                             │
 │                                                                              │
 │ EXECUTION PATTERN:                                                         │
-│   • Parse plan into concrete tasks                                        │
+│   • Parse outline into concrete tasks                                     │
 │   • Delegate to sub-agents in parallel (where possible)                  │
 │   • Verify outputs against acceptance criteria                           │
 │   • SECURITY REVIEW IS MANDATORY (no skipping)                           │
@@ -147,7 +147,7 @@ STATUS: All v3 features implemented and documented
 │                                                                              │
 │ Creates: Implemented code changes                                         │
 │ Updates: bugs.md, decisions.md, issues.md, .project-memory-state.json   │
-│ Reads: execution_brief.md, plan.md, memory, USER_PROFILE.json, codebase │
+│ Reads: execution_brief.md, outline.md, memory, USER_PROFILE.json, codebase │
 │                                                                              │
 │ Sub-agents: Code Writer, Test Runner, Code Reviewer, Security Expert,    │
 │             Documentation, Research, Specification Writer                 │
@@ -180,7 +180,7 @@ How It Gets Built:
   6. Profile builds incrementally across projects and iterations
 
 How It's Used:
-  • Magellan reads at planning startup → personalizes plan
+  • Magellan reads at outlining startup → personalizes outline
   • Faraday reads at execution startup → personalizes execution
   • Start skill (future) can reference for session context
 
@@ -199,8 +199,8 @@ Key Property: PERSISTENT & CROSS-PROJECT
 | .project-memory-state.json | Start/Handoff | Initialize | All skills | Workflow state |
 | discovery_brief.md | Waldo | Waldo | Only Waldo | Discovery narrative |
 | discovery_output.json | Waldo | Waldo | Only Waldo | Structured findings |
-| planning_brief.md | Handoff | Handoff | Only Handoff | Context for planning |
-| plan.md | Magellan | Magellan | Only Magellan | Structured plan |
+| outline_brief.md | Handoff | Handoff | Only Handoff | Context for outlining |
+| outline.md | Magellan | Magellan | Only Magellan | Structured outline |
 | execution_brief.md | Handoff | Handoff | Only Handoff | Context for execution |
 | key_facts.md | Initialize | Initialize | Handoff | Project facts |
 | decisions.md | Initialize | Initialize | Handoff, Faraday | Architectural decisions |

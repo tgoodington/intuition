@@ -122,7 +122,7 @@ The state file uses the v7.0 schema:
 ```json
 {
   "initialized": true,
-  "version": "7.0",
+  "version": "8.0",
   "active_context": "trunk",
   "trunk": {
     "status": "none",
@@ -134,7 +134,7 @@ The state file uses the v7.0 schema:
         "completed_at": null,
         "output_files": []
       },
-      "planning": {
+      "outline": {
         "started": false,
         "completed": false,
         "completed_at": null,

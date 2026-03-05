@@ -50,8 +50,8 @@ Step 8: Confirm blueprint, route to handoff
 Read `{context_path}/detail_brief.md` from disk. Extract:
 - **Current specialist**: name and profile path
 - **Assigned tasks**: task IDs, depths, descriptions, acceptance criteria, dependencies
-- **Decision classifications**: `[USER]`/`[SPEC]`/`[SILENT]` decisions per task (from plan's Decisions field)
-- **Decision policy**: from plan Section 10 Decision Policy — either `conservative` (hands-on posture) or `aggressive` (delegator posture)
+- **Decision classifications**: `[USER]`/`[SPEC]`/`[SILENT]` decisions per task (from outline's Decisions field)
+- **Decision policy**: from outline Section 10 Decision Policy — either `conservative` (hands-on posture) or `aggressive` (delegator posture)
 - **Prior blueprints**: paths to blueprints from earlier specialists (may be empty)
 - **Plan context**: section 10 content for engineering/specialist guidance
 
@@ -94,7 +94,7 @@ Ensure the `{context_path}/scratch/` directory exists (create via Bash `mkdir -p
 
 Spawn an opus Task subagent that combines exploration AND specification in one pass:
 - **System prompt**: Stage 1 Protocol text + Stage 2 Protocol text (concatenated with a separator)
-- **Task context**: plan tasks, research patterns from profile frontmatter, prior blueprints, plan Section 10 context
+- **Task context**: plan tasks, research patterns from profile frontmatter, prior blueprints, outline Section 10 context
 - **Output instruction**: "Research the project, then produce the complete blueprint directly. No user gate — use your best judgment for all decisions. Write to `{context_path}/blueprints/{specialist-name}.md`."
 
 Ensure the `{context_path}/blueprints/` directory exists. After the subagent returns, verify the blueprint was written. Skip to Step 8.
@@ -122,9 +122,9 @@ Spawn an opus Task subagent. The system prompt combines a research-planning fram
 
      Research budget: You may request at most {cap} research items (Deep tasks: 3, Standard tasks: 2). If you need to investigate more areas, combine related questions into broader queries. Prioritize research that fills gaps — do not re-investigate what's in the Known Research section.
 
-     IMPORTANT: A 'Known Research' section is included in your context. This contains findings from the planning phase that overlap with your domain. Do NOT request research that duplicates what is already known — build on it. Only request research for gaps, unknowns, or areas that need deeper investigation than the planning phase provided.
+     IMPORTANT: A 'Known Research' section is included in your context. This contains findings from the outline phase that overlap with your domain. Do NOT request research that duplicates what is already known — build on it. Only request research for gaps, unknowns, or areas that need deeper investigation than the outline phase provided.
 
-     The plan classifies key decisions for your tasks as [USER] (user decides), [SPEC] (you decide and document), or [SILENT] (handle autonomously). During your research planning, note which of your investigation areas relate to [USER] decisions — those need full options and tradeoffs prepared for the user. [SPEC] decisions need your best recommendation with documented rationale. [SILENT] decisions need no special treatment.
+     The outline classifies key decisions for your tasks as [USER] (user decides), [SPEC] (you decide and document), or [SILENT] (handle autonomously). During your research planning, note which of your investigation areas relate to [USER] decisions — those need full options and tradeoffs prepared for the user. [SPEC] decisions need your best recommendation with documented rationale. [SILENT] decisions need no special treatment.
 
      Do NOT begin your full analysis yet. Focus only on identifying what information you need."
 
@@ -166,13 +166,13 @@ In either case, provide this prompt (the synthesis framing is owned by this skil
 
 [Include each research agent's results, labeled by R{N} title]
 
-Now complete your full exploration. Using these research findings together with the plan context, perform your domain analysis (ECD exploration or equivalent), classify your findings into assumptions vs key decisions, identify risks, and form your recommended approach.
+Now complete your full exploration. Using these research findings together with the outline context, perform your domain analysis (ECD exploration or equivalent), classify your findings into assumptions vs key decisions, identify risks, and form your recommended approach.
 
 Write your complete output to `{context_path}/scratch/{specialist-name}-stage1.md`. Use EXACTLY these headings — the orchestrator parses by them:
 - `## Research Findings` — facts discovered from the research results above
 - `## ECD Analysis` (or your domain-equivalent exploration heading)
 - `## Assumptions` — each as `### A{N}: [Title]` with `- **Default**:` and `- **Rationale**:` fields
-- `## Key Decisions` — each as `### D{N}: [Title]` with `- **Tier**:` ([USER], [SPEC], [SILENT], or [UNCLASSIFIED] for decisions you discovered that aren't in the plan), `- **Options**:`, `- **Recommendation**:`, and `- **Risk if wrong**:` fields
+- `## Key Decisions` — each as `### D{N}: [Title]` with `- **Tier**:` ([USER], [SPEC], [SILENT], or [UNCLASSIFIED] for decisions you discovered that aren't in the outline), `- **Options**:`, `- **Recommendation**:`, and `- **Risk if wrong**:` fields
 - `## Risks Identified`
 - `## Recommended Approach`
 
@@ -213,7 +213,7 @@ Each decision entry uses this structure:
   "id": "D1",
   "title": "...",
   "tier": "USER|SPEC|SILENT",
-  "classified_by": "plan|detail",
+  "classified_by": "outline|detail",
   "context": "...",
   "options": ["..."],
   "chosen": "...",
@@ -285,7 +285,7 @@ Present all `[USER]` decisions in batched AskUserQuestion calls, up to **4 decis
 - 9-12 decisions: three calls (4, 4, remaining)
 - Continue the pattern for more
 
-**After EACH batch is answered:** Read decisions.json from disk, add ALL decision entries from that batch with fields: `id`, `title`, `tier: "USER"`, `classified_by: "plan"`, `context`, `options`, `chosen`, `user_input`. Write the full file back. Then present the next batch if any remain.
+**After EACH batch is answered:** Read decisions.json from disk, add ALL decision entries from that batch with fields: `id`, `title`, `tier: "USER"`, `classified_by: "outline"`, `context`, `options`, `chosen`, `user_input`. Write the full file back. Then present the next batch if any remain.
 
 #### Phase 2b: [SPEC] Decisions — Display Summary, Auto-Record
 
@@ -298,7 +298,7 @@ The specialist will handle these decisions:
 - ...
 ```
 
-Then record each in decisions.json with `tier: "SPEC"`, `classified_by: "plan"`, `chosen` = the specialist's recommendation, `user_input: null`.
+Then record each in decisions.json with `tier: "SPEC"`, `classified_by: "outline"`, `chosen` = the specialist's recommendation, `user_input: null`.
 
 #### Phase 2c: [UNCLASSIFIED] Decisions — Classify Then Route
 
@@ -351,10 +351,10 @@ After the subagent returns, verify the blueprint was written and contains the ex
 
 After verifying section headings, perform a traceability check:
 
-1. Read each plan task's acceptance criteria from the detail brief.
+1. Read each outline task's acceptance criteria from the detail brief.
 2. Read the blueprint's Acceptance Mapping section (Section 6).
 3. For EACH acceptance criterion in the plan: verify it maps to at least one concrete operation in the Deliverable Specification (Section 5). An "operation" is a discrete, testable behavior — not a vague reference to the data involved.
-4. **Split compound criteria**: If a plan acceptance criterion contains multiple behavioral verbs (e.g., "display lineage AND use source table for join resolution"), each verb phrase MUST map to a separate operation in the Deliverable Specification. A single implementation step that only addresses one verb phrase is not sufficient coverage.
+4. **Split compound criteria**: If a outline acceptance criterion contains multiple behavioral verbs (e.g., "display lineage AND use source table for join resolution"), each verb phrase MUST map to a separate operation in the Deliverable Specification. A single implementation step that only addresses one verb phrase is not sufficient coverage.
 5. If any acceptance criterion lacks a corresponding operation in the Deliverable Specification, report the gap to the user: "Blueprint for [specialist] is missing implementation details for: [list unmapped criteria]. The Stage 2 subagent should be re-run or the blueprint manually amended before proceeding to build."
 
 Do NOT skip this check. A blueprint that passes section-heading validation but fails traceability will produce partial implementations.

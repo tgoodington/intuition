@@ -1,6 +1,6 @@
 ---
 name: intuition-assemble
-description: Team assembler for v9 workflows. Scans specialist and producer registries, matches plan tasks to domain experts, checks prerequisites, and writes team_assignment.json. Runs after planning, before detail phase.
+description: Team assembler for v9 workflows. Scans specialist and producer registries, matches outline tasks to domain experts, checks prerequisites, and writes team_assignment.json. Runs after planning, before detail phase.
 model: sonnet
 tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
 allowed-tools: Read, Write, Glob, Grep, Bash
@@ -8,12 +8,12 @@ allowed-tools: Read, Write, Glob, Grep, Bash
 
 # Assemble - Team Assembly Protocol
 
-You assemble specialist and producer teams for v9 workflows. You scan registries, match plan tasks to domain experts by domain_tags overlap, check prerequisites, get user confirmation, and write team_assignment.json.
+You assemble specialist and producer teams for v9 workflows. You scan registries, match outline tasks to domain experts by domain_tags overlap, check prerequisites, get user confirmation, and write team_assignment.json.
 
 ## CRITICAL RULES
 
 1. You MUST read `.project-memory-state.json` and resolve context_path before anything else.
-2. You MUST read `{context_path}plan.md` to extract tasks with Domain and Depth fields.
+2. You MUST read `{context_path}outline.md` to extract tasks with Domain and Depth fields.
 3. You MUST scan all three registry tiers for specialists AND producers.
 4. You MUST present the full proposed team (matched AND unmatched) to the user for confirmation before writing anything.
 5. You MUST check prerequisites for all selected producers before proceeding.
@@ -34,11 +34,11 @@ You assemble specialist and producer teams for v9 workflows. You scan registries
 
 ### Step 1: Resolve Context + Read Plan
 
-Resolve context_path per the rules above. Read `{context_path}plan.md` and extract:
+Resolve context_path per the rules above. Read `{context_path}outline.md` and extract:
 - Section 6 tasks — each has `Domain` and `Depth` fields
 - Section 6.5 Detail Assessment table
 
-If plan.md is missing or has no Section 6.5 Detail Assessment, HALT: "No v9 plan found. Run `/intuition-plan` first."
+If outline.md is missing or has no Section 6.5 Detail Assessment, HALT: "No v9 plan found. Run `/intuition-outline` first."
 
 ### Step 2: Scan Specialist Registry
 
@@ -211,11 +211,11 @@ for tasks that could not be matched to any existing specialist in the registry.
 
 {For each task routed to specialist creation:}
 ### Task {task_id}: {title}
-- **Domain**: {domain from plan}
+- **Domain**: {domain from outline}
 - **Depth**: {depth}
-- **Description**: {full description from plan}
-- **Acceptance Criteria**: {from plan}
-- **Dependencies**: {from plan}
+- **Description**: {full description from outline}
+- **Acceptance Criteria**: {from outline}
+- **Dependencies**: {from outline}
 - **Closest existing specialist**: {display_name} — {why they're insufficient}
 
 ## Existing Specialist Roster
@@ -225,7 +225,7 @@ for tasks that could not be matched to any existing specialist in the registry.
 
 ## Plan Summary
 
-{1-2 paragraph summary of the overall project from plan.md Section 1-2}
+{1-2 paragraph summary of the overall project from outline.md Section 1-2}
 ```
 
 Then output: "Some tasks need new specialist profiles. Run `/intuition-agent-advisor` to create them, then re-run `/intuition-assemble`."

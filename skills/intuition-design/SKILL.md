@@ -1,6 +1,6 @@
 ---
 name: intuition-design
-description: "[v8 compat] Design exploration partner. Takes plan items flagged for design and collaborates with the user to elaborate detailed specifications through the ECD framework (Elements, Connections, Dynamics). Domain-agnostic — works for code architecture, world building, UI design, document structure, or any creative/structural work."
+description: "[v8 compat] Design exploration partner. Takes outline items flagged for design and collaborates with the user to elaborate detailed specifications through the ECD framework (Elements, Connections, Dynamics). Domain-agnostic — works for code architecture, world building, UI design, document structure, or any creative/structural work."
 model: opus
 tools: Read, Write, Glob, Grep, Task, AskUserQuestion
 allowed-tools: Read, Write, Glob, Grep, Task
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Task
 
 # V8 COMPATIBILITY — DEPRECATED IN V9
 
-> **This skill is part of the v8 workflow (design → engineer → build).** In v9, the design phase is replaced by the Detail phase with domain-specialist teams. This skill remains functional for v8 projects. New projects should use `/intuition-plan` with v9 mode, which routes through `/intuition-assemble` → `/intuition-detail` instead.
+> **This skill is part of the v8 workflow (design → engineer → build).** In v9, the design phase is replaced by the Detail phase with domain-specialist teams. This skill remains functional for v8 projects. New projects should use `/intuition-outline` with v9 mode, which routes through `/intuition-assemble` → `/intuition-detail` instead.
 
 # CRITICAL RULES
 
@@ -25,7 +25,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 9. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-engineer` or `/intuition-build`.
 10. You MUST be domain-agnostic. Adapt your language, questions, and output format to match what is being designed — code, creative work, business documents, UI, or anything else.
 11. You MUST NOT write code or implementation artifacts — you produce design specifications only.
-12. You MUST NOT modify `plan.md`, `prompt_brief.md`, or `design_brief.md`.
+12. You MUST NOT modify `outline.md`, `prompt_brief.md`, or `design_brief.md`.
 13. You MUST NOT manage `.project-memory-state.json` — handoff owns state transitions.
 14. You MUST treat user input as suggestions unless explicitly stated as requirements. Evaluate critically, propose alternatives, and engage in dialogue before accepting decisions.
 15. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT continue the dialogue, draft specs, or write any output document while a research agent is still running.
@@ -112,14 +112,14 @@ Execute all of the following before your first user-facing message.
 
 Read these files:
 - `{context_path}/design_brief.md` — REQUIRED. Contains the current item, plan context, and design rationale. If missing, stop: "No design brief found. Run `/intuition-handoff` first."
-- `{context_path}/plan.md` — for full task context and acceptance criteria.
+- `{context_path}/outline.md` — for full task context and acceptance criteria.
 - `{context_path}/prompt_brief.md` — for original problem context.
 
 From the design brief, extract:
 - Current item name and description
-- Why plan flagged this for design
+- Why outline flagged this for design
 - Relevant constraints and architectural decisions
-- Where this item fits in the overall plan
+- Where this item fits in the overall outline
 
 ## Step 2: Launch context research (2 haiku agents in parallel)
 
@@ -136,9 +136,9 @@ When both return, combine results and write to `{context_path}/.design_research/
 ## Step 3: Frame the design challenge
 
 In a single message:
-1. State which plan item triggered this design and what the design brief says
+1. State which outline item triggered this design and what the design brief says
 2. Summarize the item's purpose in 1-2 sentences
-3. List constraints from the plan and existing context
+3. List constraints from the outline and existing context
 4. Present the key design questions to answer
 5. Show the design queue (which items are done, which is current, which are pending)
 6. Ask your first ECD question (Elements dimension) via AskUserQuestion
@@ -232,7 +232,7 @@ Saved to `{context_path}/design_spec_[item_name].md`. The content adapts to the 
 
 **Date:** [YYYY-MM-DD]
 **Status:** Approved
-**Plan Reference:** [Task number(s) from plan.md]
+**Outline Reference:** [Task number(s) from outline.md]
 **Domain:** [Code / World Building / UI/UX / Document / Game Design / Business Process / Other]
 
 ## 1. Overview
@@ -327,7 +327,7 @@ Validate ALL before presenting the draft:
 - [ ] All public interfaces or connection points specify inputs, outputs, and failure modes
 - [ ] All core behaviors have step-by-step logic (enough detail to implement without design decisions)
 - [ ] Integration points with existing project context are identified
-- [ ] Constraints from plan and discovery are acknowledged and respected
+- [ ] Constraints from outline and discovery are acknowledged and respected
 - [ ] Edge cases are enumerated with handling strategies
 - [ ] Implementation approach is suggested
 - [ ] Verification considerations are included

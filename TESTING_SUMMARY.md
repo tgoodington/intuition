@@ -49,8 +49,8 @@ C:\Projects\Intuition\
 │       ├── .project-memory-state.json
 │       ├── discovery_brief.md
 │       ├── discovery_output.json
-│       ├── planning_brief.md
-│       ├── plan.md
+│       ├── outline_brief.md
+│       ├── outline.md
 │       ├── execution_brief.md
 │       ├── bugs.md
 │       ├── decisions.md
@@ -61,7 +61,7 @@ C:\Projects\Intuition\
 │   ├── intuition-initialize/          # Project memory setup
 │   ├── intuition-discovery/           # Waldo v3 (Research-informed)
 │   ├── intuition-handoff/             # Orchestrator
-│   ├── intuition-plan/                # Magellan (Planner)
+│   ├── intuition-outline/                # Magellan (Planner)
 │   └── intuition-execute/             # Faraday (Executor)
 ├── package.json                       # Version 3.0.0
 ├── WALDO_V3_COMPLETE_DOCUMENTATION.md # Full v3 documentation
@@ -127,7 +127,7 @@ Both modes produce identical discovery outcomes and depth. The difference is pur
 
 ### 2.3 Handoff Orchestration System
 
-**Purpose:** Explicit phase coordinator between discovery→planning and planning→execution
+**Purpose:** Explicit phase coordinator between discovery→outlining and outlining→execution
 
 **Responsibilities:**
 1. **Phase Detection** - Determines which transition is occurring
@@ -138,8 +138,8 @@ Both modes produce identical discovery outcomes and depth. The difference is pur
 3. **User Profile Extraction** - Reads `discovery_output.json` > `user_profile_learnings`
 4. **Profile Merging** - Updates `.claude/USER_PROFILE.json` with discovered user properties
 5. **Brief Generation** - Creates next brief for subsequent agent:
-   - After discovery: `planning_brief.md` for Magellan
-   - After planning: `execution_brief.md` for Faraday
+   - After discovery: `outline_brief.md` for Magellan
+   - After outlining: `execution_brief.md` for Faraday
 6. **State Transition** - Updates `.project-memory-state.json` workflow status
 
 **Key Design:**
@@ -195,9 +195,9 @@ Both modes produce identical discovery outcomes and depth. The difference is pur
    - If field populated → only overwrite if confidence is "high"
    - Updates timestamps and project tracking
 
-3. **Magellan reads** - Uses profile to personalize planning
+3. **Magellan reads** - Uses profile to personalize outlining
    - Understands user's role, expertise, decision-making style
-   - Tailors planning depth and complexity
+   - Tailors outlining depth and complexity
 
 4. **Faraday reads** - Uses profile to personalize execution
    - Understands user's authority level, team size, constraints
@@ -225,16 +225,16 @@ START
 /intuition-handoff (Orchestrator - Extract & prepare)
   → Updates: key_facts.md, decisions.md, issues.md
   → Merges: .claude/USER_PROFILE.json
-  → Creates: planning_brief.md
+  → Creates: outline_brief.md
   ↓
-/intuition-plan (Magellan - Read profile, synthesize plan)
+/intuition-outline (Magellan - Read profile, synthesize outline)
   → Reads: USER_PROFILE.json for personalization
-  → Creates: plan.md (structured tasks, risks, decisions)
+  → Creates: outline.md (structured tasks, risks, decisions)
   ↓
 (User reviews & approves)
   ↓
 /intuition-handoff (Orchestrator - Prepare execution)
-  → Updates: issues.md (log planning)
+  → Updates: issues.md (log outlining)
   → Creates: execution_brief.md
   ↓
 /intuition-execute (Faraday - Read profile, coordinate implementation)
@@ -252,9 +252,9 @@ COMPLETE
 | **Start** | — | .project-memory-state.json | All memory files |
 | **Initialize** | All templates, USER_PROFILE.json | — | — |
 | **Discovery (Waldo)** | discovery_brief.md, discovery_output.json | .project-memory-state.json | Existing memory (context) |
-| **Handoff** | planning_brief.md, execution_brief.md | key_facts.md, decisions.md, issues.md, USER_PROFILE.json, .project-memory-state.json | discovery_output.json, plan.md |
-| **Plan (Magellan)** | plan.md | .project-memory-state.json | discovery_brief.md, USER_PROFILE.json, codebase |
-| **Execute (Faraday)** | Implementation, reports | bugs.md, decisions.md, issues.md, .project-memory-state.json | plan.md, USER_PROFILE.json, codebase |
+| **Handoff** | outline_brief.md, execution_brief.md | key_facts.md, decisions.md, issues.md, USER_PROFILE.json, .project-memory-state.json | discovery_output.json, outline.md |
+| **Outline (Magellan)** | outline.md | .project-memory-state.json | discovery_brief.md, USER_PROFILE.json, codebase |
+| **Execute (Faraday)** | Implementation, reports | bugs.md, decisions.md, issues.md, .project-memory-state.json | outline.md, USER_PROFILE.json, codebase |
 
 **Golden Rule:** Each file has exactly one owner. Only that skill modifies it (Handoff is exception during transitions).
 
@@ -288,7 +288,7 @@ Skill C reads Skill B's output
 **File:** `.project-memory-state.json` in `docs/project_notes/`
 
 **Tracks:**
-- Workflow phase (discovery, planning, executing, complete)
+- Workflow phase (discovery, outlining, executing, complete)
 - Discovery status: dialogue_mode, initial_context, research_performed, conversation_history, GAPP coverage, quality_score
 - Planning status: started/completed timestamps, approval status
 - Execution status: task progress, completion tracking
@@ -405,7 +405,7 @@ TASK 3: Research Agent - Emerging Patterns (optional)
 - [ ] key_facts.md updates with proper formatting
 - [ ] decisions.md ADR creation from architectural choices
 - [ ] issues.md work logging
-- [ ] planning_brief.md generation with all sections
+- [ ] outline_brief.md generation with all sections
 - [ ] execution_brief.md generation with all sections
 - [ ] Workflow state transitions
 - [ ] Memory consistency after handoff
@@ -439,9 +439,9 @@ TASK 3: Research Agent - Emerging Patterns (optional)
 - [ ] Cross-platform path handling
 
 #### Category 8: Integration & System Behavior
-- [ ] Full discovery→handoff→planning→execution flow
+- [ ] Full discovery→handoff→outlining→execution flow
 - [ ] Profile building across multiple discoveries
-- [ ] Personalization in planning (Magellan behavior changes with profile)
+- [ ] Personalization in outlining (Magellan behavior changes with profile)
 - [ ] Personalization in execution (Faraday behavior changes with profile)
 - [ ] Sub-agent task coordination (parallel execution with profile context)
 - [ ] Security review enforcement (Faraday mandatory security gate)
@@ -469,14 +469,14 @@ TASK 3: Research Agent - Emerging Patterns (optional)
 
 #### Integration Testing
 1. **Full Workflows**
-   - Run complete discovery→handoff→planning→execution
+   - Run complete discovery→handoff→outlining→execution
    - Verify file creation at each stage
    - Verify state consistency
    - Verify profile updates
 
 2. **Resume Scenarios**
    - Interrupt discovery, resume from state
-   - Interrupt planning, verify handoff can retry
+   - Interrupt outlining, verify handoff can retry
    - Interrupt execution, verify state preservation
 
 3. **Cross-Project Profile Building**
@@ -580,10 +580,10 @@ TASK 3: Research Agent - Emerging Patterns (optional)
 
 ```
 IF workflow.discovery.completed == true
-   AND workflow.planning.started == false:
-   → TRANSITION: Discovery → Planning (extract profile, create planning_brief)
+   AND workflow.outline.started == false:
+   → TRANSITION: Discovery → Outlining (extract profile, create outline_brief)
 
-IF workflow.planning.completed == true
+IF workflow.outline.completed == true
    AND workflow.execution.started == false:
    → TRANSITION: Planning → Execution (create execution_brief)
 
@@ -606,7 +606,7 @@ IF no clear transition:
 - Link to discovery brief
 
 **issues.md:**
-- Log work completed (discovery, planning, execution)
+- Log work completed (discovery, outlining, execution)
 - Format: Date - ID - Title
 - Include status, description, links to outputs
 
@@ -643,7 +643,7 @@ docs/
 │   ├── .project-memory-state.json    # Workflow state (v3 schema)
 │   ├── discovery_brief.md             # Waldo output
 │   ├── discovery_output.json          # Waldo structured output (user_profile_learnings)
-│   ├── planning_brief.md              # Handoff output for planning
+│   ├── outline_brief.md              # Handoff output for outlining
 │   ├── execution_brief.md             # Handoff output for execution
 │   ├── key_facts.md                   # Updated by handoff
 │   ├── decisions.md                   # Updated by handoff
@@ -680,11 +680,11 @@ docs/
 - [ ] Run full discovery session (Open-Ended mode)
 - [ ] Execute handoff after discovery
 - [ ] Verify profile merging
-- [ ] Test planning integration
+- [ ] Test outlining integration
 - [ ] Test execution integration
 
 ### Phase 4: End-to-End Testing
-- [ ] Complete discovery→handoff→planning→execution flow
+- [ ] Complete discovery→handoff→outlining→execution flow
 - [ ] Cross-project profile building (2+ projects)
 - [ ] Resume scenarios (interrupt and continue)
 - [ ] Edge cases (missing files, poor quality, etc.)

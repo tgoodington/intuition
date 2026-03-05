@@ -5,7 +5,7 @@ A trunk-and-branch workflow system for Claude Code. Turns rough ideas into struc
 ## Workflow
 
 ```
-/intuition-prompt  →  /intuition-handoff  →  /intuition-plan  →  /intuition-handoff
+/intuition-prompt  →  /intuition-handoff  →  /intuition-outline  →  /intuition-handoff
                                                                         ↓
                                                               [design loop, if needed]
                                                                         ↓
@@ -28,7 +28,7 @@ The first prompt→build cycle is the **trunk**. After trunk completes, create *
 |-------|-------------|
 | `/intuition-start` | Detects where you left off, shows project status, routes to next step or branch creation |
 | `/intuition-prompt` | Sharpens a rough idea into a planning-ready brief through focused Q&A |
-| `/intuition-plan` | Builds a strategic blueprint with tasks, decisions, and design flags |
+| `/intuition-outline` | Builds a strategic blueprint with tasks, decisions, and design flags |
 | `/intuition-design` | Elaborates flagged items through collaborative design exploration (ECD framework) |
 | `/intuition-engineer` | Creates code-level specifications through codebase research and interactive dialogue |
 | `/intuition-build` | Delegates implementation to subagents, verifies against code specs and acceptance criteria |
@@ -42,8 +42,8 @@ The first prompt→build cycle is the **trunk**. After trunk completes, create *
 
 1. `/intuition-start` — see where you are
 2. `/intuition-prompt` — describe what you want to build
-3. `/intuition-handoff` — process and move to planning
-4. `/intuition-plan` — create the blueprint
+3. `/intuition-handoff` — process and move to outline
+4. `/intuition-outline` — create the blueprint
 5. `/intuition-handoff` — review design flags, confirm items
 6. `/intuition-design` — elaborate each flagged item (repeat with handoff between)
 7. `/intuition-handoff` — prepare for engineering
