@@ -24,10 +24,10 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 8. You MUST execute the three-layer review chain: specialist review, builder verification, then cross-cutting reviewers — for EVERY deliverable.
 9. You MUST use the correct model for each subagent type per the producer/specialist profile declarations.
 10. Security Expert review MUST run as a cross-cutting reviewer on every build — even when no `mandatory_reviewers` are configured. NO exceptions.
-11. You MUST route to `/intuition-handoff` after build completion. NEVER treat build as the final step.
+11. You MUST run the Exit Protocol after build completion. Route to `/intuition-test` (if code produced) or complete the workflow. NEVER to `/intuition-handoff`.
 12. You MUST NOT make domain decisions — match output to blueprints.
 13. You MUST NOT skip user confirmation.
-14. You MUST NOT manage state.json — handoff owns state transitions.
+14. You MUST update `.project-memory-state.json` as part of the Exit Protocol.
 15. You MUST skip test-related deliverables in blueprints (test files, test specs, test configurations). Log skipped test deliverables in build_report.md under a "Test Deliverables Deferred" section so the test phase can review them.
 
 **TOOL DISTINCTION — READ THIS CAREFULLY:**
@@ -48,10 +48,11 @@ On startup, before reading any files:
 
 After resolving context_path, verify required inputs:
 
-1. Check if `{context_path}/blueprints/` directory exists with `.md` files inside it.
-2. Check if `{context_path}/team_assignment.json` exists.
-3. If BOTH exist → proceed with the protocol below.
-4. If EITHER is missing → STOP: "No blueprints or team assignment found. Run the detail phase first."
+1. Read `{context_path}/team_assignment.json`. If missing → STOP: "No team assignment found. Run the detail phase first."
+2. Check if `team_assignment.json` contains `"fast_track": true` → **Fast Track Mode** (see FAST TRACK PROTOCOL below).
+3. Otherwise, check if `{context_path}/blueprints/` directory exists with `.md` files inside it.
+4. If blueprints exist → proceed with the standard protocol below.
+5. If blueprints missing → STOP: "No blueprints found. Run the detail phase first."
 
 ## PROTOCOL: COMPLETE FLOW
 
@@ -75,8 +76,7 @@ Read these files:
 2. `{context_path}/team_assignment.json` — producer assignments and execution order.
 3. ALL files in `{context_path}/blueprints/*.md` — specialist blueprints.
 4. `{context_path}/outline.md` — approved plan with acceptance criteria.
-5. `{context_path}/build_brief.md` (if exists) — context passed from handoff.
-6. `{context_path}/scratch/*-decisions.json` (all specialist decision logs) — decision tiers and chosen options.
+5. `{context_path}/scratch/*-decisions.json` (all specialist decision logs) — decision tiers and chosen options.
 
 From team_assignment.json, extract:
 - `specialist_assignments` — which specialist owns which tasks
@@ -328,16 +328,83 @@ Write the build report to `{context_path}/build_report.md` AND display a summary
 
 Present a concise version: task count, pass/fail status, files produced count, review chain results, any required user steps. Reference the full report at `{context_path}/build_report.md`.
 
-## STEP 8: ROUTE TO HANDOFF
+## STEP 8: EXIT PROTOCOL
 
 After reporting results:
 
+**8a. Extract to memory.** Spawn a haiku Task subagent: "Read `{context_path}/build_report.md`. Then read `docs/project_notes/key_facts.md`, `docs/project_notes/issues.md`, and `docs/project_notes/bugs.md`. Append only NEW entries: lessons/deviations → `key_facts.md`, completed work → `issues.md`, bugs found → `bugs.md`. Do not duplicate. Preserve existing formatting." Run in background.
+
+**8b. Determine next phase.** Read `{context_path}/team_assignment.json`. Check if any `producer_assignments` entry has `producer == "code-writer"`.
+
+**8c. Update state and route.**
+
+**If code was produced** (code-writer found):
+- Read `.project-memory-state.json`. Target active context. Set: `status` → `"testing"`, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp, `workflow.test.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"build_to_test"`. Write back.
+- Tell the user: "Build complete. Code was produced — test phase needed. Run `/clear` then `/intuition-test`"
+
+**If no code was produced** (no code-writer):
+- Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp, `workflow.test.skipped` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"build_to_complete"`. Write back.
+- Check for generated specialists in `{context_path}/generated-specialists/` (Glob: `*.specialist.md`). For each found, use AskUserQuestion: "Save **[display_name]** to your personal specialist library?" Options: "Yes — save to ~/.claude/specialists/" / "No — discard". If yes, copy via Bash.
+- Offer git commit via AskUserQuestion: "Commit changes?" Options: "Yes — commit and push" / "Yes — commit only" / "No". If approved, stage files from build report, commit with descriptive message.
+- Tell the user: "Workflow complete. Run `/clear` then `/intuition-start` to see project status."
+
+## FAST TRACK PROTOCOL
+
+When `team_assignment.json` has `"fast_track": true`, the outline tasks ARE the specifications. No blueprints exist.
+
+### Fast Track Flow
+
 ```
-"Build complete. Run /intuition-handoff to process results,
-update project memory, and close out this workflow cycle."
+Step 1: Read context (team_assignment.json + outline.md + decisions from outline)
+Step 2: Confirm build plan with user (same as standard Step 2)
+Step 3: Create task board (same as standard Step 3)
+Step 4: Delegate to producers using outline tasks as specs
+Step 5: Simplified review (builder verification + security only)
+Step 6: Report results (same as standard Step 7)
+Step 7: Exit Protocol (same as standard Step 8)
 ```
 
-ALWAYS route to `/intuition-handoff`. Build is NOT the final step.
+### Fast Track Delegation (Step 4)
+
+For each task in `team_assignment.json`:
+
+1. Load the producer profile from the registry (same scan order as standard).
+2. Construct the delegation prompt using outline task details instead of blueprints:
+
+```
+You are a [producer display_name]. Follow these instructions exactly:
+
+[Producer profile body content]
+
+## Your Task
+Read the outline at {context_path}/outline.md — find Task [N]: [Title].
+Implement exactly what the task description and acceptance criteria specify.
+
+Task description: [from outline]
+Acceptance criteria: [from outline]
+Dependencies: [from outline]
+Files: [from outline]
+
+Output the deliverables as described. Follow project conventions.
+```
+
+3. Spawn the producer as a Task subagent using the model declared in the producer profile.
+
+### Fast Track Review (Step 5)
+
+Two layers only (no specialist review — there was no specialist):
+
+1. **Builder Verification**: Check deliverable against outline acceptance criteria. Verify output files exist. Flag deviations from task description.
+2. **Security Review**: Security Expert reviews ALL code/config/script deliverables. Same delegation format as standard Layer 3.
+
+Retry strategy is the same as standard (2 attempts, then escalate).
+
+### Fast Track Reporting
+
+Build report follows the same format as standard, but:
+- "Domain" and "Specialist" fields show "fast-track (no specialist)"
+- "Specialist Review" in review chain shows "N/A — fast track"
+- Decision Compliance section notes "Fast track — no specialist decisions"
 
 ---
 

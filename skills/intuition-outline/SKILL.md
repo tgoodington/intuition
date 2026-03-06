@@ -17,7 +17,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 5. You MUST ask exactly ONE question per turn via AskUserQuestion. For decisional questions, present 2-3 options with trade-offs. For informational questions (gathering facts, confirming understanding), present relevant options but trade-off analysis is not required.
 6. You MUST get explicit user approval before saving the outline.
 7. You MUST save the final outline to `{context_path}/outline.md`.
-8. You MUST route to `/intuition-handoff` after saving. NEVER to `/intuition-engineer` or `/intuition-build`.
+8. You MUST run the Exit Protocol after saving. For v9: fast track eligible → `/intuition-build`, otherwise → `/intuition-assemble`. For v8 → `/intuition-handoff`.
 9. You MUST write interim artifacts to `{context_path}/.outline_research/` for context management.
 10. You MUST validate against the Executable Outline Checklist before presenting the draft outline.
 11. You MUST present 2-4 sentences of analysis BEFORE every question. Show your reasoning.
@@ -28,7 +28,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 16. When planning on a branch, you MUST read the parent context's outline.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 17. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT draft options, present findings, or write any output document while a research agent is still running.
 
-REMINDER: One question per turn. Route to `/intuition-handoff`, never to `/intuition-engineer` or `/intuition-build`.
+REMINDER: One question per turn. v9 → fast track `/intuition-build` or `/intuition-assemble`. v8 → `/intuition-handoff`. Never to `/intuition-engineer`.
 
 # ARCH COVERAGE FRAMEWORK
 
@@ -346,8 +346,59 @@ If changes requested, make them and present again. Repeat until explicitly appro
 After explicit approval:
 
 1. Write the final outline to `{context_path}/outline.md`.
-2. Tell the user: "Outline saved to `{context_path}/outline.md`. Next step: Run `/intuition-handoff` to transition to the next phase."
-3. ALWAYS route to `/intuition-handoff`.
+2. Run the Exit Protocol.
+
+## Exit Protocol
+
+After writing `outline.md`:
+
+**1. Update state:** Read `.project-memory-state.json`. Target the active context object (trunk or branch). Set: `status` → `"outline"`, `workflow.outline.completed` → `true`, `workflow.outline.completed_at` → current ISO timestamp, `workflow.outline.approved` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"outline_complete"`. Write back.
+
+**2. Extract to memory:** Spawn a haiku Task subagent (subagent_type: Explore): "Read `{context_path}/outline.md` and `{context_path}/.outline_research/decisions_log.md`. Then read `docs/project_notes/decisions.md` and `docs/project_notes/issues.md`. Append only NEW entries: architectural decisions → `decisions.md` as ADRs, risks and dependencies → `issues.md`. Do not duplicate existing entries. Preserve existing formatting." Run in background — do not wait for completion.
+
+**3. Fast Track Assessment (v9 only):**
+
+Check if the outline qualifies for fast track:
+- Tier is **Lightweight**
+- ALL tasks in Section 6.5 are classified as **Light** depth
+- No tasks have `[USER]` decisions classified
+
+If ALL conditions are met, ask via AskUserQuestion:
+
+```
+Question: "This looks straightforward — all tasks are Light depth with no user decisions. Build directly from the outline, or run the full specialist pipeline?"
+Header: "Fast Track"
+Options:
+- "Fast track — build directly"
+- "Full pipeline — assemble specialist team"
+```
+
+**If fast track approved:**
+- Write `{context_path}/team_assignment.json` with `fast_track: true`:
+  ```json
+  {
+    "fast_track": true,
+    "tasks": [
+      {
+        "task_id": "T1",
+        "title": "[from outline]",
+        "domain": "[from outline]",
+        "producer": "[inferred — see below]"
+      }
+    ],
+    "execution_order": [{ "phase": 1, "tasks": ["T1", "T2", ...] }]
+  }
+  ```
+- Infer producer per task from domain: domains containing "code" → "code-writer", "document"/"report"/"legal" → "document-writer", "spreadsheet"/"data"/"financial" → "spreadsheet-builder", "presentation"/"pitch" → "presentation-creator", "form" → "form-filler". Default to "code-writer" if ambiguous.
+- Update state: set `status` → `"building"`, `workflow.detail.started` → `true`, `workflow.detail.completed` → `true`, `workflow.detail.completed_at` → current ISO timestamp, `workflow.build.started` → `true`. Set `last_handoff_transition` → `"outline_to_build_fast_track"`. Write back.
+- Route: "Outline saved. Fast track approved — skipping specialist pipeline. Run `/clear` then `/intuition-build`"
+- STOP — do not continue to step 4.
+
+If fast track declined OR conditions not met, continue to step 4.
+
+**4. Route (mode-dependent):**
+- **v9** (outline contains `### 6.5 Detail Assessment`): "Outline saved. Run `/clear` then `/intuition-assemble`"
+- **v8** (outline contains `Design Recommendations` or neither marker): "Outline saved. Run `/clear` then `/intuition-handoff`"
 
 # OUTLINE.MD OUTPUT FORMAT (Outline-Execute Contract v1.0)
 

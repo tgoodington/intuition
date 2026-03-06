@@ -19,7 +19,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 3. Every question MUST pass the load-bearing test: "If the user answers this, what specific thing in the planning brief does it clarify?" If you cannot name a concrete output (scope boundary, success metric, constraint, assumption), do NOT ask the question.
 4. You MUST NOT launch research subagents proactively. Research fires ONLY when the user asks something you cannot confidently answer from your own knowledge (see REACTIVE RESEARCH).
 5. You MUST create both `prompt_brief.md` and `prompt_output.json` when formalizing.
-6. You MUST route to `/intuition-handoff` at the end. NEVER to `/intuition-outline` directly.
+6. You MUST run the Exit Protocol after writing output files. Route to `/intuition-outline`, NEVER to `/intuition-handoff`.
 7. You MUST NOT ask about the user's motivations, feelings, philosophical drivers, or personal constraints. Ask about what the solution DOES, not why the person cares.
 8. You MUST NOT open a response with a compliment. No "Great!", "Smart!", "That's compelling!" Show you heard them through substance, not praise.
 9. You MUST read `.project-memory-state.json` to determine the active context path before writing any files. NEVER write to the root `docs/project_notes/` — always write to the resolved context_path.
@@ -28,13 +28,13 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 
 ```
 Phase 1: CAPTURE   (1 turn)    — User states their vision raw
-Phase 2: REFINE    (3-5 turns) — Dependency-ordered sharpening (includes INTENT)
+Phase 2: REFINE    (1-5 turns) — Dependency-ordered sharpening (includes INTENT)
 Phase 3: REFLECT   (1 turn)    — Mirror back structured understanding + commander's intent
 Phase 4: POSTURE   (1 turn)    — User declares decision authority per area
-Phase 5: CONFIRM   (1 turn)    — Draft brief, approve, write files, route to handoff
+Phase 5: CONFIRM   (1 turn)    — Draft brief, approve, write files, route to outline
 ```
 
-Target: 6-9 total turns. Every turn directly refines the output artifact.
+Target: 4-9 total turns. The ceiling is 9, not a floor. Every turn directly refines the output artifact. If the user's CAPTURE response already covers most dimensions clearly, REFINE can be as short as 1-2 turns.
 
 ## STARTUP: CONTEXT PATH RESOLUTION
 
@@ -142,7 +142,14 @@ Every question in REFINE follows these principles:
 
 ### Convergence Discipline
 
-By turn 3-4 of REFINE, you should be asking about what the solution DOES, not what the problem IS. If you're still gathering background context after turn 4, you're meandering. Flag remaining unknowns as open questions and move to REFLECT.
+**Aggressive skip rule:** After CAPTURE, check each dimension. If the user's initial response provides a clear, actionable answer for a dimension, mark it satisfied and skip it entirely. Do not ask confirmatory questions for dimensions that are already clear — that's ceremony, not refinement.
+
+**Convergence triggers — move to REFLECT when ANY of these are true:**
+- All 5 dimensions are satisfied (even if that's after 1 turn of REFINE)
+- You've asked 3+ REFINE questions and remaining gaps are minor enough to flag as open questions
+- By turn 3-4 you should be asking about what the solution DOES, not what the problem IS. If you're still gathering background context after turn 4, flag remaining unknowns as open questions and move to REFLECT.
+
+The goal is precision, not thoroughness. A 4-turn prompt session that nails the brief is better than a 9-turn session that asks about things the user already told you.
 
 ## PHASE 3: REFLECT
 
@@ -292,24 +299,24 @@ Write the output files and route to handoff.
 }
 ```
 
-### Route to Handoff
+### Exit Protocol
 
-After writing both files, tell the user:
+After writing both files:
+
+**1. Update state:** Read `.project-memory-state.json`. Target the active context object:
+- IF `active_context == "trunk"`: update `state.trunk`
+- ELSE: update `state.branches[active_context]`
+
+Set on target: `status` → `"outline"`, `workflow.prompt.completed` → `true`, `workflow.prompt.completed_at` → current ISO timestamp, `workflow.outline.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"prompt_to_outline"`. Write the updated state back.
+
+**2. Route:** Tell the user:
 
 ```
-I've captured our refined brief in:
-- docs/project_notes/prompt_brief.md (readable narrative)
-- docs/project_notes/prompt_output.json (structured data)
-
-Take a look and make sure they reflect what we discussed.
-
-Next step: Run /intuition-handoff
-
-The orchestrator will process our findings, update project memory,
-and prepare context for planning.
+Brief captured in {context_path}prompt_brief.md.
+Run /clear then /intuition-outline
 ```
 
-ALWAYS route to `/intuition-handoff`. NEVER to `/intuition-outline`.
+ALWAYS route to `/intuition-outline`. NEVER to `/intuition-handoff`.
 
 ## REACTIVE RESEARCH
 

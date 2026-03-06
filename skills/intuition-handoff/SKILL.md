@@ -1,6 +1,6 @@
 ---
 name: intuition-handoff
-description: Universal phase transition orchestrator. Processes phase outputs, updates project memory, generates fresh briefs for next agent. Manages the design loop for multi-item design cycles and v9 team assembly for specialist workflows.
+description: Branch creation and v8 phase transitions. Creates new branches, manages v8 design loop and engineer/build transitions, runs state migrations. v9 workflows handle their own transitions via skill exit protocols.
 model: sonnet
 tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
 allowed-tools: Read, Write, Glob, Grep, Bash
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Bash
 
 # Handoff - Phase Transition Orchestrator Protocol
 
-You are the handoff orchestrator. You process phase outputs, update project memory, generate fresh briefs for the next agent, and manage workflow state. You are the ONLY skill that writes to `.project-memory-state.json`.
+You handle branch creation, v8 workflow transitions, and state migrations. In v9 workflows, each skill updates state via its own exit protocol — handoff is only needed for branch creation. You share state write access with other skills.
 
 ## CRITICAL RULES
 
@@ -19,9 +19,9 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 3. You MUST read all phase output files before processing.
 4. You MUST update memory files with proper formatting (see formats below).
 5. You MUST generate a brief for the next agent.
-6. You MUST update `.project-memory-state.json` — you are the ONLY skill that writes to this file.
+6. You MUST update `.project-memory-state.json` during transitions you handle.
 7. You MUST NOT evaluate or critique phase outputs. Process and document, never judge.
-8. You MUST NOT skip the user profile merge step during prompt→outline transitions.
+8. You MUST detect v9 workflows and redirect users to `/intuition-start` instead of processing transitions.
 9. You MUST suggest the correct next skill after completing the transition.
 10. You MUST NOT modify prompt_brief.md, outline.md, design_spec_*.md, code_specs.md, or other phase output files — they are read-only inputs.
 11. You MUST manage the design loop: track which items are designed, route to next item or to engineer when all are done.
@@ -69,26 +69,12 @@ Step 9: Report what was processed and suggest next skill
 
 After resolving context_path, context_workflow, and mode:
 
+**NOTE:** v9 workflows handle their own transitions via skill exit protocols. Handoff is only invoked for v8 transitions and branch creation. If you detect a v9 workflow state, inform the user: "v9 workflows no longer require `/intuition-handoff` between phases. Run `/intuition-start` to detect the next step."
+
 ```
-IF context_workflow.status == "prompt" AND workflow.prompt.completed == true
-   AND workflow.outline.started == false:
-   → TRANSITION: Prompt → Outline (Transition 1)
-
 IF context_workflow.status == "outline" AND workflow.outline.completed == true:
-   IF v9 mode AND NOT (workflow.detail exists AND workflow.detail.started == true):
-      IF {context_path}team_assignment.json exists:
-         → TRANSITION: Assemble → Detail (Transition 2.5v9)
-      ELSE:
-         → TRANSITION: Outline → Assemble (Transition 2v9)
-   ELSE IF v8 mode AND workflow.design.started == false AND workflow.engineering.started == false:
+   IF v8 mode AND workflow.design.started == false AND workflow.engineering.started == false:
       → TRANSITION: Outline → Design (Transition 2) OR Outline → Engineer (Transition 2B)
-
-IF v9 mode AND context_workflow.status == "detail":
-   → Check workflow.detail.specialists array
-   → IF current specialist status == "completed" AND more specialists remain in current or later execution phases:
-      → TRANSITION: Specialist → Specialist (Transition 3v9)
-   → IF ALL specialists completed:
-      → TRANSITION: Detail → Build (Transition 4v9)
 
 IF v8 mode AND context_workflow.status == "design":
    → Check workflow.design.items array
@@ -101,18 +87,8 @@ IF context_workflow.status == "engineering" AND workflow.engineering.completed =
    AND workflow.build.started == false:
    → TRANSITION: Engineer → Build (Transition 5) — v8 only
 
-IF context_workflow.status == "building" AND workflow.build.completed == true:
-   IF v9 mode AND workflow.test.started == false:
-      Read {context_path}/team_assignment.json
-      IF any producer_assignments entry has producer == "code-writer":
-         → TRANSITION: Build → Test (Transition 6.5v9)
-      ELSE:
-         → TRANSITION: Build → Complete (Transition 6)
-   ELSE IF v8 mode:
-      → TRANSITION: Build → Complete (Transition 6)
-
-IF context_workflow.status == "testing" AND workflow.test.completed == true:
-   → TRANSITION: Test → Complete (Transition 7)
+IF v8 mode AND context_workflow.status == "building" AND workflow.build.completed == true:
+   → TRANSITION: Build → Complete (Transition 6)
 
 IF no clear transition detected:
    → ASK USER: "Which phase just completed?" (use AskUserQuestion)
@@ -209,18 +185,6 @@ Fires when handoff detects `version == "4.0"` OR (`execution` phase exists but n
 
 Fires when handoff detects `version == "3.0"` OR missing `active_context`. Create `docs/project_notes/trunk/`. Move existing workflow artifacts (`prompt_brief.md`, `prompt_output.json`, `planning_brief.md`, `plan.md`, `design_brief.md`, `design_spec_*.md`, `execution_brief.md`, `.planning_research/`) from `docs/project_notes/` into `trunk/` — skip missing files. Restructure state: wrap existing `status` + `workflow` into `trunk` object, add `active_context: "trunk"`, `branches: {}`, rename `execution` → `build`, add `engineering` phase, set `version: "5.0"`. Preserve `initialized`, `last_handoff`, `last_handoff_transition`. Write state. Report what was migrated and confirm v5.0 upgrade. Leave shared files (`key_facts.md`, `decisions.md`, `issues.md`, `bugs.md`) at `docs/project_notes/`.
 
-## TRANSITION 1: PROMPT → OUTLINE
-
-Read `{context_path}prompt_brief.md` and `{context_path}prompt_output.json` (if exists — fall back to extracting from brief manually).
-
-**Extract and Structure:** Key facts → `key_facts.md`, constraints → `key_facts.md` (constraints category), suggested decisions → ADRs in `decisions.md`, assumptions → reference in brief only, follow-up items → `issues.md`.
-
-**User Profile Merge:** If `prompt_output.json` has `user_profile_learnings` AND `.claude/USER_PROFILE.json` exists: read profile, merge (null fields get new values, populated fields overwrite only if confidence "high"), save. Skip if no USER_PROFILE.json.
-
-**Generate Outline Brief:** Write `{context_path}outline_brief.md` with: Discovery Summary (1-2 paragraphs), Problem Statement, Goals & Success Criteria, Key Constraints, Architectural Context, Assumptions & Risks (with confidence levels), References (prompt_brief path, ADR numbers).
-
-Update state: set `status` to `"outline"`, mark `prompt.completed = true` with timestamp, set `outline.started = true`. Route: "Prompt output processed. Outline brief saved to `{context_path}outline_brief.md`. Run `/clear` then `/intuition-outline` to create a structured plan."
-
 ## TRANSITION 2: OUTLINE → DESIGN (Initial Setup)
 
 v8 mode only. Read `{context_path}outline.md`. Find "Design Recommendations" section — extract items flagged for design with rationale and task numbers (if no section, assess tasks yourself). Extract: decisions → `decisions.md`, risks/dependencies → include in brief, outline work → `issues.md`.
@@ -236,145 +200,6 @@ Update state: set `status` to `"design"`, mark `outline.completed = true` with t
 v8 mode only. Used when user confirms NO items need design. Write `{context_path}engineering_brief.md` with: Plan Summary (1-2 paragraphs), Objective, Discovery Context, Task Summary, Known Risks, References.
 
 Update state: set `status` to `"engineering"`, mark `outline.completed = true` with timestamp and `approved = true`, set `design.started = false`, `design.completed = false`, `design.items = []`, set `engineering.started = true`. Route: "Outline processed. No design items flagged. Engineering brief saved to `{context_path}engineering_brief.md`. Run `/clear` then `/intuition-engineer` to create code specs."
-
-## TRANSITION 2v9: OUTLINE → ASSEMBLE
-
-v9 mode only. Triggers when outline completes and the plan contains a `### 6.5 Detail Assessment` section.
-
-### Protocol
-
-1. **Extract and structure** from outline.md: architectural decisions → `docs/project_notes/decisions.md`, risks/dependencies → note for brief, outline insights → `docs/project_notes/issues.md`.
-2. **Update state**: Set `status` to `"outline"`, mark `outline.completed = true` with timestamp, `approved = true`.
-3. **Route user**: "Outline processed. Run `/clear` then `/intuition-assemble` to build the specialist team and begin the detail phase."
-
-## TRANSITION 2.5v9: ASSEMBLE → DETAIL
-
-v9 mode only. Triggers when outline is complete, `{context_path}team_assignment.json` exists, and detail has not started. This means assemble has finished and the team is ready.
-
-### Protocol
-
-1. **Read team assignment**: Read `{context_path}team_assignment.json`. Extract specialist_assignments, execution_order, and producer_assignments.
-
-2. **Read specialist profiles**: For each specialist in specialist_assignments, read their profile to get `display_name` and `domain`.
-
-3. **Determine first specialist**: From execution_order phase 1, pick the first specialist alphabetically (or the only one if solo).
-
-4. **Generate detail brief**: Write `{context_path}detail_brief.md` with:
-
-```markdown
-# Detail Brief
-
-## Current Specialist
-- **Name**: {specialist name}
-- **Display Name**: {display_name from profile}
-- **Domain**: {domain from profile}
-- **Profile Path**: {absolute path to the specialist profile file}
-
-## Assigned Tasks
-{For each task assigned to this specialist:}
-### Task {task_id}: {title}
-- **Depth**: {depth}
-- **Description**: {from plan}
-- **Acceptance Criteria**: {from plan}
-- **Dependencies**: {from plan}
-
-## Known Research
-{Extract from outline.md the sections relevant to THIS specialist's domain and assigned tasks:}
-{- Section 2 (Discovery Summary) — full content, always include}
-{- Section 4 (Risk Analysis) — risks relevant to this specialist's tasks}
-{- Section 7 (Architectural Decisions) — decisions touching this specialist's domain}
-{- Any other outline sections that contain research findings relevant to the assigned tasks}
-{Omit sections with no relevance to this specialist. If the outline has no research relevant to this specialist, write "No prior research overlaps with this specialist's domain."}
-
-## Prior Blueprints
-None (first specialist in execution order)
-
-## Outline Context
-{Relevant content from outline.md Section 10, if present}
-
-## Detail Queue
-{All specialists with status:}
-- [in_progress] {first specialist display_name}
-- [pending] {second specialist display_name}
-- [pending] ...
-```
-
-5. **Update state**:
-   - Set `status` to `"detail"`
-   - Set `detail.started` to `true`, `detail.completed` to `false`
-   - Set `detail.team_assignment` to `"team_assignment.json"`
-   - Populate `detail.specialists` array from specialist_assignments. Each entry:
-     - `name`: specialist name
-     - `tasks`: task list from assignment
-     - `status`: `"pending"` (except first specialist: `"in_progress"`)
-     - `stage`: `"stage1"`
-     - `stage1_path`: null
-     - `decisions_path`: null
-     - `blueprint_path`: null
-   - Set `detail.current_specialist` to the first specialist name
-   - Set `detail.execution_phase` to `1`
-
-6. **Route user**: "Team assignment processed. Detail brief prepared for **[First Specialist Display Name]**. Run `/clear` then `/intuition-detail` to begin specialist consultation."
-
-## TRANSITION 3v9: SPECIALIST → SPECIALIST (Next Specialist)
-
-v9 mode only. Triggers when the current specialist's blueprint is complete and more specialists remain.
-
-### Protocol
-
-1. **Read completed blueprint**: Read `{context_path}/blueprints/{completed-specialist-name}.md`. Extract: key decisions → `docs/project_notes/decisions.md`, domain facts → `docs/project_notes/key_facts.md`.
-
-2. **Update specialist status**: In `detail.specialists`, mark the completed specialist as `status: "completed"`, `stage: "done"`, set `blueprint_path` to the blueprint file path.
-
-3. **Determine next specialist**: Check `detail.execution_order` from `{context_path}/team_assignment.json`. Within the current `execution_phase`, find the next specialist with `status: "pending"`. If all specialists in the current phase are complete, advance `execution_phase` and pick the first pending specialist in the next phase.
-
-4. **Check dependencies**: Read `team_assignment.json` dependencies array. If the next specialist has `reads_blueprint_from` entries, verify those blueprints exist. If any dependency blueprint is missing, skip to the next eligible specialist or halt if none are ready.
-
-5. **Generate detail brief for next specialist**: Overwrite `{context_path}/detail_brief.md` with:
-   - **Current Specialist**: name, display_name, domain (from next specialist's profile)
-   - **Assigned Tasks**: task details from outline
-   - **Specialist Profile Path**: absolute path to the next specialist's profile
-   - **Known Research**: same extraction as Transition 2.5v9 — outline sections relevant to this specialist's domain and tasks (Section 2 always, Sections 4/7 filtered by relevance). Omit sections with no relevance.
-   - **Prior Blueprints**: paths to ALL completed blueprints in `{context_path}/blueprints/` (the next specialist may need to reference them)
-   - **Outline Context**: section 10 content
-   - **Detail Queue**: all specialists with status (completed/in_progress/pending)
-
-6. **Update state**: Set `detail.current_specialist` to next specialist name, mark next specialist `status: "in_progress"`, `stage: "stage1"`. Update `detail.execution_phase` if advanced.
-
-7. **Route user**: "[Completed Specialist] blueprint complete. Detail brief updated for **[Next Specialist Display Name]** ([N] of [total], [remaining] remaining). Run `/clear` then `/intuition-detail` to continue."
-
-## TRANSITION 4v9: DETAIL → BUILD (Conflict Check + Completeness Gate)
-
-v9 mode only. Triggers when ALL specialists in `detail.specialists` have `status: "completed"`.
-
-### Protocol
-
-1. **Extract from all blueprints**: For each blueprint in `{context_path}/blueprints/*.md`, extract decisions → `docs/project_notes/decisions.md`, key facts → `docs/project_notes/key_facts.md`.
-
-2. **Conflict detection**: Spawn a haiku Task subagent to scan all blueprints:
-   - **Prompt**: "Read all blueprint files in `{context_path}/blueprints/`. Compare them for: contradictory decisions (same field/resource specified differently), overlapping file modifications (multiple blueprints targeting the same file with conflicting changes), inconsistent interface assumptions (one blueprint expects an API that another defines differently), and duplicated work (two blueprints specifying the same deliverable). Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts found, write 'No conflicts detected.' to the file."
-   - If conflicts found → present to user via AskUserQuestion, ask how to resolve. Do NOT proceed to build until resolved or user explicitly accepts the conflicts.
-
-3. **Completeness gate**: For each blueprint, verify:
-   - Section 8 "Open Items" is empty (or contains only `[VERIFY]` / execution-time items)
-   - All 9 mandatory sections are present and non-empty
-   - Acceptance Mapping section addresses every acceptance criterion from the plan
-   - Producer Handoff section references a valid producer
-   - If any blueprint fails → report the specific failures, do NOT proceed to build.
-
-4. **Generate build brief**: Write `{context_path}/build_brief.md` with:
-   - **Plan Summary** (1-2 paragraphs)
-   - **Objective**
-   - **Team Summary**: specialists involved, blueprint count, producer assignments
-   - **Blueprint Index**: each blueprint with specialist, tasks covered, producer, output format
-   - **Conflict Check**: results (clean or resolved conflicts)
-   - **Quality Gates**: security review, domain specialist reviews, cross-cutting reviews
-   - **Known Risks**: aggregated from blueprints
-   - **References**: plan path, all blueprint paths, team_assignment.json path
-
-5. **Update state**: Set `status` to `"building"`, mark `detail.completed = true` with timestamp, set `build.started = true`.
-
-6. **Route user**: "All blueprints complete. Conflict check [passed/resolved]. Build brief saved to `{context_path}/build_brief.md`. Run `/clear` then `/intuition-build` to begin production."
 
 ## TRANSITION 3: DESIGN → DESIGN (Next Item)
 
@@ -400,74 +225,9 @@ Write `{context_path}build_brief.md` with: Outline Summary (1-2 paragraphs), Obj
 
 Update state: set `status` to `"building"`, mark `engineering.completed = true` with timestamp, set `build.started = true`. Route: "Code specs processed. Build brief saved to `{context_path}build_brief.md`. Run `/clear` then `/intuition-build` to begin implementation."
 
-## TRANSITION 6.5v9: BUILD → TEST
+## TRANSITION 6: BUILD → COMPLETE (v8 only)
 
-v9 mode only. Triggers when build completes and `team_assignment.json` contains at least one `producer_assignments` entry with `producer == "code-writer"`.
-
-### Protocol
-
-1. **Read build_report.md**: Extract files modified, task results, deviations from blueprints.
-
-2. **Extract to memory files**: Same extraction as Transition 6 — bugs → `bugs.md`, lessons/deviations → `key_facts.md`, work completed → `issues.md`. Do NOT mark build as the final step.
-
-3. **Generate test brief**: Write `{context_path}/test_brief.md`:
-
-```markdown
-# Test Brief
-
-## Build Summary
-- **Status**: [from build_report]
-- **Tasks completed**: [count and list]
-- **Files modified**: [list from build_report]
-
-## Code Producers Used
-[For each producer_assignments entry where producer == "code-writer":]
-- **Specialist**: [specialist name]
-- **Tasks**: [task IDs]
-- **Output files**: [from build_report]
-
-## Acceptance Criteria
-[For each code-writer task, extract acceptance criteria from outline.md]
-
-## Decision Log References
-- Specialist decision logs: [paths to {context_path}/scratch/*-decisions.json]
-- Project decisions: docs/project_notes/decisions.md
-
-## Blueprint References
-[Paths to blueprints for code-writer tasks in {context_path}/blueprints/]
-
-## Specialist Test Recommendations
-[From build_report "Test Deliverables Deferred" section — any test specs/files that specialists recommended but build skipped. Include the blueprint source for each so test can read the full context.]
-
-| Blueprint Source | Deferred File | Description |
-|-----------------|---------------|-------------|
-| [specialist-name.md] | [file path] | [what the specialist recommended] |
-
-[If build_report has no "Test Deliverables Deferred" section or it says "No test deliverables found", write "No specialist test recommendations."]
-
-## Known Issues
-[From build_report — any issues, deviations, or flagged items]
-```
-
-4. **Update state**: Set `status` to `"testing"`, mark `build.completed = true` with timestamp, set `test.started = true`.
-
-5. **Route**: "Build complete. Code was produced — test phase needed. Run `/clear` then `/intuition-test`."
-
-## TRANSITION 7: TEST → COMPLETE
-
-Triggers when `context_workflow.status == "testing"` and `workflow.test.completed == true`.
-
-### Protocol
-
-1. **Read test_report.md**: Read `{context_path}/test_report.md`. If missing, warn user but proceed with build_report only.
-
-2. **Extract to memory files**: Implementation fixes → `docs/project_notes/bugs.md`, test coverage insights → `docs/project_notes/key_facts.md`, escalated issues → `docs/project_notes/issues.md`.
-
-3. **Fall through to Transition 6 completion protocol**: Proceed with the full Transition 6 protocol below (build_report reading, generated specialist saving, git commit offer, state updates). When coming from test, also read test_report.md during the completion extraction and mark `test.completed = true` with timestamp.
-
-## TRANSITION 6: BUILD → COMPLETE
-
-This transition also serves as the completion protocol for Transition 7 fallthrough. When coming from test (status == "testing"), also read `{context_path}/test_report.md` and include test results in memory extraction. Mark `test.completed = true` with timestamp if applicable. When coming from build with no code-writer (v9) or any v8 build, mark `test.skipped = true`.
+v8 mode only. v9 workflows handle completion via build and test exit protocols.
 
 Read `{context_path}/build_report.md` — REQUIRED (warn user if missing, proceed with what's available). Extract: bugs → `bugs.md`, lessons/deviations → `key_facts.md`, work completed → `issues.md`.
 
@@ -506,13 +266,7 @@ All shared memory files live at `docs/project_notes/` (never context_path).
 - **No Design Recommendations in outline**: Present tasks to user, ask if any need design. If none, use 2B.
 - **Outline revision after design started**: Alert user. Ask whether to continue or re-evaluate.
 - **Missing code_specs.md at Transition 5**: Tell user to run `/intuition-engineer` first.
-- **v9 outline detected but no assemble run yet**: Route to `/intuition-assemble`.
-- **v9 specialist dependency blueprint missing**: Skip to next eligible specialist. If none are eligible, halt and ask user.
-- **v9 conflict detection finds issues**: Present all conflicts, ask user to resolve before build. Do not auto-resolve.
-- **v9 completeness gate fails**: Report exact failures per blueprint. User must fix blueprints (re-run detail) before build.
-- **v9 build with no code-writer**: Skip test, mark `test.skipped = true`, direct to Transition 6 completion.
-- **Test report missing at Transition 7**: Warn user, proceed with build report only for memory extraction.
-- **Test skipped by user**: Set `test.skipped = true`, `test.completed = true`, proceed to completion.
+- **v9 workflow detected**: Inform user that v9 workflows handle transitions via skill exit protocols. Route to `/intuition-start`.
 
 ## VOICE
 

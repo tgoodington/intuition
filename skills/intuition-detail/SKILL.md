@@ -19,8 +19,9 @@ allowed-tools: Read, Write, Glob, Grep, Bash, Task
 7. You MUST spawn Stage 2 as a FRESH subagent — do NOT resume the Stage 1 subagent.
 8. You MUST NOT adopt the specialist's persona. You are an orchestrator, not a domain expert. Domain intelligence stays in the subagents.
 9. You MUST NOT make domain-level decisions. Present what the specialist found, collect user input, pass it to Stage 2.
-10. You MUST route to `/intuition-handoff` after blueprint is written. NEVER treat detail as the final step.
-11. For Light-depth tasks, skip the user gate entirely — run a single subagent that produces the blueprint directly.
+10. You MUST run the Specialist Loop after each blueprint is written. When all specialists are done, route to `/intuition-build`. NEVER to `/intuition-handoff`.
+11. You MUST update `.project-memory-state.json` after completing each specialist and when all specialists are done.
+12. For Light-depth tasks, skip the user gate entirely — run a single subagent that produces the blueprint directly.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -361,12 +362,49 @@ Do NOT skip this check. A blueprint that passes section-heading validation but f
 
 If the blueprint is missing or incomplete, report the specific issue and stop.
 
-## STEP 8: CONFIRM AND ROUTE
+## STEP 8: SPECIALIST LOOP
 
-Report to the user:
-- "Blueprint written for **[Specialist Display Name]** at `{context_path}/blueprints/{specialist-name}.md`"
-- Brief summary of what was specified (2-3 sentences covering the key design choices and deliverables)
-- "Run `/intuition-handoff` to process results and route to the next specialist or build phase."
+After a blueprint passes the traceability check:
+
+**8a. Report completion.** Tell the user: "Blueprint written for **[Specialist Display Name]** at `{context_path}/blueprints/{specialist-name}.md`" + 2-3 sentence summary of key design choices.
+
+**8b. Update specialist state.** Read `.project-memory-state.json`. In `workflow.detail.specialists`, mark the completed specialist: `status → "completed"`, `stage → "done"`, `blueprint_path → "{context_path}/blueprints/{specialist-name}.md"`. Write back.
+
+**8c. Extract to memory.** Spawn a haiku Task subagent: "Read `{context_path}/blueprints/{specialist-name}.md`. Then read `docs/project_notes/decisions.md` and `docs/project_notes/key_facts.md`. Append only NEW entries: decisions from the blueprint's Decisions Made section → `decisions.md` as ADRs, domain facts from Research Findings → `key_facts.md`. Do not duplicate. Preserve existing formatting." Run in background.
+
+**8d. Check for next specialist.** Read `{context_path}/team_assignment.json`. Read current state.
+
+1. In the current `execution_phase`, find the next specialist with `status: "pending"`.
+2. If no pending specialists remain in the current phase, advance `execution_phase` by 1 and check the next phase.
+3. If a next specialist is found, check dependencies: if `reads_blueprint_from` entries exist in `team_assignment.json`, verify those blueprints exist. If a dependency is missing, skip to the next eligible specialist.
+4. If NO eligible specialist remains → all done. Go to Step 9 (Exit Protocol).
+
+**8e. Prepare next specialist.** Read the next specialist's profile for display_name and domain. Overwrite `{context_path}/detail_brief.md` with:
+- **Current Specialist**: name, display_name, domain, profile path (from next specialist)
+- **Assigned Tasks**: task details from outline for this specialist
+- **Decision Policy**: from outline Section 10 (or "conservative" if not specified)
+- **Known Research**: outline sections relevant to this specialist's domain (Section 2 always, Sections 3/8/10 filtered by relevance)
+- **Prior Blueprints**: paths to ALL completed blueprints in `{context_path}/blueprints/`
+- **Outline Context**: Section 10 content
+- **Detail Queue**: all specialists with status (completed/in_progress/pending)
+
+Update state: `workflow.detail.current_specialist` → next specialist, mark next specialist `status: "in_progress"`, `stage: "stage1"`. Update `execution_phase` if advanced. Write back.
+
+**8f. Continue or clear.** Report: "[Completed Specialist] complete. Starting **[Next Specialist Display Name]** ([N] of [total])."
+
+If the COMPLETED specialist was Deep depth, recommend: "Context is heavy — consider running `/clear` then `/intuition-detail` to continue with a fresh context." Otherwise, loop back to Step 2 (read the new detail_brief.md) and continue in the same session.
+
+## STEP 9: EXIT PROTOCOL (All Specialists Done)
+
+Triggers when Step 8d finds no remaining specialists.
+
+**9a. Conflict detection.** Spawn a haiku Task subagent: "Read all blueprint files in `{context_path}/blueprints/`. Compare for: contradictory decisions, overlapping file modifications with conflicting changes, inconsistent interface assumptions, and duplicated work. Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts, write 'No conflicts detected.'" Wait for completion. If conflicts found, present to user via AskUserQuestion and resolve before continuing.
+
+**9b. Completeness gate.** For each blueprint, verify: all 9 mandatory sections present and non-empty, Open Items section has no unresolved items (only [VERIFY]/execution-time items allowed), Acceptance Mapping addresses every acceptance criterion, Producer Handoff references a valid producer. If any fail, report specific failures and stop.
+
+**9c. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"building"`, `workflow.detail.completed` → `true`, `workflow.detail.completed_at` → current ISO timestamp, `workflow.build.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"detail_to_build"`. Write back.
+
+**9d. Route.** "All blueprints complete. Conflict check [passed/resolved]. Run `/clear` then `/intuition-build`"
 
 ## VOICE
 

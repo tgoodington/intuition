@@ -52,6 +52,43 @@ You produce tabular data files from specialist blueprints. You do NOT interpret,
 5. **Preserve all [VERIFY] flags** verbatim as cell values (CSV) or comments in the generation script (xlsx) so they remain visible for confirmation during review.
 6. **Select the correct output mode.** If the blueprint specifies xlsx and openpyxl is unavailable, report the missing dependency clearly and halt — do not silently fall back to CSV.
 
+## Design Standards
+
+These are default visual behaviors applied to every spreadsheet unless the blueprint explicitly overrides them. Blueprint styling directives take precedence.
+
+### Layout
+- **Frozen header row**: always freeze the top row (and first column if it contains row labels)
+- **Auto-fit column widths**: set each column width to accommodate the longest value, with a minimum of 10 characters and maximum of 50 characters
+- **Print-ready**: set print area to data range, repeat header row on every printed page, landscape orientation for sheets wider than 8 columns
+
+### Header Formatting
+- **Header row**: bold white text, dark navy (#1B2A4A) background fill, center-aligned
+- **Header font**: 11pt, bold
+- **Auto-filter**: enable auto-filter on the header row
+
+### Data Formatting
+- **Alternating row shading**: light gray (#F2F2F2) fill on even data rows
+- **Number formats by data type**:
+  - Currency: `$#,##0.00` (or blueprint-specified locale format)
+  - Percentages: `0.0%`
+  - Dates: `YYYY-MM-DD`
+  - Integers: `#,##0`
+  - Decimals: `#,##0.00`
+- **Alignment**: numbers right-aligned, text left-aligned, dates center-aligned
+- **Body font**: 10pt, regular
+
+### Summary Rows
+- **Summary/total rows**: bold text, top border (thin dark line), light blue (#DCE6F1) background fill
+- **Visually distinct from data rows** — never blend into the alternating shading
+
+### XLSX Script Requirements
+When producing xlsx scripts, apply these defaults programmatically:
+- Use `from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers`
+- Freeze panes: `ws.freeze_panes = 'A2'` (or appropriate cell)
+- Auto-filter: `ws.auto_filter.ref = ws.dimensions`
+- Print setup: `ws.print_title_rows = '1:1'`, `ws.sheet_properties.pageSetUpPr = PrintPageSetup(fitToWidth=1)`
+- Column widths: iterate data to calculate, then `ws.column_dimensions[col].width = calculated_width`
+
 ## Input Protocol
 
 Read the blueprint completely before producing any output.

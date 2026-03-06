@@ -19,9 +19,9 @@ You assemble specialist and producer teams for v9 workflows. You scan registries
 5. You MUST check prerequisites for all selected producers before proceeding.
 6. You MUST halt with install instructions if any required tool is missing.
 7. You MUST write `team_assignment.json` to context_path.
-8. You MUST NOT update `.project-memory-state.json` — handoff owns all state writes.
+8. You MUST update `.project-memory-state.json` as part of the Exit Protocol (Step 9).
 9. You MUST NOT make domain judgments beyond domain_tags overlap — match mechanically, and `/intuition-agent-advisor` handles specialist creation.
-10. You MUST route to `/intuition-handoff` after completion.
+10. You MUST run the Exit Protocol after writing team_assignment.json. Route to `/intuition-detail`, NEVER to `/intuition-handoff`.
 
 ## CONTEXT RESOLUTION
 
@@ -112,6 +112,19 @@ Schema notes:
 - `dependencies` is for CROSS-SPECIALIST dependencies only; same-specialist task sequencing is handled via execution_order phases
 - `execution_order` includes rationale for each phase
 
+### Step 4.5: Format Reconciliation
+
+Before checking prerequisites, cross-reference each assignment's output_format against the outline's format constraints.
+
+1. Read the outline's **Section 3 (Technology Decisions)** and **Section 10 (Constraints)** for any explicit target format per task, format exclusions (e.g., "no markdown in final distribution"), or format-per-category mappings.
+2. For each producer assignment, compare the specialist's `default_output_format` against the outline-specified format for that task:
+   - If the outline specifies a different target format, OVERRIDE the default with the outline-specified format.
+   - If the outline excludes a format globally (e.g., "no markdown"), flag any assignment still using that format as a conflict.
+3. When an override changes the format, verify the assigned producer supports the new format. If not, find a producer from the registry that does and reassign.
+4. Track all overrides in a `format_overrides` list (specialist, original format, overridden format, reason) for display in Step 6.
+
+If the outline has no format constraints and no Section 3 technology decisions about output formats, skip this step — specialist defaults stand.
+
 ### Step 5: Prerequisite Checking
 
 For each producer in `producer_assignments`:
@@ -148,6 +161,12 @@ Present the team proposal using AskUserQuestion with the `markdown` preview feat
 ## Execution Order
 Phase 1: [specialists] (parallel)
 Phase 2: [specialists] (after Phase 1)
+
+## Format Overrides
+{Only if Step 4.5 produced overrides. Omit this section if no overrides.}
+| Specialist | Default | Overridden To | Reason |
+|-----------|---------|--------------|--------|
+| [name] | markdown | docx | Outline Section 3: guides target docx |
 
 ## Dependencies
 [specialist] reads blueprint from [specialist]
@@ -238,9 +257,63 @@ For tasks assigned to existing specialists (stretches the user accepted or manua
 
 Write the finalized assembly output to `{context_path}team_assignment.json`.
 
-### Step 9: Route User
+### Step 9: Exit Protocol
 
-Output: "Team assembled and saved to `team_assignment.json`. Run `/intuition-handoff` to transition to the detail phase."
+After writing `team_assignment.json`:
+
+**9a. Generate detail brief.** Read specialist profiles for the first specialist in execution_order phase 1 (alphabetically if multiple). Read `{context_path}outline.md` to extract relevant research. Write `{context_path}detail_brief.md`:
+
+```markdown
+# Detail Brief
+
+## Current Specialist
+- **Name**: {specialist name}
+- **Display Name**: {display_name from profile}
+- **Domain**: {domain from profile}
+- **Profile Path**: {absolute path to the specialist profile file}
+
+## Assigned Tasks
+{For each task assigned to this specialist:}
+### Task {task_id}: {title}
+- **Depth**: {depth}
+- **Description**: {from outline}
+- **Acceptance Criteria**: {from outline}
+- **Dependencies**: {from outline}
+- **Decisions**: {[USER]/[SPEC] decisions from outline, if any}
+
+## Decision Policy
+{From outline Section 10 Decision Policy, or "conservative" if not specified}
+
+## Known Research
+{Extract from outline.md sections relevant to THIS specialist's domain:}
+{- Section 2 (Discovery Summary) — always include}
+{- Section 3 (Technology Decisions) — if relevant to this specialist}
+{- Section 8 (Risks) — risks relevant to this specialist's tasks}
+{- Section 10 domain-specific notes for this specialist's domain}
+{Omit sections with no relevance. If no overlap, write "No prior research overlaps with this specialist's domain."}
+
+## Prior Blueprints
+None (first specialist in execution order)
+
+## Outline Context
+{Section 10 content from outline.md}
+
+## Detail Queue
+{All specialists with status:}
+- [in_progress] {first specialist display_name}
+- [pending] {remaining specialists}
+```
+
+**9b. Update state.** Read `.project-memory-state.json`. Target the active context object (trunk or branch). Set:
+- `status` → `"detail"`
+- `workflow.detail.started` → `true`, `workflow.detail.completed` → `false`
+- `workflow.detail.team_assignment` → `"team_assignment.json"`
+- `workflow.detail.specialists` → array from specialist_assignments, each with: `name`, `tasks`, `status: "pending"` (except first: `"in_progress"`), `stage: "stage1"`, `stage1_path: null`, `decisions_path: null`, `blueprint_path: null`
+- `workflow.detail.current_specialist` → first specialist name
+- `workflow.detail.execution_phase` → `1`
+Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"assemble_to_detail"`. Write back.
+
+**9c. Route.** Tell the user: "Team assembled. Detail brief prepared for **[First Specialist Display Name]**. Run `/clear` then `/intuition-detail`"
 
 ## EDGE CASES
 

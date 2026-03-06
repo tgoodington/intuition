@@ -158,26 +158,24 @@ Output one line of status, then the next command.
 |-------|-------------|-------|
 | first_time | "No project memory found." | `/intuition-prompt` |
 | prompt_in_progress | "Prompt refinement in progress." | `/intuition-prompt` |
-| ready_for_outline | "Prompt complete." | `/intuition-handoff` |
+| ready_for_outline | "Prompt complete." | `/intuition-outline` |
 | planning_in_progress | "Planning in progress." | `/intuition-outline` |
-| ready_for_assemble | "Planning complete (v9)." | `/intuition-handoff` |
-| detail_in_progress | "Detail phase in progress." | See DETAIL ROUTING below |
+| ready_for_assemble | "Planning complete (v9)." | `/intuition-assemble` |
+| detail_in_progress | "Detail phase in progress." | `/intuition-detail` |
 | design_in_progress | "Design exploration in progress." | See DESIGN ROUTING below |
 | ready_for_engineering | "Planning complete (v8)." | `/intuition-handoff` |
 | engineering_in_progress | "Engineering in progress." | `/intuition-engineer` |
-| ready_for_build | "Code specs ready." | `/intuition-handoff` |
+| ready_for_build | "Specs ready." | `/intuition-build` |
 | build_in_progress | "Build in progress." | `/intuition-build` |
-| ready_for_test | "Build complete, testing pending." | `/intuition-handoff` |
+| ready_for_test | "Build complete, testing pending." | `/intuition-test` |
 | test_in_progress | "Test phase in progress." | `/intuition-test` |
 | post_completion | See POST-COMPLETION below | — |
 
-**DESIGN ROUTING:** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" → `/intuition-design`. If an item just completed and others remain → `/intuition-handoff`. If ambiguous, ask the user.
+**DESIGN ROUTING (v8 only):** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" → `/intuition-design`. If an item just completed and others remain → `/intuition-handoff`. If ambiguous, ask the user.
 
-**TEST ROUTING NOTE:** `ready_for_test` routes to handoff (not test) because the test_brief hasn't been generated yet — handoff creates it during Transition 6.5v9.
+**DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If all specialists completed but build not started → `/intuition-build`. If ambiguous, ask the user.
 
-**DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If a specialist just completed and others remain → `/intuition-handoff`. If all specialists completed but build not started → `/intuition-handoff`. If ambiguous, ask the user.
-
-For "ready_for" phases, route to `/intuition-handoff` (which manages `/clear` and phase transitions). For "in_progress" phases, route directly to the active skill.
+For v9 workflows, route directly to the next skill. For v8 "ready_for" phases (engineering, design transitions), route to `/intuition-handoff`. For "in_progress" phases, route directly to the active skill.
 
 ## POST-COMPLETION
 
