@@ -400,11 +400,52 @@ Triggers when Step 8d finds no remaining specialists.
 
 **9a. Conflict detection.** Spawn a haiku Task subagent: "Read all blueprint files in `{context_path}/blueprints/`. Compare for: contradictory decisions, overlapping file modifications with conflicting changes, inconsistent interface assumptions, and duplicated work. Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts, write 'No conflicts detected.'" Wait for completion. If conflicts found, present to user via AskUserQuestion and resolve before continuing.
 
-**9b. Completeness gate.** For each blueprint, verify: all 9 mandatory sections present and non-empty, Open Items section has no unresolved items (only [VERIFY]/execution-time items allowed), Acceptance Mapping addresses every acceptance criterion, Producer Handoff references a valid producer. If any fail, report specific failures and stop.
+**9b. Vision review.** Skip this step if only 1 specialist completed (no cross-specialist seams to check).
 
-**9c. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"building"`, `workflow.detail.completed` → `true`, `workflow.detail.completed_at` → current ISO timestamp, `workflow.build.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"detail_to_build"`. Write back.
+For multi-specialist projects, spawn a sonnet Task subagent:
 
-**9d. Route.** "All blueprints complete. Conflict check [passed/resolved]. Run `/clear` then `/intuition-build`"
+"Read these files:
+1. `{context_path}/prompt_brief.md` — extract Commander's Intent (desired end state, non-negotiables, boundaries) and Success Criteria
+2. `{context_path}/outline.md` — extract the task list and acceptance criteria
+3. For each blueprint in `{context_path}/blueprints/`: read the Approach section (Section 3) and Acceptance Mapping section (Section 6) only — skip the full deliverable specs
+
+Then evaluate the blueprints AS A WHOLE against the original vision:
+
+**Coverage check:** Is every success criterion from the prompt brief addressed by at least one blueprint's Acceptance Mapping? List any unaddressed criteria.
+
+**Seam check:** Are there handoff points between specialists where neither blueprint takes ownership? Look for: data or output from one specialist that another specialist's blueprint assumes exists but doesn't specify who creates it. Look for user-facing flows that cross specialist boundaries without explicit coordination.
+
+**Intent alignment:** Do the collective approaches honor the non-negotiables from Commander's Intent? If the intent says 'simple and fast,' are any blueprints introducing complexity that conflicts? If the intent says 'professional and polished,' are all blueprints consistent with that quality bar?
+
+**Consistency check:** Do blueprints that touch overlapping areas use consistent terminology, assumptions, and conventions?
+
+Do NOT second-guess individual specialist domain decisions — that is their expertise. Focus only on the holistic picture: does the sum of these designs deliver the original vision?
+
+Write findings to `{context_path}/vision-review.md`. Use this format:
+- **Coverage**: [PASS or list gaps]
+- **Seams**: [PASS or list gaps with which specialists are involved]
+- **Intent Alignment**: [PASS or list concerns with specific non-negotiable references]
+- **Consistency**: [PASS or list inconsistencies]
+- **Overall**: PASS | CONCERNS — [one-sentence summary]
+
+If everything passes, write 'Vision review passed — all blueprints align with Commander's Intent.'"
+
+Wait for completion. If concerns are found, present each finding to the user via AskUserQuestion:
+- Header: "Vision Review"
+- Question: "[Finding summary]. How should we handle this?"
+- Options vary by finding type:
+  - Coverage gap: "Add to [specialist]'s blueprint" / "Accept the gap" / "This needs a new task"
+  - Seam gap: "Assign to [specialist A]" / "Assign to [specialist B]" / "Flag for build"
+  - Intent drift: "Revise [specialist]'s approach" / "It's fine — intent is still met"
+  - Inconsistency: "Flag for producers to align" / "It's intentional"
+
+If the user wants a blueprint revised, update `{context_path}/detail_brief.md` for that specialist and loop back to Step 5 for a focused re-run. If flagging for build, append the finding to `{context_path}/vision-review.md` with the resolution so build can reference it.
+
+**9c. Completeness gate.** For each blueprint, verify: all 9 mandatory sections present and non-empty, Open Items section has no unresolved items (only [VERIFY]/execution-time items allowed), Acceptance Mapping addresses every acceptance criterion, Producer Handoff references a valid producer. If any fail, report specific failures and stop.
+
+**9d. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"building"`, `workflow.detail.completed` → `true`, `workflow.detail.completed_at` → current ISO timestamp, `workflow.build.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"detail_to_build"`. Write back.
+
+**9e. Route.** "All blueprints complete. Conflict check [passed/resolved]. Vision review [passed/resolved]. Run `/clear` then `/intuition-build`"
 
 ## VOICE
 

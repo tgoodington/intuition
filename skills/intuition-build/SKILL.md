@@ -77,6 +77,8 @@ Read these files:
 3. ALL files in `{context_path}/blueprints/*.md` — specialist blueprints.
 4. `{context_path}/outline.md` — approved plan with acceptance criteria.
 5. `{context_path}/scratch/*-decisions.json` (all specialist decision logs) — decision tiers and chosen options.
+6. `{context_path}/prompt_brief.md` — Commander's Intent, success criteria, non-negotiables (for Vision Alignment in report).
+7. `{context_path}/vision-review.md` (if exists) — flagged items from detail's vision review that build should address.
 
 From team_assignment.json, extract:
 - `specialist_assignments` — which specialist owns which tasks
@@ -316,6 +318,20 @@ Write the build report to `{context_path}/build_report.md` AND display a summary
 | [specialist-name.md] | [file path] | [what the specialist recommended] |
 
 [If no test deliverables were found in any blueprint, write "No test deliverables found in blueprints."]
+
+## Vision Alignment
+[Read `{context_path}/prompt_brief.md` — extract Success Criteria and Commander's Intent non-negotiables. Map each to the produced output.]
+
+| Success Criterion | Addressed By | Status |
+|---|---|---|
+| [criterion from brief] | [output file(s) + task that covers it] | Covered / Gap |
+
+**Non-negotiables check:**
+| Non-negotiable | Assessment |
+|---|---|
+| [quality from Commander's Intent] | Met — [evidence] / Concern — [why] |
+
+[If `{context_path}/vision-review.md` exists and contains flagged items for build, list them here with how they were handled during production.]
 
 ## Issues & Resolutions
 - [Any problems encountered and how they were resolved]
