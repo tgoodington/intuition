@@ -327,12 +327,11 @@ You do NOT launch research subagents by default. Research fires ONLY in this sce
 - "Are there compliance requirements for Z?"
 - "What do other teams typically use for this?"
 
-**Action:** Launch ONE targeted Task call:
+**Action:** Launch ONE targeted `intuition-researcher` agent:
 
 ```
 Description: "Research [specific question]"
-Subagent type: Explore
-Model: haiku
+Subagent type: intuition-researcher
 Prompt: "Research [specific question from the user].
 Context: [what the user is building].
 Search the web and local codebase for relevant information.

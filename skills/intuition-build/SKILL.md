@@ -150,7 +150,7 @@ For each task per `team_assignment.json` execution order (parallelize tasks with
    - User: `~/.claude/producers/{producer-name}/{producer-name}.producer.md`
    - Framework-shipped: scan the `producers/` directory at the package root
 4. Construct the delegation prompt using the producer profile as system instructions. Direct the subagent to READ the blueprint from disk (do NOT inject blueprint content into the prompt — this avoids duplicating large files in both parent and subagent contexts). Only include non-test output files in the delegation.
-5. Spawn the producer as a Task subagent using the model declared in the producer profile.
+5. Spawn the producer as an `intuition-code-writer` agent (or appropriate producer-specific agent if one exists). Use the model declared in the producer profile.
 
 **Producer delegation format:**
 ```
@@ -180,7 +180,7 @@ After producers complete deliverables, execute all three review layers. **Batch 
 
 1. Identify the specialist that authored the blueprint (from blueprint YAML frontmatter `specialist` field).
 2. Locate that specialist's profile path in the registry (same scan order as producers: project → user → framework).
-3. Spawn a review subagent with adversarial framing. Use the `reviewer_model` declared in the specialist profile's YAML frontmatter. If this specialist produced multiple deliverables, include ALL of them (up to 3) in a single review subagent.
+3. Spawn an `intuition-reviewer` agent with adversarial framing. Use the `reviewer_model` declared in the specialist profile's YAML frontmatter. If this specialist produced multiple deliverables, include ALL of them (up to 3) in a single review agent.
 
 **Specialist review delegation format:**
 ```
@@ -224,9 +224,9 @@ Log all deviations (additions and omissions) in the build report's "Deviations f
 ### Layer 3: Mandatory Cross-Cutting Reviewers
 
 1. Check the specialist profile's `mandatory_reviewers` field in its YAML frontmatter.
-2. For EACH mandatory reviewer listed: locate their specialist profile, spawn a review subagent using their `reviewer_model`.
-3. **Security Expert is ALWAYS mandatory** — even if `mandatory_reviewers` is empty. Spawn a Security Expert review for every deliverable that produces code, configuration, or scripts.
-4. **Batch cross-cutting reviews** the same way as Layer 1: include up to 3 deliverables per review subagent. If all code deliverables in the current execution phase share the same cross-cutting reviewer, batch them into one review call.
+2. For EACH mandatory reviewer listed: locate their specialist profile, spawn an `intuition-reviewer` agent using their `reviewer_model`.
+3. **Security Expert is ALWAYS mandatory** — even if `mandatory_reviewers` is empty. Spawn a Security Expert `intuition-reviewer` agent for every deliverable that produces code, configuration, or scripts.
+4. **Batch cross-cutting reviews** the same way as Layer 1: include up to 3 deliverables per review agent. If all code deliverables in the current execution phase share the same cross-cutting reviewer, batch them into one review call.
 
 **Cross-cutting review delegation format:**
 ```

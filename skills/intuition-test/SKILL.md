@@ -40,7 +40,7 @@ On startup, before reading any files:
 
 ```
 Step 1: Read context (state, build_report, blueprints, decisions, outline)
-Step 2: Analyze test infrastructure (2 parallel haiku Explore agents)
+Step 2: Analyze test infrastructure (2 parallel intuition-researcher agents)
 Step 3: Design test strategy (self-contained domain reasoning)
 Step 4: Confirm test plan with user
 Step 5: Create tests (delegate to sonnet code-writer subagents)
@@ -86,9 +86,9 @@ From decisions files, build a decision index:
 - Map each `[SPEC]` decision to its chosen option and rationale
 - This index is used in Step 6 for fix boundary checking
 
-## STEP 2: RESEARCH (2 Parallel Haiku Explore Agents)
+## STEP 2: RESEARCH (2 Parallel Research Agents)
 
-Spawn two haiku Explore agents in parallel (both Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for both agents to return before proceeding to Step 3:
+Spawn two `intuition-researcher` agents in parallel (both Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for both agents to return before proceeding to Step 3:
 
 **Agent 1 — Test Infrastructure:**
 "Search the project for test infrastructure. Find: test framework and runner (jest, vitest, mocha, pytest, etc.), test configuration files, existing test directories and naming conventions, mock/fixture patterns, test utility helpers, CI test commands, coverage configuration and thresholds. Report exact paths and configuration values."
@@ -203,9 +203,9 @@ Options:
 
 ## STEP 5: CREATE TESTS
 
-Delegate test creation to sonnet Task subagents. Parallelize independent test files (multiple Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for ALL subagents to return before proceeding to Step 6.
+Delegate test creation to `intuition-code-writer` agents. Parallelize independent test files (multiple Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for ALL subagents to return before proceeding to Step 6.
 
-For each test file, spawn a sonnet subagent:
+For each test file, spawn an `intuition-code-writer` agent:
 
 ```
 You are a test writer. Create a test file following these specifications exactly.
@@ -244,9 +244,9 @@ For each failure, classify:
 
 | Classification | Action |
 |---|---|
-| **Test bug** (wrong assertion, incorrect mock, import error) | Fix autonomously — haiku Task subagent |
-| **Implementation bug, trivial** (off-by-one, missing null check, typo — 1-3 lines) | Fix directly — haiku Task subagent |
-| **Implementation bug, moderate** (logic error, missing handler — contained to one file) | Fix — sonnet Task subagent with full diagnosis |
+| **Test bug** (wrong assertion, incorrect mock, import error) | Fix autonomously — `intuition-code-writer` agent |
+| **Implementation bug, trivial** (off-by-one, missing null check, typo — 1-3 lines) | Fix directly — `intuition-code-writer` agent |
+| **Implementation bug, moderate** (logic error, missing handler — contained to one file) | Fix — `intuition-code-writer` agent with full diagnosis |
 | **Implementation bug, complex** (multi-file structural issue) | Escalate to user |
 | **Fix would violate [USER] decision** | STOP — escalate to user immediately |
 | **Fix would violate [SPEC] decision** | Note the conflict, proceed with fix (specialist had authority) |

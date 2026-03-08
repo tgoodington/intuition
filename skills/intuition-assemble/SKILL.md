@@ -46,7 +46,10 @@ Scan three tiers in priority order. Deduplicate by `name` — first found wins.
 
 1. Glob `.claude/specialists/*/*.specialist.md` (project-level)
 2. Glob `~/.claude/specialists/*/*.specialist.md` (user-level, expand `~` via Bash)
-3. Determine the Intuition package root: run `node -e "console.log(require.resolve('@tgoodington/intuition/package.json'))"` via Bash, extract the directory. Glob `{package_root}/specialists/*/*.specialist.md`.
+3. Framework-bundled specialists — try in order, stop at first success:
+   a. **Plugin path**: Glob `${CLAUDE_PLUGIN_ROOT}/specialists/*/*.specialist.md`. If `${CLAUDE_PLUGIN_ROOT}` is empty or the glob returns nothing, fall through.
+   b. **npm path**: Run `node -e "console.log(require.resolve('@tgoodington/intuition/package.json'))"` via Bash, extract the directory. Glob `{package_root}/specialists/*/*.specialist.md`.
+   c. **Fallback**: Glob `node_modules/@tgoodington/intuition/specialists/*/*.specialist.md` relative to project root.
 
 For each profile found: read ONLY the YAML frontmatter using `Read` with `limit: 30` (frontmatter is typically under 25 lines). Extract `name` and `domain_tags`. Do NOT read the full profile body — the Stage 1/2 protocols are not needed for matching. Build a specialists list.
 
@@ -54,13 +57,14 @@ If zero specialists found after all three tiers, HALT with this message:
 "No specialist profiles found. Install specialist profiles in one of these locations:
 - `.claude/specialists/` (project-level)
 - `~/.claude/specialists/` (user-level)
-- Or ensure `@tgoodington/intuition` is installed with its bundled specialists."
+- Install the Intuition plugin: `/plugin install intuition`
+- Or install via npm: `npm install -g @tgoodington/intuition`"
 
 ### Step 3: Scan Producer Registry
 
-Same three-tier pattern using `producers/` directories and `*.producer.md` files. Read ONLY the YAML frontmatter using `Read` with `limit: 30`. Extract `name` and `output_formats` from each. Do NOT read the full profile body. Deduplicate by name with same priority (first found wins).
+Same three-tier pattern as Step 2, using `producers/` directories and `*.producer.md` files. Tier 3 uses the same resolution order (plugin path → npm path → fallback). Read ONLY the YAML frontmatter using `Read` with `limit: 30`. Extract `name` and `output_formats` from each. Do NOT read the full profile body. Deduplicate by name with same priority (first found wins).
 
-If zero producers found, HALT with the same pattern message referencing producer directories.
+If zero producers found, HALT with the same pattern message referencing producer directories and install methods.
 
 ### Step 4: Team Assembly (Inline Matching)
 
@@ -319,7 +323,7 @@ Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition`
 
 - **Zero specialists found**: Halt at Step 2 with install instructions.
 - **Zero producers found**: Halt at Step 3 with install instructions.
-- **Package root resolution fails**: Fallback to scanning `node_modules/@tgoodington/intuition/` relative to project root.
+- **Framework-bundled resolution fails**: Tier 3 tries plugin path, then npm resolution, then local node_modules. If all three fail, Tiers 1 and 2 may still have results.
 - **All tasks unmatched**: Present the full unmatched list at Step 6. If user chooses to create specialists, write the request file and route to agent-advisor. Do not silently skip everything.
 - **User rejects team**: Allow adjustments, re-present. Do not write anything until approved.
 - **Prerequisites missing**: Halt with exact install commands. Do not proceed to team confirmation.

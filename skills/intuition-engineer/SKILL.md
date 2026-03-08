@@ -101,7 +101,7 @@ Options:
 
 ## STEP 2: FAN-OUT RESEARCH
 
-For each task (or group of related tasks), launch a haiku research subagent via the Task tool (subagent_type: Explore, model: haiku).
+For each task (or group of related tasks), launch an `intuition-researcher` agent via the Task tool.
 
 When constructing each prompt, replace bracketed placeholders with actual values from the outline. If the task has known file paths, use the "Known Files" variant. If files are marked TBD, use the "TBD Files" variant.
 

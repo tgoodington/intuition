@@ -23,6 +23,8 @@
     "test": "node bin/intuition.js help"
   },
   "files": [
+    ".claude-plugin/",
+    "agents/",
     "bin/",
     "skills/",
     "specialists/",

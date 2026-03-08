@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Uninstallation script for Intuition skills
+ * Uninstallation script for Intuition skills, agents, specialists, and producers
  *
  * This script is run before `npm uninstall -g @tgoodington/intuition`
- * It removes all Intuition skills from ~/.claude/skills/
+ * It removes all Intuition components from ~/.claude/
  */
 
 const fs = require('fs');
@@ -69,6 +69,23 @@ try {
     const skillDest = path.join(claudeSkillsDir, skillName);
     if (removeDir(skillDest)) {
       log(`\u2713 Removed /${skillName} skill from ${skillDest}`);
+    }
+  });
+
+  // Remove Intuition agent definitions
+  const claudeAgentsDir = path.join(homeDir, '.claude', 'agents');
+  const agentsToRemove = [
+    'intuition-researcher.md',
+    'intuition-code-writer.md',
+    'intuition-reviewer.md',
+    'intuition-synthesizer.md'
+  ];
+
+  agentsToRemove.forEach(agentFile => {
+    const agentDest = path.join(claudeAgentsDir, agentFile);
+    if (fs.existsSync(agentDest)) {
+      fs.rmSync(agentDest, { force: true });
+      log(`\u2713 Removed ${agentFile} agent from ${agentDest}`);
     }
   });
 

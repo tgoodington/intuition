@@ -93,7 +93,7 @@ Ensure the `{context_path}/scratch/` directory exists (create via Bash `mkdir -p
 
 ### Light Tasks (single-pass bypass)
 
-Spawn an opus Task subagent that combines exploration AND specification in one pass:
+Spawn an `intuition-synthesizer` agent that combines exploration AND specification in one pass:
 - **System prompt**: Stage 1 Protocol text + Stage 2 Protocol text (concatenated with a separator)
 - **Task context**: plan tasks, research patterns from profile frontmatter, prior blueprints, outline Section 10 context
 - **Output instruction**: "Research the project, then produce the complete blueprint directly. No user gate — use your best judgment for all decisions. Write to `{context_path}/blueprints/{specialist-name}.md`."
@@ -104,7 +104,7 @@ Ensure the `{context_path}/blueprints/` directory exists. After the subagent ret
 
 #### Stage 1a: Research Planning
 
-Spawn a sonnet Task subagent. The system prompt combines a research-planning framing (owned by this skill) with the specialist's domain expertise (from the profile):
+Spawn an `intuition-synthesizer` agent (model override: sonnet). The system prompt combines a research-planning framing (owned by this skill) with the specialist's domain expertise (from the profile):
 
 - **System prompt**: Construct by concatenating:
   1. **Framing (detail skill provides this):**
@@ -148,7 +148,7 @@ After 1a returns, write the specialist's research plan output to `{context_path}
 
 Parse the specialist's research plan output. Enforce the depth-based research cap: Deep tasks allow 3 entries max, Standard tasks allow 2. If the specialist's plan contains more entries than the cap, take ONLY the first {cap} entries and log a warning to the user: "Research plan had {N} items, capped at {cap} per depth policy."
 
-For each `### R{N}:` entry (up to the cap), spawn a haiku Task subagent (subagent_type: `Explore`):
+For each `### R{N}:` entry (up to the cap), spawn an `intuition-researcher` agent:
 - **Task**: the natural language description from the research plan entry
 - **Instruction suffix**: "Search the project codebase thoroughly. Report: file paths found, key patterns observed, relevant code snippets, and any constraints or conventions discovered. Be specific — include exact paths, field names, and data types."
 
@@ -159,7 +159,7 @@ If any research agent finds nothing relevant, note this — the specialist needs
 #### Stage 1c: Analysis and Synthesis (Resume 1a or Fresh)
 
 **Normal flow:** Resume the Stage 1a specialist subagent using the saved agent ID.
-**Crash recovery flow (no agent ID):** Spawn a fresh opus Task subagent. Provide the specialist's Stage 1 Exploration Protocol as system prompt, and include the saved research plan from `{context_path}/scratch/{specialist-name}-research-plan.md` as additional context so the fresh agent understands what was asked for.
+**Crash recovery flow (no agent ID):** Spawn a fresh `intuition-synthesizer` agent. Provide the specialist's Stage 1 Exploration Protocol as system prompt, and include the saved research plan from `{context_path}/scratch/{specialist-name}-research-plan.md` as additional context so the fresh agent understands what was asked for.
 
 In either case, provide this prompt (the synthesis framing is owned by this skill, not the specialist):
 
@@ -335,7 +335,7 @@ Mark these decisions with `"classified_by": "detail"` in decisions.json.
 
 ## STEP 7: STAGE 2 — SPECIFICATION SUBAGENT
 
-Spawn a FRESH opus Task subagent (do NOT resume Stage 1):
+Spawn a FRESH `intuition-synthesizer` agent (do NOT resume Stage 1):
 - **System prompt**: the specialist's Stage 2 Specification Protocol text (extracted in Step 3)
 - **Injected context**:
   - Full contents of `{context_path}/scratch/{specialist-name}-stage1.md`
@@ -402,11 +402,11 @@ If the COMPLETED specialist was Deep depth, recommend: "Context is heavy — con
 
 Triggers when Step 8d finds no remaining specialists.
 
-**9a. Conflict detection.** Spawn a haiku Task subagent: "Read all blueprint files in `{context_path}/blueprints/`. Compare for: contradictory decisions, overlapping file modifications with conflicting changes, inconsistent interface assumptions, and duplicated work. Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts, write 'No conflicts detected.'" Wait for completion. If conflicts found, present to user via AskUserQuestion and resolve before continuing.
+**9a. Conflict detection.** Spawn an `intuition-researcher` agent: "Read all blueprint files in `{context_path}/blueprints/`. Compare for: contradictory decisions, overlapping file modifications with conflicting changes, inconsistent interface assumptions, and duplicated work. Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts, write 'No conflicts detected.'" Wait for completion. If conflicts found, present to user via AskUserQuestion and resolve before continuing.
 
 **9b. Vision review.** Skip this step if only 1 specialist completed (no cross-specialist seams to check).
 
-For multi-specialist projects, spawn a sonnet Task subagent:
+For multi-specialist projects, spawn an `intuition-reviewer` agent:
 
 "Read these files:
 1. `{context_path}/prompt_brief.md` — extract Commander's Intent (desired end state, non-negotiables, boundaries) and Success Criteria

@@ -1,9 +1,11 @@
 {
-  "name": "intuition-skills",
-  "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
-  "version": "2.0.0",
+  "name": "intuition",
+  "description": "Domain-adaptive workflow system for Claude Code: prompt, outline, assemble specialist teams, detail with domain experts, build with format producers, test code output. Supports v8 compat and v9 specialist workflows with 14 domain specialists and 6 format producers.",
+  "version": "9.4.0",
   "author": {
     "name": "Intuition Contributors"
   },
-  "license": "MIT"
+  "repository": "https://github.com/tgoodington/intuition",
+  "license": "MIT",
+  "keywords": ["workflow", "planning", "execution", "specialists", "producers", "orchestration"]
 }

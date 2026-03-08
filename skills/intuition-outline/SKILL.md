@@ -99,9 +99,9 @@ Create the directory `{context_path}/.outline_research/` if it does not exist.
 
 **Resume check:** If `{context_path}/.outline_research/orientation.md` already exists AND `{context_path}/.outline_research/decisions_log.md` exists with at least one entry, skip the research agents — read the existing orientation.md and proceed to Step 3. This avoids re-spending tokens on research that hasn't changed.
 
-Launch 2 sonnet research agents in parallel using the Task tool:
+Launch 2 `intuition-researcher` agents in parallel using the Task tool (both calls in a single response):
 
-**Agent 1 — Codebase Topology** (subagent_type: Explore, model: sonnet):
+**Agent 1 — Codebase Topology** (subagent_type: `intuition-researcher`):
 Prompt:
 "The project root is the current working directory. Analyze the codebase structure by following these steps in order:
 
@@ -124,7 +124,7 @@ Report on:
 
 Under 500 words. Facts only, no speculation."
 
-**Agent 2 — Pattern Extraction** (subagent_type: Explore, model: sonnet):
+**Agent 2 — Pattern Extraction** (subagent_type: `intuition-researcher`):
 Prompt:
 "The project root is the current working directory. Analyze codebase patterns by following these steps:
 
@@ -156,7 +156,7 @@ When `active_context` is NOT trunk:
 3. Read parent's outline.md and any design specs at `{parent_path}/design_spec_*.md`.
 4. Launch a THIRD orientation research agent alongside the existing two:
 
-**Agent 3 — Parent Intersection Analysis** (subagent_type: Explore, model: sonnet):
+**Agent 3 — Parent Intersection Analysis** (subagent_type: `intuition-researcher`):
 Prompt:
 "The project root is the current working directory. Compare two workflow artifacts:
 
@@ -257,8 +257,8 @@ For each major decision domain identified from the prompt brief, orientation res
 
 1. **Identify** the decision needed. State it clearly.
 2. **Research** (when needed): Launch 1-2 targeted research agents via Task tool.
-   - Use haiku (subagent_type: Explore) for straightforward fact-gathering.
-   - Use sonnet (subagent_type: general-purpose) for trade-off analysis against the existing codebase.
+   - Use `intuition-researcher` for straightforward fact-gathering.
+   - Use `intuition-researcher` (model override: sonnet) for trade-off analysis against the existing codebase.
    - Each agent prompt MUST reference the specific decision domain, return under 400 words.
    - Write results to `{context_path}/.outline_research/decision_[domain].md` (snake_case).
    - NEVER launch more than 2 agents simultaneously.
@@ -606,14 +606,14 @@ If any check fails, fix it before presenting.
 
 ## Tier 1: Orientation (launched in Phase 1)
 
-Launch 2 sonnet Explore agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `{context_path}/.outline_research/orientation.md`.
+Launch 2 `intuition-researcher` agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `{context_path}/.outline_research/orientation.md`.
 
 ## Tier 2: Decision Research (launched on demand in Phase 3)
 
 Launch 1-2 agents per decision domain when dialogue reveals unknowns needing investigation.
 
-- Use haiku Explore agents for fact-gathering (e.g., "What testing framework does this project use?").
-- Use sonnet general-purpose agents for trade-off analysis (e.g., "Compare approaches X and Y given the current architecture").
+- Use `intuition-researcher` agents for fact-gathering (e.g., "What testing framework does this project use?").
+- Use `intuition-researcher` agents (model override: sonnet) for trade-off analysis (e.g., "Compare approaches X and Y given the current architecture").
 - Each prompt MUST specify the decision domain and a 400-word limit.
 - Reference specific files or directories when possible.
 - Write results to `{context_path}/.outline_research/decision_[domain].md`.

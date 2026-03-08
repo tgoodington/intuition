@@ -125,10 +125,10 @@ From the design brief, extract:
 
 Create the directory `{context_path}/.design_research/[item_name]/` if it does not exist.
 
-**Agent 1 — Existing Work Scan** (subagent_type: Explore, model: haiku):
+**Agent 1 — Existing Work Scan** (subagent_type: `intuition-researcher`):
 Prompt: "Search the project for existing work related to [item description]. Look for: prior documentation, existing implementations, reference material, patterns that inform this design. Check docs/, src/, and any relevant directories. Report findings in under 400 words. Facts only."
 
-**Agent 2 — Context Mapping** (subagent_type: Explore, model: haiku):
+**Agent 2 — Context Mapping** (subagent_type: `intuition-researcher`):
 Prompt: "Map the context surrounding [item description]. What already exists that this design must work with or within? What are the boundaries and integration points? Check the codebase structure, existing docs, and configuration. Report in under 400 words. Facts only."
 
 When both return, combine results and write to `{context_path}/.design_research/[item_name]/context.md`.
@@ -156,7 +156,7 @@ Domain-adaptive focus questions:
 
 Each turn: 2-4 sentences of analysis referencing research findings, then ONE question via AskUserQuestion with 2-4 options.
 
-**Research triggers:** If an element definition requires investigating existing patterns or prior art, launch a targeted haiku agent. WAIT for results before continuing the dialogue.
+**Research triggers:** If an element definition requires investigating existing patterns or prior art, launch a targeted `intuition-researcher` agent. WAIT for results before continuing the dialogue.
 
 # PHASE 3: CONNECTIONS (1-2 turns) [ECD: C]
 
@@ -184,7 +184,7 @@ Domain-adaptive focus questions:
 
 This phase gets the most turns because dynamics design often reveals new elements or connection needs. If a gap appears, loop back briefly to address it.
 
-**Research triggers:** For complex design questions requiring deeper analysis, launch a sonnet agent (subagent_type: general-purpose, model: sonnet) for trade-off analysis. Limit: 1 at a time, 600-word responses. WAIT for results before continuing the dialogue.
+**Research triggers:** For complex design questions requiring deeper analysis, launch an `intuition-researcher` agent (model override: sonnet) for trade-off analysis. Limit: 1 at a time, 600-word responses. WAIT for results before continuing the dialogue.
 
 # PHASE 5: FORMALIZATION (1 turn)
 
@@ -354,12 +354,12 @@ Working files in `.design_research/` enable resuming interrupted design sessions
 
 ## Context Research (launched in Phase 1)
 
-Launch 2 haiku Explore agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `.design_research/[item_name]/context.md`.
+Launch 2 `intuition-researcher` agents in parallel via Task tool. See Phase 1, Step 2 for prompt templates. Write combined results to `.design_research/[item_name]/context.md`.
 
 ## Targeted Research (launched on demand in Phases 2-4)
 
-- Use haiku Explore agents for fact-gathering (e.g., "What patterns exist in the project for this kind of thing?")
-- Use sonnet general-purpose agents for trade-off analysis (e.g., "Compare approach X and Y given the existing context")
+- Use `intuition-researcher` agents for fact-gathering (e.g., "What patterns exist in the project for this kind of thing?")
+- Use `intuition-researcher` agents (model override: sonnet) for trade-off analysis (e.g., "Compare approach X and Y given the existing context")
 - Each prompt MUST specify the design question and a 400-word limit (600 for sonnet)
 - Write results to `.design_research/[item_name]/options_[topic].md`
 - NEVER launch more than 2 agents simultaneously

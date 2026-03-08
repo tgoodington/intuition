@@ -191,7 +191,7 @@ Execute the investigation protocol for the classified category. This is NOT a ch
 - Compare against implementation — does code match outline?
 - The answer determines where the fix belongs (code, plan, or discovery).
 
-**For large dependency graphs:** Launch a Research/Explorer subagent (haiku):
+**For large dependency graphs:** Launch an `intuition-researcher` agent:
 ```
 Task: "Map all imports and usages of [module/function] across the codebase.
 Report: file paths, line numbers, how each usage depends on this module.
@@ -259,8 +259,8 @@ Do NOT proceed to Step 8 without explicit user confirmation.
 | Scenario | Action |
 |----------|--------|
 | Trivial (1-3 lines, single file) | Debugger MAY fix directly |
-| Moderate (multiple lines, single file) | Delegate to Code Writer (sonnet) |
-| Complex (multiple files) | Delegate to Code Writer (sonnet) with full causal chain context |
+| Moderate (multiple lines, single file) | Delegate to `intuition-code-writer` agent |
+| Complex (multiple files) | Delegate to `intuition-code-writer` agent with full causal chain context |
 | Cross-context | Delegate with BOTH contexts' implementation guides referenced |
 
 **Subagent prompt template:**
@@ -295,8 +295,8 @@ ALWAYS populate dependent files and interfaces. Never omit context from subagent
 After the subagent returns:
 
 1. **Review the changes** — Read modified files. Confirm the fix addresses the ROOT CAUSE, not just the symptom.
-2. **Run tests** — Launch Test Runner (haiku) if test infrastructure exists.
-3. **Impact check** — Launch Impact Analyst (haiku):
+2. **Run tests** — Launch `intuition-researcher` agent if test infrastructure exists.
+3. **Impact check** — Launch `intuition-researcher` agent:
    ```
    "Read [dependent files]. Verify compatibility with changes to [modified files].
    Report broken imports, changed interfaces, or behavioral mismatches. Under 400 words."
@@ -365,12 +365,10 @@ After reporting (and optional git commit), ask: "Is there another issue to inves
 
 # SUBAGENT TABLE
 
-| Agent | Model | When to Use |
-|-------|-------|-------------|
-| **Code Writer** | sonnet | Implementing fixes — moderate to complex changes |
-| **Research/Explorer** | haiku | Mapping dependencies, cross-context analysis, profiling setup |
-| **Test Runner** | haiku | Running tests after fixes to verify correctness |
-| **Impact Analyst** | haiku | Verifying dependent code is compatible after changes |
+| Agent | Definition | When to Use |
+|-------|-----------|-------------|
+| `intuition-code-writer` | sonnet, acceptEdits | Implementing fixes — moderate to complex changes |
+| `intuition-researcher` | haiku, dontAsk | Mapping dependencies, cross-context analysis, test running, impact analysis |
 
 ---
 

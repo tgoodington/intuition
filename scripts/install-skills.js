@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Installation script for Intuition skills, specialists, and producers
+ * Installation script for Intuition skills, specialists, producers, and agents
  *
  * This script is run after `npm install -g @tgoodington/intuition`
  * It copies skills to ~/.claude/skills/, specialists to ~/.claude/specialists/,
- * and producers to ~/.claude/producers/ for global access.
+ * producers to ~/.claude/producers/, and agents to ~/.claude/agents/ for global access.
  */
 
 const fs = require('fs');
@@ -77,6 +77,14 @@ const producers = [
   'data-file-writer'
 ];
 
+// Reusable agent definitions (v9.4) — scanned dynamically
+const agentsDir = path.join(__dirname, '..', 'agents');
+const agents = fs.existsSync(agentsDir)
+  ? fs.readdirSync(agentsDir).filter(entry =>
+      entry.endsWith('.md')
+    )
+  : [];
+
 // Main installation logic
 try {
   const homeDir = os.homedir();
@@ -130,6 +138,14 @@ try {
     log(`Created ${claudeProducersDir}`);
   }
 
+  // --- Agents directory (v9.4) ---
+  const claudeAgentsDir = path.join(homeDir, '.claude', 'agents');
+
+  if (!fs.existsSync(claudeAgentsDir)) {
+    fs.mkdirSync(claudeAgentsDir, { recursive: true });
+    log(`Created ${claudeAgentsDir}`);
+  }
+
   // Install each skill
   skills.forEach(skillName => {
     const src = path.join(packageRoot, 'skills', skillName);
@@ -175,6 +191,23 @@ try {
     }
   });
 
+  // Install each agent definition (flat .md files)
+  if (agents.length === 0) {
+    log(`No agent definitions found in ${agentsDir} — skipping agent install`);
+  }
+  agents.forEach(agentFile => {
+    const src = path.join(agentsDir, agentFile);
+    const dest = path.join(claudeAgentsDir, agentFile);
+
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      log(`\u2713 Installed ${agentFile} agent to ${dest}`);
+    } else {
+      error(`${agentFile} agent not found at ${src}`);
+      process.exit(1);
+    }
+  });
+
   // Verify installation
   const allSkillsInstalled = skills.every(skillName =>
     fs.existsSync(path.join(claudeSkillsDir, skillName))
@@ -185,8 +218,11 @@ try {
   const allProducersInstalled = producers.every(name =>
     fs.existsSync(path.join(claudeProducersDir, name))
   );
+  const allAgentsInstalled = agents.every(name =>
+    fs.existsSync(path.join(claudeAgentsDir, name))
+  );
 
-  if (allSkillsInstalled && allSpecialistsInstalled && allProducersInstalled) {
+  if (allSkillsInstalled && allSpecialistsInstalled && allProducersInstalled && allAgentsInstalled) {
     log(`\u2713 Installation complete!`);
     log(`Skills are now available globally:`);
     log(`  /intuition-start          - Load project context and detect workflow phase`);
@@ -209,6 +245,8 @@ try {
     specialists.forEach(name => log(`  ${name}`));
     log(`Format producers (${producers.length}):`);
     producers.forEach(name => log(`  ${name}`));
+    log(`Reusable agents (${agents.length}):`);
+    agents.forEach(name => log(`  ${name.replace('.md', '')}`));
     log(`\nYou can now use these skills in any project with Claude Code.`);
   } else {
     error(`Verification failed - not all components properly installed`);

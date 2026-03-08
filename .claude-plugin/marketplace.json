@@ -5,22 +5,21 @@
     "email": "tgoodington@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
-    "version": "2.0.0"
+    "description": "Domain-adaptive workflow system for Claude Code with specialist teams and format producers.",
+    "version": "9.4.0"
   },
   "plugins": [
     {
-      "name": "intuition-skills",
+      "name": "intuition",
       "source": ".",
-      "description": "Five-skill system: discovery (Waldo), handoff, planning (Magellan), and execution (Faraday) for Claude Code",
-      "version": "2.0.0",
+      "description": "Domain-adaptive workflow system: prompt, outline, assemble, detail, build, test. 15 skills, 14 domain specialists, 6 format producers.",
+      "version": "9.4.0",
       "author": {
         "name": "Intuition Contributors"
       },
       "license": "MIT",
-      "keywords": ["planning", "execution", "architecture", "orchestration"],
-      "category": "productivity",
-      "strict": false
+      "keywords": ["workflow", "planning", "execution", "specialists", "producers", "orchestration"],
+      "category": "productivity"
     }
   ]
 }
