@@ -104,7 +104,7 @@ Ensure the `{context_path}/blueprints/` directory exists. After the subagent ret
 
 #### Stage 1a: Research Planning
 
-Spawn an opus Task subagent. The system prompt combines a research-planning framing (owned by this skill) with the specialist's domain expertise (from the profile):
+Spawn a sonnet Task subagent. The system prompt combines a research-planning framing (owned by this skill) with the specialist's domain expertise (from the profile):
 
 - **System prompt**: Construct by concatenating:
   1. **Framing (detail skill provides this):**
@@ -342,7 +342,9 @@ Spawn a FRESH opus Task subagent (do NOT resume Stage 1):
   - Full contents of `{context_path}/scratch/{specialist-name}-decisions.json`
   - Plan tasks with acceptance criteria
   - Prior blueprint contents (if any — read each path and include full text)
-- **Output instruction**: "Produce the complete blueprint in the universal envelope format (9 sections: Task Reference, Research Findings, Approach, Decisions Made, Deliverable Specification, Acceptance Mapping, Integration Points, Open Items, Producer Handoff). Write to `{context_path}/blueprints/{specialist-name}.md`. Every design choice must trace to Stage 1 research, a user decision from decisions.json, or a named domain standard. Ungrounded choices go in the Open Items section."
+- **Output instruction**: "Produce the complete blueprint in the universal envelope format (9 sections: Task Reference, Research Findings, Approach, Decisions Made, Deliverable Specification, Acceptance Mapping, Integration Points, Open Items, Producer Handoff). Write to `{context_path}/blueprints/{specialist-name}.md`. Every design choice must trace to Stage 1 research, a user decision from decisions.json, or a named domain standard. Ungrounded choices go in the Open Items section.
+
+     IMPORTANT — Testing boundary: Do NOT specify test files or test deliverables in Producer Handoff (Section 9). Testing is handled by a dedicated test phase, not by producers. If you have domain-specific testing knowledge (edge cases, critical paths, failure modes, boundary conditions), include it in the Approach section (Section 3) under a '### Testability Notes' subheading. This gives the test phase domain context without prescribing test files."
 
 Ensure the `{context_path}/blueprints/` directory exists (create via Bash `mkdir -p` if needed).
 
@@ -370,7 +372,9 @@ After a blueprint passes the traceability check:
 
 **8b. Update specialist state.** Read `.project-memory-state.json`. In `workflow.detail.specialists`, mark the completed specialist: `status → "completed"`, `stage → "done"`, `blueprint_path → "{context_path}/blueprints/{specialist-name}.md"`. Write back.
 
-**8c. Extract to memory.** Spawn a haiku Task subagent: "Read `{context_path}/blueprints/{specialist-name}.md`. Then read `docs/project_notes/decisions.md` and `docs/project_notes/key_facts.md`. Append only NEW entries: decisions from the blueprint's Decisions Made section → `decisions.md` as ADRs, domain facts from Research Findings → `key_facts.md`. Do not duplicate. Preserve existing formatting." Run in background.
+**8c. Extract to memory (inline).** Read the just-written blueprint's Decisions Made section (Section 4). For each decision, read `docs/project_notes/decisions.md` and use Edit to append a new ADR entry if one doesn't already exist. For key domain facts from the blueprint's Research Findings (Section 2), read `docs/project_notes/key_facts.md` and append if not present. Keep entries concise (2-3 lines each). Do NOT spawn a subagent — write directly.
+
+**8c-ii. Extract testability notes.** If the blueprint's Approach section (Section 3) contains a `### Testability Notes` subheading, extract its contents and append to `{context_path}/test_advisory.md` (create if it doesn't exist). Format: `## {Specialist Display Name}\n{testability notes content}\n`. This gives the test phase a compact file instead of needing to read all blueprints.
 
 **8d. Check for next specialist.** Read `{context_path}/team_assignment.json`. Read current state.
 

@@ -24,6 +24,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 8. You MUST write `{context_path}/test_report.md` before routing to handoff.
 9. You MUST run the Exit Protocol after writing the test report. NEVER route to `/intuition-handoff`.
 10. You MUST update `.project-memory-state.json` as part of the Exit Protocol.
+11. You MUST NOT use `run_in_background` for subagents in Steps 2 and 5. All research and test-creation agents MUST complete before their next step begins.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -63,11 +64,11 @@ Check for existing artifacts before starting. Use `{context_path}/scratch/test_s
 Read these files:
 
 1. `{context_path}/build_report.md` — REQUIRED. Extract: files modified, task results, deviations from blueprints, decision compliance notes.
-3. `{context_path}/outline.md` — acceptance criteria per task.
-4. ALL files matching `{context_path}/blueprints/*.md` — specialist blueprints with deliverable specifications.
-5. `{context_path}/team_assignment.json` — producer assignments (identify code-writer tasks).
-6. ALL files matching `{context_path}/scratch/*-decisions.json` — decision tiers and chosen options per specialist.
-7. `docs/project_notes/decisions.md` — project-level ADRs.
+2. `{context_path}/outline.md` — acceptance criteria per task.
+3. `{context_path}/test_advisory.md` — compact testability notes extracted by the detail phase (one section per specialist). Read this INSTEAD of all blueprints. If this file does not exist (older workflows), fall back to reading `{context_path}/blueprints/*.md` and extracting Testability Notes from each Approach section.
+4. `{context_path}/team_assignment.json` — producer assignments (identify code-writer tasks).
+5. ALL files matching `{context_path}/scratch/*-decisions.json` — decision tiers and chosen options per specialist.
+6. `docs/project_notes/decisions.md` — project-level ADRs.
 
 From build_report.md, extract:
 - **Files modified** — the scope boundary for testing and fixes
@@ -76,10 +77,9 @@ From build_report.md, extract:
 - **Decision compliance** — any flagged decision issues
 - **Test Deliverables Deferred** — test specs/files that specialists recommended but build skipped (if this section exists)
 
-From blueprints, extract any test recommendations:
-- Test cases specialists suggested in their blueprints
-- Edge cases or coverage areas they flagged
-- Test-related deliverables from Producer Handoff sections
+From test_advisory.md (or blueprints as fallback), extract domain test knowledge:
+- Edge cases, critical paths, failure modes, and boundary conditions flagged by specialists
+- Any test-relevant domain insights
 
 From decisions files, build a decision index:
 - Map each `[USER]` decision to its chosen option
@@ -88,7 +88,7 @@ From decisions files, build a decision index:
 
 ## STEP 2: RESEARCH (2 Parallel Haiku Explore Agents)
 
-Spawn two haiku Explore agents in parallel (both Task calls in a single response):
+Spawn two haiku Explore agents in parallel (both Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for both agents to return before proceeding to Step 3:
 
 **Agent 1 — Test Infrastructure:**
 "Search the project for test infrastructure. Find: test framework and runner (jest, vitest, mocha, pytest, etc.), test configuration files, existing test directories and naming conventions, mock/fixture patterns, test utility helpers, CI test commands, coverage configuration and thresholds. Report exact paths and configuration values."
@@ -157,11 +157,11 @@ Tests that only exercise isolated helper functions satisfy unit coverage but do 
 
 ### Specialist Test Recommendations
 
-Before finalizing the test plan, review specialist test recommendations from two sources:
-- **Blueprint test recommendations**: Test cases, edge cases, and coverage areas that specialists flagged in their blueprints
-- **Deferred test deliverables**: Test specs/files from build_report.md's "Test Deliverables Deferred" section (and/or test_brief.md's "Specialist Test Recommendations" section)
+Before finalizing the test plan, review specialist domain knowledge from blueprints:
+- **Testability Notes**: Edge cases, critical paths, failure modes, and boundary conditions from each blueprint's Approach section (Section 3, `### Testability Notes` subheading)
+- **Deferred test deliverables**: Any test specs from build_report.md's "Test Deliverables Deferred" section (legacy — older blueprints may still include test files in Producer Handoff)
 
-Specialists have domain expertise about what should be tested. Incorporate relevant recommendations into your test plan, but you are not bound to follow them exactly. You own the test strategy — use specialist input as advisory, not prescriptive.
+Specialists have domain expertise about what should be tested. Incorporate their testability insights into your test plan, but you own the test strategy — use specialist input as advisory, not prescriptive.
 
 ### Output
 
@@ -203,7 +203,7 @@ Options:
 
 ## STEP 5: CREATE TESTS
 
-Delegate test creation to sonnet Task subagents. Parallelize independent test files (multiple Task calls in a single response).
+Delegate test creation to sonnet Task subagents. Parallelize independent test files (multiple Task calls in a single response). Do NOT use `run_in_background` — you MUST wait for ALL subagents to return before proceeding to Step 6.
 
 For each test file, spawn a sonnet subagent:
 
@@ -224,7 +224,7 @@ You are a test writer. Create a test file following these specifications exactly
 Write the complete test file to the specified path. Follow the project's existing test style exactly. Do NOT add test infrastructure (no new packages, no config changes).
 ```
 
-After all subagents return, verify each test file was written. If any failed, retry once with error context.
+SYNCHRONIZATION GATE: After all subagents return, verify each test file exists on disk using Glob. If any file is missing, retry that subagent once (foreground) with error context. Do NOT proceed to Step 6 until every planned test file is confirmed on disk.
 
 ## STEP 6: RUN TESTS + FIX CYCLE
 
@@ -327,7 +327,7 @@ Write `{context_path}/test_report.md`:
 
 ## STEP 8: EXIT PROTOCOL
 
-**8a. Extract to memory.** Spawn a haiku Task subagent: "Read `{context_path}/test_report.md`. Then read `docs/project_notes/key_facts.md`, `docs/project_notes/issues.md`, and `docs/project_notes/bugs.md`. Append only NEW entries: test coverage insights → `key_facts.md`, implementation fixes → `bugs.md`, escalated issues → `issues.md`. Do not duplicate. Preserve existing formatting." Run in background.
+**8a. Extract to memory (inline).** Review the test report you just wrote. For test coverage insights, read `docs/project_notes/key_facts.md` and use Edit to append concise entries (2-3 lines each) if not already present. For implementation fixes applied, read `docs/project_notes/bugs.md` and append. For escalated issues, read `docs/project_notes/issues.md` and append. Do NOT spawn a subagent — write directly.
 
 **8b. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.test.completed` → `true`, `workflow.test.completed_at` → current ISO timestamp, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp (if not already set). Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"test_to_complete"`. Write back.
 

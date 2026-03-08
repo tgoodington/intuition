@@ -97,6 +97,8 @@ From the prompt brief, extract: core problem, success criteria, stakeholders, co
 
 Create the directory `{context_path}/.outline_research/` if it does not exist.
 
+**Resume check:** If `{context_path}/.outline_research/orientation.md` already exists AND `{context_path}/.outline_research/decisions_log.md` exists with at least one entry, skip the research agents — read the existing orientation.md and proceed to Step 3. This avoids re-spending tokens on research that hasn't changed.
+
 Launch 2 sonnet research agents in parallel using the Task tool:
 
 **Agent 1 — Codebase Topology** (subagent_type: Explore, model: sonnet):
@@ -201,7 +203,7 @@ When actors are sufficiently mapped (user has confirmed or adjusted), transition
 Based on the scope revealed by the prompt brief and actors discussion, recommend a outline depth tier:
 
 - **Lightweight** (1-4 tasks): Focused scope, few unknowns. Outline includes: Objective, Discovery Summary, Task Sequence, Execution Notes.
-- **Standard** (5-10 tasks): Moderate complexity. Adds: Technology Decisions, Testing Strategy, Risks & Mitigations.
+- **Standard** (5-10 tasks): Moderate complexity. Adds: Technology Decisions, Risks & Mitigations.
 - **Comprehensive** (10+ tasks): Broad scope, multiple components. All sections including Component Architecture and Interface Contracts.
 
 Present your recommendation with reasoning via AskUserQuestion. Options: the three tiers (with your recommendation marked). The user may agree or pick a different tier.
@@ -354,7 +356,7 @@ After writing `outline.md`:
 
 **1. Update state:** Read `.project-memory-state.json`. Target the active context object (trunk or branch). Set: `status` → `"outline"`, `workflow.outline.completed` → `true`, `workflow.outline.completed_at` → current ISO timestamp, `workflow.outline.approved` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"outline_complete"`. Write back.
 
-**2. Extract to memory:** Spawn a haiku Task subagent (subagent_type: Explore): "Read `{context_path}/outline.md` and `{context_path}/.outline_research/decisions_log.md`. Then read `docs/project_notes/decisions.md` and `docs/project_notes/issues.md`. Append only NEW entries: architectural decisions → `decisions.md` as ADRs, risks and dependencies → `issues.md`. Do not duplicate existing entries. Preserve existing formatting." Run in background — do not wait for completion.
+**2. Extract to memory (inline).** Read `{context_path}/.outline_research/decisions_log.md`. For each locked decision, read `docs/project_notes/decisions.md` and use Edit to append a new ADR entry if one doesn't already exist for that decision. For each risk identified during dialogue, read `docs/project_notes/issues.md` and use Edit to append if not already present. Keep entries concise (2-3 lines each). Do NOT spawn a subagent for this — write directly.
 
 **3. Fast Track Assessment (v9 only):**
 
@@ -405,8 +407,8 @@ If fast track declined OR conditions not met, continue to step 4.
 ## Scope Scaling
 
 - **Lightweight**: Sections 1, 2, 6, 6.5, 10
-- **Standard**: Sections 1, 2, 3, 6, 6.5, 7, 8, 10
-- **Comprehensive**: All sections (1-10, including 6.5)
+- **Standard**: Sections 1, 2, 3, 6, 6.5, 8, 10
+- **Comprehensive**: All sections (1-6.5, 8-10)
 
 Section 6.5 (Detail Assessment) is ALWAYS included regardless of tier.
 Section 2.5 is Parent Context — included for ALL tiers when on a branch.
@@ -482,8 +484,7 @@ Depth controls specialist invocation:
 
 **Acceptance criteria rule:** If a criterion can only be satisfied ONE way, it is over-specified. Criteria describe outcomes ("users can reset passwords via email"), not implementations ("add a resetPassword() method that calls sendEmail()"). The engineer and build phases decide the code-level HOW.
 
-### 7. Testing Strategy (Standard+, when code is produced)
-Test types required. Which tasks need tests (reference task numbers). Critical test scenarios. Infrastructure needed.
+**No test tasks.** Do NOT create tasks for writing tests (e.g., "Write unit tests for the API layer"). Testing is a dedicated phase (`/intuition-test`), not a task. The test phase discovers infrastructure, designs strategy, and creates tests independently. Outline tasks describe what gets built — verification is the test phase's job.
 
 ### 8. Risks & Mitigations (Standard+)
 

@@ -48,7 +48,7 @@ Scan three tiers in priority order. Deduplicate by `name` — first found wins.
 2. Glob `~/.claude/specialists/*/*.specialist.md` (user-level, expand `~` via Bash)
 3. Determine the Intuition package root: run `node -e "console.log(require.resolve('@tgoodington/intuition/package.json'))"` via Bash, extract the directory. Glob `{package_root}/specialists/*/*.specialist.md`.
 
-For each profile found: read the YAML frontmatter, extract `name` and `domain_tags`. Build a specialists list.
+For each profile found: read ONLY the YAML frontmatter using `Read` with `limit: 30` (frontmatter is typically under 25 lines). Extract `name` and `domain_tags`. Do NOT read the full profile body — the Stage 1/2 protocols are not needed for matching. Build a specialists list.
 
 If zero specialists found after all three tiers, HALT with this message:
 "No specialist profiles found. Install specialist profiles in one of these locations:
@@ -58,7 +58,7 @@ If zero specialists found after all three tiers, HALT with this message:
 
 ### Step 3: Scan Producer Registry
 
-Same three-tier pattern using `producers/` directories and `*.producer.md` files. Extract `name` and `output_formats` from each. Deduplicate by name with same priority (first found wins).
+Same three-tier pattern using `producers/` directories and `*.producer.md` files. Read ONLY the YAML frontmatter using `Read` with `limit: 30`. Extract `name` and `output_formats` from each. Do NOT read the full profile body. Deduplicate by name with same priority (first found wins).
 
 If zero producers found, HALT with the same pattern message referencing producer directories.
 
@@ -128,7 +128,7 @@ If the outline has no format constraints and no Section 3 technology decisions a
 ### Step 5: Prerequisite Checking
 
 For each producer in `producer_assignments`:
-1. Read the full producer profile from the registry
+1. Read the producer profile frontmatter from the registry (the `tooling` field is within the frontmatter, already read in Step 3)
 2. Check `tooling.{output_format}.required` array
 3. For each required tool, run Bash to verify availability (e.g., `python --version`, `which pandoc`)
 4. Record results in `prerequisite_check` (format: `"producer/format": "PASS — tool version found"` or `"FAIL — tool not found"`)

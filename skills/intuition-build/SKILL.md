@@ -149,7 +149,7 @@ For each task per `team_assignment.json` execution order (parallelize tasks with
    - Project: `.claude/producers/{producer-name}/{producer-name}.producer.md`
    - User: `~/.claude/producers/{producer-name}/{producer-name}.producer.md`
    - Framework-shipped: scan the `producers/` directory at the package root
-4. Construct the delegation prompt using the producer profile as system instructions and the blueprint as task context. Only include non-test output files in the delegation.
+4. Construct the delegation prompt using the producer profile as system instructions. Direct the subagent to READ the blueprint from disk (do NOT inject blueprint content into the prompt — this avoids duplicating large files in both parent and subagent contexts). Only include non-test output files in the delegation.
 5. Spawn the producer as a Task subagent using the model declared in the producer profile.
 
 **Producer delegation format:**
@@ -174,25 +174,27 @@ When building on a branch, add to subagent prompts:
 
 ## STEP 5: THREE-LAYER REVIEW CHAIN
 
-After a producer completes each deliverable, execute all three review layers in sequence.
+After producers complete deliverables, execute all three review layers. **Batch deliverables from the same specialist** into a single review subagent (up to 3 deliverables per review — if a specialist has more than 3, split into multiple batches). This reduces subagent spawn overhead.
 
 ### Layer 1: Domain Specialist Review
 
 1. Identify the specialist that authored the blueprint (from blueprint YAML frontmatter `specialist` field).
-2. Load that specialist's profile from the registry (same scan order as producers: project → user → framework).
-3. Extract the Review Protocol section from the specialist profile body.
-4. Spawn a review subagent with adversarial framing. Use the `reviewer_model` declared in the specialist profile's YAML frontmatter.
+2. Locate that specialist's profile path in the registry (same scan order as producers: project → user → framework).
+3. Spawn a review subagent with adversarial framing. Use the `reviewer_model` declared in the specialist profile's YAML frontmatter. If this specialist produced multiple deliverables, include ALL of them (up to 3) in a single review subagent.
 
 **Specialist review delegation format:**
 ```
-You are a [specialist display_name] reviewing a deliverable produced from your blueprint. Your job is to FIND PROBLEMS — not to approve.
+You are a [specialist display_name] reviewing deliverables produced from your blueprint. Your job is to FIND PROBLEMS — not to approve.
 
-[Specialist Review Protocol section content]
+Read your review protocol from: [specialist profile path] — find the ## Review Protocol section.
 
 Blueprint: Read {context_path}/blueprints/{specialist-name}.md
-Deliverable: Read [produced output file paths]
+Deliverables: Read each of these files:
+- [produced output file path 1]
+- [produced output file path 2]
+- ...
 
-Does this deliverable accurately capture what the blueprint specified? Are the domain-specific requirements met? Check every review criterion. Return: PASS + summary OR FAIL + specific issues list with blueprint section references.
+For EACH deliverable: does it accurately capture what the blueprint specified? Are the domain-specific requirements met? Check every review criterion. Return per deliverable: PASS + summary OR FAIL + specific issues list with blueprint section references.
 ```
 
 - If FAIL → send feedback back to the producer (re-delegate with specific issues). Do NOT proceed to Layer 2.
@@ -222,14 +224,15 @@ Log all deviations (additions and omissions) in the build report's "Deviations f
 ### Layer 3: Mandatory Cross-Cutting Reviewers
 
 1. Check the specialist profile's `mandatory_reviewers` field in its YAML frontmatter.
-2. For EACH mandatory reviewer listed: load their specialist profile, extract their Review Protocol, spawn a review subagent using their `reviewer_model`.
+2. For EACH mandatory reviewer listed: locate their specialist profile, spawn a review subagent using their `reviewer_model`.
 3. **Security Expert is ALWAYS mandatory** — even if `mandatory_reviewers` is empty. Spawn a Security Expert review for every deliverable that produces code, configuration, or scripts.
+4. **Batch cross-cutting reviews** the same way as Layer 1: include up to 3 deliverables per review subagent. If all code deliverables in the current execution phase share the same cross-cutting reviewer, batch them into one review call.
 
 **Cross-cutting review delegation format:**
 ```
 You are a [reviewer display_name] performing a cross-cutting review. Your job is to FIND PROBLEMS in your area of expertise.
 
-[Reviewer's Review Protocol section content]
+Read your review protocol from: [reviewer profile path] — find the ## Review Protocol section.
 
 Deliverable: Read [produced output file paths]
 Blueprint: Read {context_path}/blueprints/{specialist-name}.md (for context only)
@@ -348,7 +351,7 @@ Present a concise version: task count, pass/fail status, files produced count, r
 
 After reporting results:
 
-**8a. Extract to memory.** Spawn a haiku Task subagent: "Read `{context_path}/build_report.md`. Then read `docs/project_notes/key_facts.md`, `docs/project_notes/issues.md`, and `docs/project_notes/bugs.md`. Append only NEW entries: lessons/deviations → `key_facts.md`, completed work → `issues.md`, bugs found → `bugs.md`. Do not duplicate. Preserve existing formatting." Run in background.
+**8a. Extract to memory (inline).** Review the build report you just wrote. For any notable deviations or lessons learned, read `docs/project_notes/key_facts.md` and use Edit to append concise entries (2-3 lines each) if not already present. For any bugs found during review cycles, read `docs/project_notes/bugs.md` and append. Do NOT spawn a subagent — write directly.
 
 **8b. Determine next phase.** Read `{context_path}/team_assignment.json`. Check if any `producer_assignments` entry has `producer == "code-writer"`.
 
