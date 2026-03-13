@@ -28,7 +28,7 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 16. When planning on a branch, you MUST read the parent context's outline.md and include a Parent Context section (Section 2.5). Inherited architectural decisions from the parent are binding unless the user explicitly overrides them.
 17. You MUST NEVER proceed past a research agent launch until its results have returned and been incorporated into your analysis. Do NOT draft options, present findings, or write any output document while a research agent is still running.
 
-REMINDER: One question per turn. v9 → fast track `/intuition-build` or `/intuition-assemble`. v8 → `/intuition-handoff`. Never to `/intuition-engineer`.
+REMINDER: One question per turn. v9 → fast track `/intuition-build` or `/intuition-assemble`. v8 → `/intuition-handoff`.
 
 # ARCH COVERAGE FRAMEWORK
 

@@ -162,16 +162,16 @@ Output one line of status, then the next command.
 | planning_in_progress | "Planning in progress." | `/intuition-outline` |
 | ready_for_assemble | "Planning complete (v9)." | `/intuition-assemble` |
 | detail_in_progress | "Detail phase in progress." | `/intuition-detail` |
-| design_in_progress | "Design exploration in progress." | See DESIGN ROUTING below |
+| design_in_progress | "Design exploration in progress (v8 legacy)." | See DESIGN ROUTING below |
 | ready_for_engineering | "Planning complete (v8)." | `/intuition-handoff` |
-| engineering_in_progress | "Engineering in progress." | `/intuition-engineer` |
+| engineering_in_progress | "Engineering in progress (v8 legacy)." | `/intuition-handoff` |
 | ready_for_build | "Specs ready." | `/intuition-build` |
 | build_in_progress | "Build in progress." | `/intuition-build` |
 | ready_for_test | "Build complete, testing pending." | `/intuition-test` |
 | test_in_progress | "Test phase in progress." | `/intuition-test` |
 | post_completion | See POST-COMPLETION below | — |
 
-**DESIGN ROUTING (v8 only):** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" → `/intuition-design`. If an item just completed and others remain → `/intuition-handoff`. If ambiguous, ask the user.
+**DESIGN ROUTING (v8 only):** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" or items remain → `/intuition-handoff` (design and engineer skills have been removed; handoff can help migrate or skip forward). If ambiguous, ask the user.
 
 **DETAIL ROUTING:** Read `context_workflow.workflow.detail`. If `current_specialist` is set and its status is "in_progress" → `/intuition-detail`. If all specialists completed but build not started → `/intuition-build`. If ambiguous, ask the user.
 

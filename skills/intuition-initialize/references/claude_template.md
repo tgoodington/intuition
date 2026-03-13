@@ -5,13 +5,11 @@ This project uses a five-phase workflow coordinated by the Intuition system, wit
 ### Workflow Model
 
 The Intuition workflow uses a trunk-and-branch model:
-- **Trunk**: The first prompt→plan→design→engineer→build cycle. Represents the core vision.
+- **Trunk**: The first prompt→outline→detail→build→test cycle. Represents the core vision.
 - **Branches**: Subsequent cycles that build on, extend, or diverge from trunk or other branches.
 - **Debugger**: Post-completion diagnostic specialist for hard problems.
 
-All phases: `/intuition-prompt` → `/intuition-handoff` → `/intuition-outline` → `/intuition-handoff` →
-`[/intuition-design loop]` → `/intuition-handoff` → `/intuition-engineer` → `/intuition-handoff` →
-`/intuition-build` → `/intuition-handoff` → complete
+v9 workflow: `/intuition-prompt` → `/intuition-outline` → `/intuition-assemble` → `/intuition-detail` → `/intuition-build` → `/intuition-test` → complete
 
 After completion: `/intuition-start` to create branches or `/intuition-debugger` to debug issues.
 
@@ -36,29 +34,30 @@ The project follows a structured workflow with handoff transitions between phase
 - Flags tasks requiring design exploration with rationale
 - Output: `outline.md` with tasks, dependencies, risks, design recommendations
 
-**Design** — `/intuition-design`
-- Detailed design exploration for flagged plan items
-- Framework: ECD (Elements, Connections, Dynamics)
-- Domain-agnostic: works for code, world building, UI, documents, or any creative/structural work
-- Runs once per flagged item in a loop managed by handoff
-- Output: Design specifications per item
+**Assemble** — `/intuition-assemble`
+- Matches outline tasks to domain specialists and format producers
+- Writes team_assignment.json for the detail phase
 
-**Engineering** — `/intuition-engineer`
-- Creates code-level specifications through codebase research and interactive dialogue
-- Research subagents read codebase, engineer discusses decisions with user
-- Output: `code_specs.md` — determines the code-level HOW for every task
+**Detail** — `/intuition-detail`
+- Domain specialists produce detailed blueprints
+- Stage 1 exploration → user gate → Stage 2 specification
+- Output: Blueprints per specialist domain
 
 **Build** — `/intuition-build`
-- Delegates implementation to subagents, verifies against code specs and acceptance criteria
+- Delegates implementation to format producers, verifies against blueprints and acceptance criteria
 - Mandatory security review before completion
-- Makes NO engineering decisions — matches output to specs
-- Output: `build_report.md` — task outcomes, files modified, deviations from specs
+- Output: `build_report.md` — task outcomes, files modified
+
+**Test** — `/intuition-test`
+- Post-build quality gate
+- Designs test strategy, creates tests, runs fix cycles
+- Output: `test_report.md`
 
 **Session Primer** — `/intuition-start`
 - Loads project context, detects workflow phase, suggests next step
 - Run at the start of any session to get oriented
 
-**Recommended Flow**: Prompt → Handoff → Plan → Handoff → [Design Loop] → Handoff → Engineer → Handoff → Build → Handoff → complete
+**Recommended Flow (v9)**: Prompt → Outline → Assemble → Detail → Build → Test → complete
 
 Run `/clear` before each phase skill. After completion, run `/intuition-start` to create a branch or invoke `/intuition-debugger` to debug issues.
 
@@ -74,11 +73,11 @@ Run `/clear` before each phase skill. After completion, run `/intuition-start` t
 **Phase Output Files** (created during workflow, in `{context_path}/`):
 - **outline_brief.md** — Brief for outline phase (created by Handoff)
 - **outline.md** — Structured project outline with design recommendations
-- **design_brief.md** — Brief for current design item (created/updated by Handoff)
-- **engineering_brief.md** — Brief for engineering phase (created by Handoff)
-- **code_specs.md** — Code-level specifications (created by Engineer)
-- **build_brief.md** — Brief for build phase (created by Handoff)
+- **team_assignment.json** — Specialist/producer assignments (created by Assemble)
+- **blueprints/** — Detailed blueprints per specialist (created by Detail)
+- **build_brief.md** — Brief for build phase (created by Handoff, v8)
 - **build_report.md** — Task outcomes and files modified (created by Build)
+- **test_report.md** — Test results and coverage (created by Test)
 
 ### Memory-Aware Protocols
 
@@ -115,20 +114,17 @@ Run `/clear` before each phase skill. After completion, run `/intuition-start` t
 **When user suggests outline work:**
 - "This sounds like a good candidate for planning. Use `/intuition-handoff` to process the brief, then `/intuition-outline` to develop a structured approach."
 
-**When plan is ready and has design items:**
-- "The plan looks ready! Use `/intuition-handoff` to review design recommendations and start the design loop."
+**When outline is ready:**
+- "Outline looks ready! Use `/intuition-assemble` to match tasks to specialists."
 
-**When design items are complete:**
-- "All design specs are done! Use `/intuition-handoff` to prepare the engineering brief."
+**When assembly is complete:**
+- "Team assigned! Use `/intuition-detail` to start the specialist blueprint phase."
 
-**When user is ready to engineer:**
-- "Engineering brief is ready! Use `/intuition-engineer` to create code specifications."
-
-**When engineering is complete:**
-- "Code specs are ready! Use `/intuition-handoff` to prepare the build brief."
-
-**When user is ready to build:**
-- "Build brief is ready! Use `/intuition-build` to kick off implementation."
+**When detail is complete:**
+- "Blueprints ready! Use `/intuition-build` to kick off implementation."
 
 **When build is complete:**
+- "Build done! Use `/intuition-test` to run the quality gate."
+
+**When test is complete:**
 - "Workflow cycle complete! Use `/intuition-start` to create a branch for new work, or `/intuition-debugger` to debug any issues."

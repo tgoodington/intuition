@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses a multi-agent system coordinated by Intuition (`@tgoodington/intuition`), a Claude Code skill system. Twelve specialized skills handle prompt refinement, planning, design exploration, code engineering, and build execution, with memory maintained in `docs/project_notes/` for consistency across sessions.
+This project uses a multi-agent system coordinated by Intuition (`@tgoodington/intuition`), a Claude Code skill system. Specialized skills handle prompt refinement, planning, domain-specialist detailing, and build execution, with memory maintained in `docs/project_notes/` for consistency across sessions.
 
 ## Workflow Skills
 
@@ -12,9 +12,10 @@ This project uses a multi-agent system coordinated by Intuition (`@tgoodington/i
 |-------|-------|-------------|
 | `/intuition-prompt` | opus | Transforms a rough vision into a planning-ready brief through focused iterative refinement |
 | `/intuition-outline` | opus | Strategic architect — maps stakeholders, explores components, evaluates options, creates executable blueprint |
-| `/intuition-design` | opus | Elaborates flagged plan items through ECD framework (Elements, Connections, Dynamics) |
-| `/intuition-engineer` | opus | Creates code-level specifications through codebase research and interactive dialogue → `code_specs.md` |
-| `/intuition-build` | sonnet | Delegates implementation to subagents, verifies outputs against code specs and acceptance criteria |
+| `/intuition-assemble` | sonnet | Matches tasks to domain specialists and format producers |
+| `/intuition-detail` | opus | Domain specialists produce detailed blueprints through exploration and user gates |
+| `/intuition-build` | sonnet | Delegates implementation to subagents, verifies outputs against blueprints and acceptance criteria |
+| `/intuition-test` | opus | Post-build quality gate — test strategy design and execution |
 
 ### Infrastructure
 
@@ -29,6 +30,8 @@ This project uses a multi-agent system coordinated by Intuition (`@tgoodington/i
 
 | Skill | Model | What it does |
 |-------|-------|-------------|
+| `/intuition-meander` | opus | Thought partner — collaborative reasoning and problem exploration |
+| `/intuition-think-tank` | opus | Rapid expert-panel analysis of documents, ideas, or proposals |
 | `/intuition-debugger` | opus | Expert debugger — 5 diagnostic categories, causal chain analysis, post-completion only |
 | `/intuition-agent-advisor` | opus | Expert advisor on building custom Claude Code agents |
 | `/intuition-skill-guide` | opus | Expert advisor on building custom Claude Code skills |
@@ -41,12 +44,11 @@ This project uses a multi-agent system coordinated by Intuition (`@tgoodington/i
 
 ## Workflow
 
-### Trunk (first cycle)
+### Trunk (first cycle, v9)
 
 ```
-/intuition-prompt → handoff → /intuition-outline → handoff →
-  [/intuition-design loop] → handoff → /intuition-engineer → handoff →
-  /intuition-build → handoff → complete
+/intuition-prompt → /intuition-outline → /intuition-assemble →
+  /intuition-detail → /intuition-build → /intuition-test → complete
 ```
 
 Each handoff transition:
@@ -64,18 +66,9 @@ After trunk completes, run `/intuition-start` to:
 
 Branches follow the same 5-phase workflow but read parent context for continuity.
 
-### Design Loop (optional)
+### Detail Phase (v9)
 
-The plan flags tasks requiring design exploration (Section 6.5). If design items exist:
-1. Handoff generates a design brief for the first item
-2. `/intuition-design` elaborates it using the ECD framework
-3. Handoff checks for remaining items → loops back or advances to engineer
-
-### Engineer → Build Split
-
-- **Engineer** (opus, interactive) determines the code-level HOW: reads codebase via research subagents, discusses decisions with you, produces `code_specs.md`
-- **Build** (sonnet, PM) implements against specs: delegates to Code Writer subagents, verifies with Code Reviewer, runs mandatory Security Expert review, produces `build_report.md`
-- Build makes NO engineering decisions — it matches output to specs
+The outline assesses every task by domain and depth. The assemble phase matches tasks to domain specialists. The detail phase runs each specialist through exploration → user gate → blueprint specification.
 
 ## Build Sub-Agents
 

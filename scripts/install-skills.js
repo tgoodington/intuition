@@ -46,8 +46,8 @@ const skills = [
   'intuition-prompt',
   'intuition-handoff',
   'intuition-outline',
-  'intuition-design',
-  'intuition-engineer',
+  'intuition-meander',
+  'intuition-think-tank',
   'intuition-build',
   'intuition-test',
   'intuition-debugger',
@@ -115,6 +115,19 @@ try {
   if (fs.existsSync(oldExecuteDest)) {
     fs.rmSync(oldExecuteDest, { recursive: true, force: true });
     log(`Removed old /intuition-execute skill (split into /intuition-engineer + /intuition-build in v8.0)`);
+  }
+
+  // Remove old design/engineer skills if they exist (removed in v10.0)
+  const oldDesignDest = path.join(claudeSkillsDir, 'intuition-design');
+  if (fs.existsSync(oldDesignDest)) {
+    fs.rmSync(oldDesignDest, { recursive: true, force: true });
+    log(`Removed old /intuition-design skill (removed in v10.0)`);
+  }
+
+  const oldEngineerDest = path.join(claudeSkillsDir, 'intuition-engineer');
+  if (fs.existsSync(oldEngineerDest)) {
+    fs.rmSync(oldEngineerDest, { recursive: true, force: true });
+    log(`Removed old /intuition-engineer skill (removed in v10.0)`);
   }
 
   // Remove old plan skill if it exists (renamed to outline in v9.1)
@@ -229,8 +242,8 @@ try {
     log(`  /intuition-prompt         - Focused discovery (prompt-engineering refinement)`);
     log(`  /intuition-handoff        - Handoff orchestrator (phase transitions + design loop)`);
     log(`  /intuition-outline        - Strategic outline (ARCH protocol + design flagging)`);
-    log(`  /intuition-design         - Design exploration (ECD framework, domain-agnostic)`);
-    log(`  /intuition-engineer       - Code spec creator (engineering decisions)`);
+    log(`  /intuition-meander        - Thought partner (reasoning + exploration)`);
+    log(`  /intuition-think-tank     - Rapid expert-panel analysis`);
     log(`  /intuition-assemble       - Team assembler (v9 specialist/producer matching)`);
     log(`  /intuition-detail         - Domain specialist orchestrator (v9 detail phase)`);
     log(`  /intuition-build          - Build manager (blueprint + producer delegation)`);

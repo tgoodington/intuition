@@ -46,6 +46,9 @@ try {
     'intuition-prompt',
     'intuition-handoff',
     'intuition-outline',
+    'intuition-meander',
+    'intuition-think-tank',
+    // Legacy skills (removed in v10.0)
     'intuition-design',
     'intuition-engineer',
     'intuition-build',
