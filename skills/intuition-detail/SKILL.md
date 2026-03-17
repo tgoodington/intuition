@@ -404,6 +404,29 @@ Triggers when Step 8d finds no remaining specialists.
 
 **9a. Conflict detection.** Spawn an `intuition-researcher` agent: "Read all blueprint files in `{context_path}/blueprints/`. Compare for: contradictory decisions, overlapping file modifications with conflicting changes, inconsistent interface assumptions, and duplicated work. Write findings to `{context_path}/blueprint-conflicts.md`. If no conflicts, write 'No conflicts detected.'" Wait for completion. If conflicts found, present to user via AskUserQuestion and resolve before continuing.
 
+**9a-ii. Process flow synthesis (conditional).** Skip this step if `{context_path}/process_flow.md` does not exist (non-code project or Lightweight outline).
+
+If `process_flow.md` exists, spawn an `intuition-synthesizer` agent:
+
+"Read these files:
+1. `{context_path}/process_flow.md` — the outline's initial WHAT-level flow draft
+2. For each blueprint in `{context_path}/blueprints/`: read Section 3 (Approach) and Section 7 (Integration Points) only
+
+Refine the process flow document with specialist knowledge. The outline draft describes flows at the WHAT level. Your job is to add the HOW:
+- Fill in concrete data paths, state transitions, and error propagation chains from the blueprints
+- Add state mutations per flow (which stores are written, by which step)
+- Add known invariants per flow (things that MUST remain true)
+- Populate the Component Dependencies section from blueprint integration points
+- Populate Integration Seams with contracts and failure modes
+- Resolve any conflicts between the outline's assumed flows and specialist approaches (specialist knowledge supersedes outline assumptions — they had deeper research)
+- Update the Flow History table
+
+Keep the document under 200 lines for Standard-tier projects, under 400 for Comprehensive. Be terse — structured steps, not prose.
+
+Write the refined document to `{context_path}/process_flow.md` (overwriting the outline's draft)."
+
+Wait for completion. If the vision review (9b) later triggers a specialist re-run, re-run this synthesis step after the re-run completes.
+
 **9b. Vision review.** Skip this step if only 1 specialist completed (no cross-specialist seams to check).
 
 For multi-specialist projects, spawn an `intuition-reviewer` agent:
@@ -411,7 +434,8 @@ For multi-specialist projects, spawn an `intuition-reviewer` agent:
 "Read these files:
 1. `{context_path}/prompt_brief.md` — extract Commander's Intent (desired end state, non-negotiables, boundaries) and Success Criteria
 2. `{context_path}/outline.md` — extract the task list and acceptance criteria
-3. For each blueprint in `{context_path}/blueprints/`: read the Approach section (Section 3) and Acceptance Mapping section (Section 6) only — skip the full deliverable specs
+3. `{context_path}/process_flow.md` (if exists) — the refined end-to-end flow document. Check that flows honor Commander's Intent and that no seams are missing.
+4. For each blueprint in `{context_path}/blueprints/`: read the Approach section (Section 3) and Acceptance Mapping section (Section 6) only — skip the full deliverable specs
 
 Then evaluate the blueprints AS A WHOLE against the original vision:
 

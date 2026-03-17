@@ -313,6 +313,52 @@ Before drafting, verify ALL research agents launched during Phase 3 have returne
 
 Read `{context_path}/.outline_research/decisions_log.md` and `orientation.md` to gather resolved context. Draft the outline following the outline.md output format below, applying scope scaling for the selected tier.
 
+## Step 2b: Draft process flow (conditional)
+
+**Gate:** Generate process_flow.md ONLY when ALL conditions are met:
+1. Tier is **Standard** or **Comprehensive**
+2. Orientation research identified code, interactive components, or systems with runtime behavior (3+ components that interact)
+
+If the gate is not met, skip this step entirely. Non-code projects (documents, spreadsheets, strategies) do not get a process flow.
+
+If the gate IS met, draft `{context_path}/process_flow.md` alongside the outline. This is a WHAT-level document — describe flows in terms of user actions, involved components, and expected outcomes. Do NOT specify data shapes, state implementation details, or internal algorithms (those are HOW decisions for the detail phase).
+
+Use this structure:
+
+```markdown
+# Process Flow: [App/Feature Name]
+
+## Overview
+[2-3 sentences: what the app/feature does and who it serves]
+
+## Core Flows
+
+### [Flow Name]
+**Trigger:** [user action / API call / scheduled job]
+**Path:** ComponentA → ComponentB → ComponentC
+1. [Actor does action → which component handles it → expected outcome]
+2. [...]
+N. [Final result visible to user or system]
+
+**Error path:** [what happens on failure — at WHAT level, not implementation detail]
+**Side effects:** [notifications, logging, external calls — if known]
+
+[Repeat for each major user-facing flow identified during ARCH exploration]
+
+## Integration Points
+[Component handoff seams identified during Reach exploration — where components interact]
+
+## Cross-Cutting Concerns
+[Auth, error handling, state management patterns — from Section 10 context]
+
+## Flow History
+| Date | Phase | Change | Reason |
+|------|-------|--------|--------|
+| [today] | Outline | Initial draft | Created from ARCH exploration |
+```
+
+Present process_flow.md alongside the outline for user approval in Step 4.
+
 ## Step 3: Validate
 
 Run the Executable Outline Checklist (below). Fix any failures before presenting.
@@ -348,7 +394,8 @@ If changes requested, make them and present again. Repeat until explicitly appro
 After explicit approval:
 
 1. Write the final outline to `{context_path}/outline.md`.
-2. Run the Exit Protocol.
+2. If process_flow.md was drafted in Step 2b, write it to `{context_path}/process_flow.md`.
+3. Run the Exit Protocol.
 
 ## Exit Protocol
 
@@ -599,6 +646,7 @@ Validate ALL before presenting the draft:
 - [ ] Tasks with decision points have Decisions field with `[USER]`/`[SPEC]` classifications
 - [ ] Decision classifications use Commander's Intent to determine human-facing boundary
 - [ ] Large data files (if detected in orientation) have a preprocessing task before any dependent work
+- [ ] Process flow document generated for Standard+ code projects with 3+ interacting components (skip for non-code or Lightweight)
 
 If any check fails, fix it before presenting.
 

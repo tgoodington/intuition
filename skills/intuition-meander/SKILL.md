@@ -3,7 +3,7 @@ name: intuition-meander
 description: Thought partner for reasoning through problems. Use when the user wants to think through an idea, explore a problem space, work through a decision, or talk something out. A collaborative thinking companion — not a workflow tool.
 model: opus
 tools: Read, Glob, Grep, Bash, Agent, AskUserQuestion, WebFetch, WebSearch
-allowed-tools: Read, Glob, Grep, Bash, Agent
+allowed-tools: Read, Glob, Grep, Bash, Agent, WebFetch, WebSearch
 ---
 
 # Meander — Thinking Partner

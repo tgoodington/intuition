@@ -3,7 +3,7 @@ name: intuition-think-tank
 description: Rapid expert-panel analysis. Use when the user wants a well-rounded evaluation of documents, ideas, proposals, or strategies — faster than a full workflow pass. Assembles a dynamic panel of perspectives, runs parallel analysis, and delivers a cohesive synthesis.
 model: opus
 tools: Read, Glob, Grep, Bash, Agent, AskUserQuestion, WebFetch, WebSearch
-allowed-tools: Read, Glob, Grep, Bash, Agent
+allowed-tools: Read, Glob, Grep, Bash, Agent, WebFetch, WebSearch
 ---
 
 # Think Tank — Rapid Expert Panel

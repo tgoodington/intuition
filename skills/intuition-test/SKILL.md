@@ -65,7 +65,8 @@ Read these files:
 
 1. `{context_path}/build_report.md` — REQUIRED. Extract: files modified, task results, deviations from blueprints, decision compliance notes.
 2. `{context_path}/outline.md` — acceptance criteria per task.
-3. `{context_path}/test_advisory.md` — compact testability notes extracted by the detail phase (one section per specialist). Read this INSTEAD of all blueprints. If this file does not exist (older workflows), fall back to reading `{context_path}/blueprints/*.md` and extracting Testability Notes from each Approach section.
+3. `{context_path}/process_flow.md` (if exists) — end-to-end user flows, component interactions, data paths, error paths. Primary source for designing integration and E2E tests. If this file does not exist (non-code project or Lightweight workflow), proceed without it.
+4. `{context_path}/test_advisory.md` — compact testability notes extracted by the detail phase (one section per specialist). Read this INSTEAD of all blueprints. If this file does not exist (older workflows), fall back to reading `{context_path}/blueprints/*.md` and extracting Testability Notes from each Approach section.
 4. `{context_path}/team_assignment.json` — producer assignments (identify code-writer tasks).
 5. ALL files matching `{context_path}/scratch/*-decisions.json` — decision tiers and chosen options per specialist.
 6. `docs/project_notes/decisions.md` — project-level ADRs.
@@ -106,6 +107,15 @@ Prioritize by value:
 - **Unit tests** (highest priority): Pure functions, business logic, data transformations, utility functions. Isolate with mocks for external dependencies only.
 - **Integration tests** (medium priority): API routes, database operations, service interactions, middleware chains. Use real dependencies where feasible, mock externals.
 - **E2E tests** (only if framework exists): Only create if the project already has an E2E framework configured. Never introduce a new E2E framework.
+
+### Process Flow Coverage (if process_flow.md exists)
+
+Use process_flow.md to identify cross-component integration boundaries and E2E paths that acceptance criteria alone don't reveal:
+- **Integration seams**: For each Integration Seam in process_flow.md, design at least one integration test that exercises the handoff between components.
+- **Error propagation**: For each error path described in Core Flows, design a test that triggers the failure and verifies the described fallback behavior.
+- **State mutations**: For each state mutation listed in Core Flows, verify the mutation occurs and dependents react correctly.
+
+If process_flow.md conflicts with actual implementation (check build_report.md deviations), test against the implementation, not the document.
 
 ### File Type Heuristic
 
@@ -216,6 +226,7 @@ You are a test writer. Create a test file following these specifications exactly
 
 **Source file:** Read [source file path]
 **Blueprint context:** Read [relevant blueprint path] (for domain understanding)
+**Flow context (integration/E2E tests only):** Read `{context_path}/process_flow.md` (if exists) for understanding how this component participates in end-to-end user flows. Not needed for unit tests.
 
 **Test file path:** [target test file path]
 **Test cases to implement:**

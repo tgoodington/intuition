@@ -79,6 +79,7 @@ Read these files:
 5. `{context_path}/scratch/*-decisions.json` (all specialist decision logs) — decision tiers and chosen options.
 6. `{context_path}/prompt_brief.md` — Commander's Intent, success criteria, non-negotiables (for Vision Alignment in report).
 7. `{context_path}/vision-review.md` (if exists) — flagged items from detail's vision review that build should address.
+8. `{context_path}/process_flow.md` (if exists) — end-to-end user flows, component interactions, data paths, error paths. Used for flow verification in Layer 2 and as orientation context for producers.
 
 From team_assignment.json, extract:
 - `specialist_assignments` — which specialist owns which tasks
@@ -165,6 +166,9 @@ The full blueprint contains all specifications — do not deviate from them.
 
 Output directory: [from blueprint's Producer Handoff]
 Output files: [from blueprint's Producer Handoff]
+
+## Flow Context (if process_flow.md exists)
+[Extract the relevant flow segment from process_flow.md showing where this deliverable fits in the end-to-end path. This is for orientation only — your specifications come from the blueprint.]
 ```
 
 When building on a branch, add to subagent prompts:
@@ -217,6 +221,16 @@ Check the deliverable yourself against outline.md acceptance criteria:
 - Compare the code's actual output against the blueprint's expected output examples (if provided in the Deliverable Specification). If the code produces different output than the blueprint shows, that is a deviation requiring explanation.
 
 Log all deviations (additions and omissions) in the build report's "Deviations from Blueprint" section, even if they seem minor.
+
+**Process flow verification (conditional):**
+If `{context_path}/process_flow.md` exists, verify the produced deliverables match the described end-to-end flows:
+- Trace each Core Flow's path against the implemented code. Do the components interact as described?
+- Check that error paths described in process_flow.md have corresponding implementation.
+- Check that integration seams have matching contracts on both sides.
+
+Log any mismatches in the build report under "Process Flow Deviations." If a deviation affects what the end user sees or experiences, escalate via AskUserQuestion with options: "Fix the code to match the process flow" / "Accept the deviation" / "I need to think about this." If the user accepts a deviation, note in the build report that process_flow.md is stale at that section.
+
+In **fast track mode**, treat process_flow.md as advisory only — log observations but do not escalate deviations (the document is in skeletal draft form without detail refinement).
 
 - If FAIL → send feedback back to the producer with specific acceptance criteria gaps. Do NOT proceed to Layer 3.
 - If PASS → proceed to Layer 3.
@@ -321,6 +335,13 @@ Write the build report to `{context_path}/build_report.md` AND display a summary
 | [specialist-name.md] | [file path] | [what the specialist recommended] |
 
 [If no test deliverables were found in any blueprint, write "No test deliverables found in blueprints."]
+
+## Process Flow Deviations
+[Cross-cutting deviations between implementation and process_flow.md. If no process_flow.md exists, write "N/A — no process flow document." If no deviations, write "None — implementation matches process flows."]
+
+| Flow | Deviation | Resolution |
+|------|-----------|------------|
+| [flow name] | [what differs] | [Fixed / Accepted — user approved / Flagged for update] |
 
 ## Vision Alignment
 [Read `{context_path}/prompt_brief.md` — extract Success Criteria and Commander's Intent non-negotiables. Map each to the produced output.]
