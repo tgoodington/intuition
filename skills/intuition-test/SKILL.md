@@ -94,8 +94,8 @@ Spawn two `intuition-researcher` agents in parallel (both Task calls in a single
 **Agent 1 — Test Infrastructure:**
 "Search the project for test infrastructure. Find: test framework and runner (jest, vitest, mocha, pytest, etc.), test configuration files, existing test directories and naming conventions, mock/fixture patterns, test utility helpers, CI test commands, coverage configuration and thresholds. Report exact paths and configuration values."
 
-**Agent 2 — Code Change Analysis:**
-"Read each of these files modified during build: [list files from build_report]. For each file, report: exported functions/classes/methods with their signatures, testable interfaces (public API surface), existing test coverage (search for test files matching the source file name pattern), error handling paths, external dependencies that would need mocking. Be specific — include function names and parameter types."
+**Agent 2 — Interface Extraction:**
+"Read each of these files modified during build: [list files from build_report]. For each file, extract ONLY structural information — do NOT describe implementation logic or return value computations. Report: exported functions/classes/methods with their signatures (name, parameters, types), constructor arguments, import paths, class hierarchies, existing test coverage (search for test files matching the source file name pattern), external dependencies that would need mocking. Output a clean interface stub per file that a test writer could use to call the code without knowing what it does internally."
 
 ## STEP 3: TEST STRATEGY (Embedded Domain Knowledge)
 
@@ -115,7 +115,7 @@ Use process_flow.md to identify cross-component integration boundaries and E2E p
 - **Error propagation**: For each error path described in Core Flows, design a test that triggers the failure and verifies the described fallback behavior.
 - **State mutations**: For each state mutation listed in Core Flows, verify the mutation occurs and dependents react correctly.
 
-If process_flow.md conflicts with actual implementation (check build_report.md deviations), test against the implementation, not the document.
+If process_flow.md conflicts with actual implementation, check build_report.md for accepted deviations. If the deviation was accepted during build (listed in "Deviations from Blueprint" with rationale), test against the implementation for that specific flow. If the deviation is NOT listed as accepted, test against process_flow.md and classify any failure as a Spec Violation.
 
 ### File Type Heuristic
 
@@ -155,13 +155,23 @@ Follow project conventions discovered in Step 2:
 - If no config → target 80% line coverage for modified files
 - Focus coverage on decision-heavy code paths (where `[USER]` and `[SPEC]` decisions were implemented)
 
+### Spec Oracle Hierarchy
+
+Tests derive their expected behavior from spec artifacts, NOT from reading source code. The oracle has three tiers, used in combination:
+
+1. **Acceptance criteria** (outline.md) — Primary oracle for behavioral correctness. Each criterion describes an observable outcome the implementation must produce. Tests assert these outcomes directly.
+2. **Blueprint deliverable specs** (blueprints or test_advisory.md) — Secondary oracle for domain-specific assertions, edge cases, and expected input/output examples. Use Section 6 (Acceptance Mapping) and Section 9 (Producer Handoff) for concrete expected behaviors.
+3. **Process flow** (process_flow.md) — Tertiary oracle for integration contracts and cross-component handoffs. Subject to accepted deviations (see Process Flow Coverage above).
+
+When a test fails, the failure means the implementation disagrees with the spec — that is a finding, not automatically a bug in either the test or the code. See Step 6 Classify Failures for how to handle this.
+
 ### Acceptance Criteria Path Coverage
 
 For every acceptance criterion in outline.md that describes observable behavior ("displays X", "uses Y for Z", "produces output containing W"):
 
 1. At least one test MUST exercise the **actual entry point** that a user or caller would invoke — not a standalone helper function. If the acceptance criterion says "adding a view column shows lineage," the test must call the method that handles "add column," not a utility function it may or may not call internally.
-2. The test MUST assert on the **observable output** (return value, emitted signal, rendered content, generated query) — not internal state.
-3. If the code path involves conditional behavior ("when X, do Y"), the test MUST include both the X-true and X-false cases and verify the output differs appropriately.
+2. The test MUST assert on the **expected output as described by the spec** (acceptance criterion + blueprint deliverable spec) — not on whatever the implementation happens to return.
+3. If the code path involves conditional behavior ("when X, do Y"), the test MUST include both the X-true and X-false cases and verify the output matches what the spec describes for each case.
 
 Tests that only exercise isolated helper functions satisfy unit coverage but do NOT satisfy acceptance criteria coverage. Both are needed.
 
@@ -179,11 +189,12 @@ Write the test strategy to `{context_path}/scratch/test_strategy.md`. This serve
 
 The test strategy document MUST contain:
 - Test files to create (path, type, target source file)
-- Test cases per file (name, type, what it validates)
+- Test cases per file (name, type, what it validates, **which spec artifact defines the expected behavior**)
 - Mock requirements per file
 - Framework command to run tests
 - Estimated test count and distribution
 - Which specialist recommendations were incorporated (and which were skipped, with rationale)
+- Any acceptance criteria where the expected behavior is ambiguous (flagged for potential SPEC_AMBIGUOUS markers)
 
 ## STEP 4: USER CONFIRMATION
 
@@ -218,19 +229,25 @@ Delegate test creation to `intuition-code-writer` agents. Parallelize independen
 For each test file, spawn an `intuition-code-writer` agent:
 
 ```
-You are a test writer. Create a test file following these specifications exactly.
+You are a test writer. Your job is to write tests that verify the code does what the SPEC says — not to verify the code does what the code does.
 
 **Framework:** [detected framework + version]
 **Test conventions:** [naming pattern, directory structure, import style from Step 2]
 **Mock patterns:** [project's established mock approach from Step 2]
 
-**Source file:** Read [source file path]
-**Blueprint context:** Read [relevant blueprint path] (for domain understanding)
-**Flow context (integration/E2E tests only):** Read `{context_path}/process_flow.md` (if exists) for understanding how this component participates in end-to-end user flows. Not needed for unit tests.
+**Interface stub (from Step 2 research):**
+[Paste the interface stub for this source file — signatures, exports, types, import paths. This is how you call the code.]
+
+**Spec oracle — what the code SHOULD do:**
+- Acceptance criteria: [paste relevant acceptance criteria from outline.md]
+- Blueprint spec: Read [relevant blueprint path] — use Deliverable Specification and Acceptance Mapping sections to determine expected inputs, outputs, and behaviors
+- Flow context (integration/E2E tests only): Read `{context_path}/process_flow.md` (if exists) for cross-component contracts
 
 **Test file path:** [target test file path]
 **Test cases to implement:**
-[List each test case from the outline with: name, type, what it validates, mock requirements]
+[List each test case with: name, type, what it validates per the spec, expected behavior from spec, mock requirements]
+
+CRITICAL: Derive ALL assertions from the spec artifacts above. Do NOT read [source file path] to determine expected return values or behavior. You have the interface stub for structural info (how to call the code). The spec tells you what it should return. If the spec is ambiguous about a specific expected value, write the test with a clear comment marking the assertion as "SPEC_AMBIGUOUS" so the orchestrator can flag it.
 
 Write the complete test file to the specified path. Follow the project's existing test style exactly. Do NOT add test infrastructure (no new packages, no config changes).
 ```
@@ -251,17 +268,19 @@ Also run `mcp__ide__getDiagnostics` to catch type errors and lint issues in the 
 
 ### Classify Failures
 
-For each failure, classify:
+For each failure, classify. The first question is always: **does the spec clearly define the expected behavior the test asserts?**
 
-| Classification | Action |
-|---|---|
-| **Test bug** (wrong assertion, incorrect mock, import error) | Fix autonomously — `intuition-code-writer` agent |
-| **Implementation bug, trivial** (off-by-one, missing null check, typo — 1-3 lines) | Fix directly — `intuition-code-writer` agent |
-| **Implementation bug, moderate** (logic error, missing handler — contained to one file) | Fix — `intuition-code-writer` agent with full diagnosis |
-| **Implementation bug, complex** (multi-file structural issue) | Escalate to user |
-| **Fix would violate [USER] decision** | STOP — escalate to user immediately |
-| **Fix would violate [SPEC] decision** | Note the conflict, proceed with fix (specialist had authority) |
-| **Fix touches files outside build_report scope** | Escalate to user (scope creep) |
+| Classification | How to identify | Action |
+|---|---|---|
+| **Test bug** (wrong assertion, incorrect mock, import error) | Test doesn't match the spec it claims to test, or has a structural error | Fix autonomously — `intuition-code-writer` agent |
+| **Spec Violation** (implementation disagrees with spec) | Test asserts spec-defined behavior, implementation returns something different, and the spec is clear and unambiguous | Escalate to user: "Test [name] expects [spec behavior] per [acceptance criterion / blueprint spec], but implementation returns [actual]. Is the spec wrong or the code?" Options: "Fix the code" / "Spec was wrong — update test" / "I'll investigate" |
+| **Spec Ambiguity** (spec underspecified, test assertion is a guess) | Test is marked SPEC_AMBIGUOUS, or the spec doesn't define the expected value precisely enough to write a deterministic assertion | Escalate to user: "Spec doesn't clearly define expected behavior for [scenario]. The code does [X]. Is that correct?" Options: "Yes, that's correct — lock it in" / "No, it should do [other]" / "Skip this test" |
+| **Implementation bug, trivial** (off-by-one, missing null check, typo — 1-3 lines) | Spec is clear, implementation is clearly wrong, fix is small | Fix directly — `intuition-code-writer` agent |
+| **Implementation bug, moderate** (logic error, missing handler — contained to one file) | Spec is clear, implementation is wrong, fix is contained | Fix — `intuition-code-writer` agent with full diagnosis |
+| **Implementation bug, complex** (multi-file structural issue) | Spec is clear, but fix requires architectural changes | Escalate to user |
+| **Fix would violate [USER] decision** | Any tier | STOP — escalate to user immediately |
+| **Fix would violate [SPEC] decision** | Any tier | Note the conflict, proceed with fix (specialist had authority) |
+| **Fix touches files outside build_report scope** | Any tier | Escalate to user (scope creep) |
 
 ### Decision Boundary Checking
 
@@ -311,9 +330,10 @@ Write `{context_path}/test_report.md`:
 ## Failures & Resolutions
 
 ### [Test name]
-- **Type:** [test bug / implementation bug — trivial/moderate/complex]
-- **Root cause:** [description]
-- **Resolution:** [fix applied] OR **Escalated:** [reason not fixable autonomously]
+- **Type:** [test bug / spec violation / spec ambiguity / implementation bug — trivial/moderate/complex]
+- **Spec source:** [which acceptance criterion, blueprint spec, or process_flow section defined the expected behavior]
+- **Root cause:** [description — what the spec says vs. what the implementation does]
+- **Resolution:** [fix applied] OR **Escalated:** [reason — spec violation pending user decision / ambiguity / architectural / scope creep / max retries]
 
 ## Implementation Fixes Applied
 | File | Change | Rationale |
