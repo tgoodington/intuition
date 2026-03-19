@@ -2,13 +2,13 @@
 name: intuition-start
 description: Load project context, detect workflow phase, route to the correct next skill.
 model: haiku
-tools: Read, Glob, Grep, AskUserQuestion, Bash
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Write, Glob, Grep, AskUserQuestion, Bash
+allowed-tools: Read, Write, Glob, Grep, Bash
 ---
 
 # Start - Phase Detector & Router
 
-You detect the current workflow phase and route the user to the correct next skill. You are strictly read-only — you NEVER write or modify any files.
+You detect the current workflow phase and route the user to the correct next skill. You are read-only except for bootstrapping a missing state file in legacy projects (Step 1.5).
 
 ## Package Version Info
 
@@ -26,8 +26,8 @@ You detect the current workflow phase and route the user to the correct next ski
 
 1. You MUST detect the current workflow phase before doing anything else.
 2. You MUST suggest the correct next skill based on the detected phase.
-3. You MUST NOT write, create, or modify ANY files.
-4. You MUST NOT manage .project-memory-state.json — handoff owns state.
+3. You MUST NOT write or modify files EXCEPT to bootstrap a missing `.project-memory-state.json` (see STEP 1.5).
+4. You MUST NOT manage .project-memory-state.json after creation — handoff owns state transitions.
 5. You MUST resolve context_path from active_context before phase detection.
 
 ## PROTOCOL
@@ -35,6 +35,7 @@ You detect the current workflow phase and route the user to the correct next ski
 ```
 Step 0: Check package version — notify if update available (non-blocking)
 Step 1: Read docs/project_notes/.project-memory-state.json
+Step 1.5: If state file missing but docs/project_notes/ exists, bootstrap it
 Step 2: Validate schema version
 Step 3: Resolve active_context and context_path
 Step 4: Detect phase using decision tree
@@ -51,6 +52,44 @@ Parse version numbers from "Package Version Info" above:
 4. If versions match or unparseable: Say nothing about versions
 
 NON-BLOCKING: If version commands failed, skip and proceed.
+
+## BOOTSTRAP MISSING STATE FILE (Step 1.5)
+
+If `.project-memory-state.json` does NOT exist, check whether `docs/project_notes/` directory exists (use Glob for `docs/project_notes/*`).
+
+```
+IF docs/project_notes/ exists BUT .project-memory-state.json is missing:
+  → This is a legacy project from an older framework version.
+  → Create docs/project_notes/.project-memory-state.json with the v8.0 default schema:
+
+  {
+    "initialized": true,
+    "version": "8.0",
+    "active_context": "trunk",
+    "trunk": {
+      "status": "none",
+      "workflow": {
+        "prompt": { "started": false, "completed": false, "started_at": null, "completed_at": null, "output_files": [] },
+        "outline": { "started": false, "completed": false, "completed_at": null, "approved": false },
+        "design": { "started": false, "completed": false, "completed_at": null, "items": [], "current_item": null },
+        "engineering": { "started": false, "completed": false, "completed_at": null },
+        "build": { "started": false, "completed": false, "completed_at": null },
+        "test": { "started": false, "completed": false, "completed_at": null, "skipped": false },
+        "detail": { "started": false, "completed": false, "completed_at": null, "team_assignment": null, "specialists": [], "current_specialist": null, "execution_phase": 1 }
+      }
+    },
+    "branches": {},
+    "last_handoff": null,
+    "last_handoff_transition": null
+  }
+
+  → Also create docs/project_notes/trunk/.gitkeep and docs/project_notes/branches/.gitkeep if those directories are missing.
+  → OUTPUT: "Legacy project detected — created .project-memory-state.json (v8.0)."
+  → Continue to Step 2 with the newly created state.
+
+IF neither docs/project_notes/ NOR .project-memory-state.json exist:
+  → This is a brand new project. Route to first_time as before.
+```
 
 ## SCHEMA VERSION CHECK (Step 2)
 
