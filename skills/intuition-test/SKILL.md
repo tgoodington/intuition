@@ -73,25 +73,7 @@ Read these files:
 7. ALL files matching `{context_path}/scratch/*-decisions.json` — decision tiers and chosen options per specialist.
 8. `docs/project_notes/decisions.md` — project-level ADRs.
 
-From build_report.md, extract:
-- **Files modified** — the scope boundary for testing and fixes
-- **Task results** — which tasks passed/failed build review
-- **Deviations** — any blueprint deviations that may need test coverage
-- **Decision compliance** — any flagged decision issues
-- **Test Deliverables Deferred** — test specs/files that specialists recommended but build skipped (if this section exists)
-
-From blueprints, extract behavioral contracts per module:
-- **Deliverable Specification** (Section 5): function signatures, return schemas (dict keys, types, value ranges), error conditions with exact messages, naming conventions, state transitions
-- **Acceptance Mapping** (Section 6): which AC each deliverable satisfies and how
-- **Producer Handoff** (Section 9): expected file paths, integration points
-
-From test_advisory.md, extract domain test knowledge:
-- Edge cases, critical paths, failure modes, and boundary conditions flagged by specialists
-
-From decisions files, build a decision index:
-- Map each `[USER]` decision to its chosen option
-- Map each `[SPEC]` decision to its chosen option and rationale
-- This index is used in Step 6 for fix boundary checking
+From these files, extract: **build_report** → files modified (scope boundary), task results, deviations, decision compliance, deferred test deliverables. **Blueprints** → Section 5 behavioral contracts (signatures, return schemas, error conditions, naming), Section 6 AC mapping, Section 9 file paths. **test_advisory** → edge cases, critical paths, failure modes. **Decisions** → index of all [USER] and [SPEC] decisions with chosen options (used in Step 6 boundary checking).
 
 ## STEP 2: RESEARCH (2 Parallel Research Agents)
 
@@ -111,20 +93,9 @@ Spawn two `intuition-researcher` agents in parallel (both Task calls in a single
 6. **External dependencies** — which external systems each module interacts with (for mocking).
 7. **Existing tests** — search the project for test files matching source file name patterns. Report paths only.
 
-Output in this format per blueprint:
-```
-## {specialist_name} — {blueprint_file}
-### Module: {file_path as specified in blueprint}
-**Import:** `from {module} import {name}`
-**Interface:** `function_name(param: Type, ...) -> ReturnType`
-**Return schema:** {what the blueprint says it returns — keys, types, values}
-**Error conditions:** {what the blueprint says about errors}
-**Naming conventions:** {patterns}
-**Mocking targets:** {external deps}
-**Existing tests:** {paths or 'None found'}
-```
+Output per blueprint as: `## {specialist} — {file}` then per module: Import, Interface, Return schema, Error conditions, Naming conventions, Mocking targets, Existing tests. Mark any unspecified field as 'Not specified in blueprint'.
 
-CRITICAL: Extract ONLY what the blueprint SPECIFIES. Do not supplement with information from source code. If the blueprint does not specify a return schema, report 'Not specified in blueprint'. The purpose is to capture what the spec says the code SHOULD look like — not what the code actually looks like."
+CRITICAL: Extract ONLY what the blueprint SPECIFIES — not what the source code does."
 
 If no blueprints directory exists, fall back to reading source files for structural information only (function signatures, import paths, external dependencies). Use the strict call-signature format: signatures and import paths only, no return value contents, no error messages, no behavioral descriptions.
 
@@ -167,17 +138,24 @@ If process_flow.md conflicts with actual implementation, check build_report.md f
 
 ### File-to-Tier Mapping
 
-For each modified file, determine which test tier drives its testing:
+| File Type | Primary Tier |
+|-----------|-------------|
+| Route / controller | Tier 1 (AC tests via HTTP) |
+| Engine / orchestrator | Tier 1 (AC tests of engine API) |
+| Service / provider | Tier 2 (blueprint contract) |
+| Model / schema | Tier 2 (blueprint contract) |
+| Utility / helper | Tier 3, or Tier 2 if blueprint specifies |
+| Configuration / Template | Skip (test indirectly via Tier 1) |
 
-| File Type | Primary Tier | Rationale |
-|-----------|-------------|-----------|
-| Route / controller | Tier 1 (AC tests via HTTP) | ACs describe route behavior — test the route |
-| Engine / orchestrator | Tier 1 (AC tests of engine API) | ACs describe engine outcomes — test the engine |
-| Service / provider | Tier 2 (blueprint contract) | Blueprints specify provider contracts |
-| Model / schema | Tier 2 (blueprint contract) | Blueprints specify data shapes |
-| Utility / helper | Tier 3 (coverage) or Tier 2 (if blueprint specifies) | Only Tier 2 if blueprint has a deliverable spec for it |
-| Configuration | Skip (test indirectly via Tier 1) | Config effects are observable at route/engine level |
-| Template / static | Skip (test indirectly via Tier 1) | Template output is observable in route responses |
+### Tier Distribution Minimums
+
+The test plan MUST satisfy these ratios (calculated against total test count):
+- **Tier 1 ≥ 40%** — If the plan has fewer than 40% Tier 1 tests, add more AC-level tests before adding Tier 2/3. If there are not enough ACs to reach 40%, document why in the test strategy.
+- **Tier 3 ≤ 30%** — Coverage gap-fillers must not dominate the suite. If Tier 3 exceeds 30%, cut the lowest-value coverage tests.
+
+### Negative Test Minimums
+
+At least **30% of Tier 1 and Tier 2 tests** must exercise error/failure/invalid-input paths: invalid inputs, dependency failures (timeout, connection refused), state violations (e.g., stopping a non-running container), missing config. If the spec doesn't describe error behavior, flag as spec gap with `# SPEC_AMBIGUOUS` — do NOT skip negative testing.
 
 ### Edge Cases, Mocking, and Coverage
 
@@ -185,34 +163,17 @@ For each modified file, determine which test tier drives its testing:
 
 **Mock strategy**: Follow project conventions from Step 2. Default: mock external dependencies only. Never mock the unit under test. Tier 1/2 tests mock at system boundaries; Tier 3 may mock internal seams.
 
+**Mock depth rule for infrastructure/DevOps projects**: When the project orchestrates external systems (Docker, cloud APIs, CLI tools, databases), pure-mock tests risk testing only mock setup. For each external-system wrapper, at least one Tier 1 test MUST assert **mock interaction depth** — not just return values, but that the mock was called with correct arguments, order, and count per the blueprint spec.
+
 **Coverage target**: Match existing config threshold, or 80% line coverage for modified files. Focus on decision-heavy code paths (`[USER]` and `[SPEC]` decisions).
 
 ### Spec Oracle Hierarchy
 
-Tests derive expected behavior from spec artifacts, NOT from reading source code. Each oracle maps to a test tier:
-
-| Oracle | Spec Source | Drives Test Tier | What it defines |
-|--------|------------|-----------------|-----------------|
-| **Primary** | outline.md acceptance criteria | Tier 1 | Observable outcomes the system must produce |
-| **Secondary** | blueprints (Section 5 + 6) | Tier 2 | Detailed behavioral contracts: return schemas, error tables, naming conventions, state machines |
-| **Tertiary** | process_flow.md | Tier 1 + 2 | Integration seams, cross-component handoffs, state mutations, error propagation |
-| **Advisory** | test_advisory.md | Tier 2 + 3 | Edge cases, critical paths, failure modes (supplements, not replaces, blueprints) |
-
-When a test fails, the failure means the implementation disagrees with the spec — that is a finding, not automatically a bug in either the test or the code. See Step 6 Classify Failures for how to handle this.
+Tests derive expected behavior from specs, NOT source code. Oracle priority: **outline.md ACs** (Tier 1) → **blueprints Sections 5+6** (Tier 2) → **process_flow.md** (Tier 1+2 integration) → **test_advisory.md** (advisory, Tier 2+3). When a test fails, the implementation disagrees with the spec — classify per Step 6, don't assume either is wrong.
 
 ### Acceptance Criteria Path Coverage
 
-For every acceptance criterion in outline.md that describes observable behavior ("displays X", "uses Y for Z", "produces output containing W"):
-
-1. At least one **Tier 1** test MUST exercise the **actual entry point at the abstraction level the AC describes**. Read the AC carefully to determine the right level:
-   - AC mentions HTTP routes or UI behavior → test the route (e.g., `TestClient.post("/admin/container/app/start")`)
-   - AC mentions engine or service behavior → test the engine's public API (e.g., `engine.run(context)`)
-   - AC mentions CLI output → test the CLI command
-   - NEVER satisfy an AC exclusively with a unit test of an internal helper function
-2. The test MUST assert on the **expected output as described by the spec** (acceptance criterion + blueprint deliverable spec). Every assertion value must be traceable to a spec document.
-3. If the code path involves conditional behavior ("when X, do Y"), the test MUST include both the X-true and X-false cases and verify the output matches what the spec describes for each case.
-
-Tier 2 tests of internal functions supplement Tier 1 but do NOT substitute for them. Every AC needs Tier 1 coverage.
+For every AC with observable behavior, at least one Tier 1 test MUST exercise the **actual entry point at the AC's abstraction level** (HTTP route → test the route, engine API → test the engine, CLI → test the command). NEVER satisfy an AC exclusively with a unit test of an internal helper. Assertions MUST match spec-defined expected output. Conditional behavior ("when X, do Y") requires both branches tested. Tier 2 supplements but does NOT substitute for Tier 1.
 
 ### Specialist Test Recommendations
 
@@ -220,7 +181,7 @@ Before finalizing the test plan, review specialist domain knowledge from bluepri
 - **Testability Notes**: Edge cases, critical paths, failure modes, and boundary conditions from each blueprint's Approach section (Section 3, `### Testability Notes` subheading)
 - **Deferred test deliverables**: Any test specs from build_report.md's "Test Deliverables Deferred" section (legacy — older blueprints may still include test files in Producer Handoff)
 
-Specialists have domain expertise about what should be tested. Incorporate their testability insights into your test plan, but you own the test strategy — use specialist input as advisory, not prescriptive.
+Incorporate specialist insights as advisory, not prescriptive — you own the test strategy.
 
 ### Output
 
@@ -228,11 +189,14 @@ Write the test strategy to `{context_path}/scratch/test_strategy.md`. This serve
 
 The test strategy document MUST contain:
 - **AC coverage matrix**: For each acceptance criterion, which test(s) cover it, at what tier, and at what abstraction level. Every AC with observable behavior MUST have at least one Tier 1 test.
+- **Tier distribution**: Total count per tier with percentages. Verify: Tier 1 ≥ 40%, Tier 3 ≤ 30%. If not met, adjust plan before proceeding.
+- **Negative test inventory**: List each negative/error-path test explicitly. Verify: ≥ 30% of Tier 1/2 tests are negative. If not met, add more error-path tests.
 - Test files to create (path, tier, target source file)
-- Test cases per file (name, tier, what it validates, **which spec artifact defines the expected behavior**, **what the spec says the expected output is**)
-- Mock requirements per file (mock external deps only for Tier 1/2; Tier 3 may mock internal seams)
+- Test cases per file (name, tier, positive/negative, what it validates, **which spec artifact defines the expected behavior**, **what the spec says the expected output is**)
+- Mock requirements per file (mock external deps only for Tier 1/2; Tier 3 may mock internal seams). For infra projects: flag files needing mock-depth assertions (call args, call order, call count).
 - Framework command to run tests
 - Estimated test count and distribution by tier
+- **Mutation spot-check candidates**: 3 source files with highest Tier 1/2 coverage, and one candidate mutation per file
 - Which specialist recommendations were incorporated (and which were skipped, with rationale)
 - Any acceptance criteria where the expected behavior is ambiguous (flagged for potential SPEC_AMBIGUOUS markers)
 
@@ -246,11 +210,13 @@ Question: "Test plan ready:
 **Framework:** [detected framework]
 **Test files:** [N] files
 **Test cases:** ~[total] tests covering [file count] modified files
-  - Tier 1 (AC tests): [N] tests covering [M] of [P] acceptance criteria
+  - Tier 1 (AC tests): [N] tests ([X]% of total, min 40%) covering [M] of [P] acceptance criteria
   - Tier 2 (blueprint contracts): [N] tests
-  - Tier 3 (coverage): [N] tests
+  - Tier 3 (coverage): [N] tests ([X]% of total, max 30%)
+**Negative tests:** [N] of [M] Tier 1/2 tests ([X]%, min 30%)
 **AC coverage:** [M]/[P] acceptance criteria have Tier 1 tests [list any uncovered ACs]
 **Coverage target:** [threshold]%
+**Post-pass:** Mutation spot-check on 3 files
 
 Proceed?"
 
@@ -301,19 +267,13 @@ You are a spec-first test writer. Your tests verify the code does what the SPEC 
 - You MUST NOT use Grep or Glob to search source files
 
 ## ASSERTION SOURCING RULES
-For EVERY assertion that checks a specific value (exact string, number, status code, dict key):
-1. Add a comment citing the spec source: `# blueprint:{specialist}:L{line} — "{spec quote}"`
-2. If no spec document defines the expected value: mark `# SPEC_AMBIGUOUS: spec says "{quote}" — value not specified`
+For EVERY assertion that checks a specific value: add `# blueprint:{specialist}:L{line} — "{spec quote}"`. If no spec defines the value: `# SPEC_AMBIGUOUS: spec says "{quote}" — value not specified`.
 
-For Tier 1 tests:
-- Test at the abstraction level the AC describes (HTTP routes, CLI output, observable state changes)
-- Mock ONLY external systems (Docker, databases, HTTP clients, cloud APIs) — do NOT mock internal modules
-- Assertions should verify user-observable outcomes, not internal function return values
+Tier 1: test at AC's abstraction level, mock ONLY external systems, assert user-observable outcomes.
+Tier 2: test at blueprint's module level, mock external deps per blueprint, assert behavioral contracts.
 
-For Tier 2 tests:
-- Test at the module level the blueprint describes
-- Mock external dependencies as the blueprint specifies
-- Assertions should verify the behavioral contracts from the blueprint's Deliverable Specification
+## ASSERTION DEPTH RULES
+Prefer DEEP assertions over shallow ones. Instead of `assert result is not None` or `assert "key" in result`, assert specific values: `assert result["network_name"] == "myapp-network"`. For infra/DevOps code: assert mock call arguments, order, and count — not just return values.
 
 Write the complete test file. Follow existing test style. Do NOT add test infrastructure.
 ```
@@ -349,20 +309,43 @@ For each value-assertion, check:
 
 Assertions without spec provenance AND without SPEC_AMBIGUOUS markers are **source-derived**. (Tier 3 tests are exempt — they are explicitly implementation-derived.)
 
-### Part B: Abstraction Level Coverage
+### Part B: Assertion Depth Scoring
+
+For each Tier 1 and Tier 2 test file, classify every assertion as **shallow** or **deep**:
+
+| Shallow (low signal) | Deep (high signal) |
+|---|---|
+| `is not None` | `== "expected-specific-value"` |
+| `isinstance(result, dict)` | `result["network_name"] == "myapp-network"` |
+| `"key" in result` | `mock_docker.run.assert_called_with(image="x", ports={...})` |
+| `len(result) > 0` | `error.message == "Container myapp not found"` |
+| `result["success"] == True` (when mock returns True) | `result["status"] == "running"` (verified against spec behavior) |
+
+**Threshold**: If >50% of assertions in a test file are shallow, flag the file. The test exists but proves almost nothing.
+
+**Escalation**: If >30% of ALL Tier 1/2 test files are flagged as shallow-dominant, present via AskUserQuestion:
+
+```
+Header: "Assertion Depth Warning"
+Question: "[N] of [M] test files have >50% shallow assertions.
+These tests pass trivially and won't catch real bugs.
+
+Examples: [list 2-3 worst offenders with their shallow assertion patterns]
+
+Options: fix shallow tests / accept as-is / skip to Step 6"
+```
+
+If "fix": delegate to `intuition-code-writer` agents with instructions to replace shallow assertions with specific value checks traced to blueprint specs. If the blueprint doesn't specify the value, add `SPEC_AMBIGUOUS` marker.
+
+### Part C: Abstraction Level Coverage
 
 For each acceptance criterion in outline.md that describes observable behavior:
 1. Check: is there at least one Tier 1 test that exercises the AC at the abstraction level it describes?
 2. If an AC describes HTTP route behavior but the only test is a unit test of an internal function → flag as **abstraction gap**
 
-Example of an abstraction gap:
-- AC T2.3: "Container operations execute successfully and status updates reflect within the next poll cycle"
-- Only test: `test_start_container_success()` which calls `start_container()` directly and checks `result["success"]`
-- Gap: No test exercises the actual HTTP route `POST /admin/container/{app_name}/start` and verifies the response
-
 ### Reporting
 
-If Part A finds >20% source-derived assertions OR Part B finds any abstraction gaps, present via AskUserQuestion:
+If Part A finds >20% source-derived assertions, Part B flags >30% shallow-dominant files, OR Part C finds any abstraction gaps, present via AskUserQuestion:
 
 ```
 Header: "Spec Compliance Audit"
@@ -394,29 +377,24 @@ Also run `mcp__ide__getDiagnostics` to catch type errors and lint issues in the 
 
 For each failure, classify. The first question is always: **does the spec clearly define the expected behavior the test asserts?**
 
-| Classification | How to identify | Action |
-|---|---|---|
-| **Test bug** (wrong assertion, incorrect mock, import error) | Test doesn't match the spec it claims to test, or has a structural error | Fix autonomously — `intuition-code-writer` agent |
-| **Spec Violation** (implementation disagrees with spec) | Test asserts spec-defined behavior, implementation returns something different, and the spec is clear and unambiguous | Escalate to user: "Test [name] expects [spec behavior] per [acceptance criterion / blueprint spec], but implementation returns [actual]. Is the spec wrong or the code?" Options: "Fix the code" / "Spec was wrong — update test" / "I'll investigate" |
-| **Spec Ambiguity** (spec underspecified, test assertion is a guess) | Test is marked SPEC_AMBIGUOUS, or the spec doesn't define the expected value precisely enough to write a deterministic assertion | Escalate to user: "Spec doesn't clearly define expected behavior for [scenario]. The code does [X]. Is that correct?" Options: "Yes, that's correct — lock it in" / "No, it should do [other]" / "Skip this test" |
-| **Implementation bug, trivial** (off-by-one, missing null check, typo — 1-3 lines) | Spec is clear, implementation is clearly wrong, fix is small | Fix directly — `intuition-code-writer` agent |
-| **Implementation bug, moderate** (logic error, missing handler — contained to one file) | Spec is clear, implementation is wrong, fix is contained | Fix — `intuition-code-writer` agent with full diagnosis |
-| **Implementation bug, complex** (multi-file structural issue) | Spec is clear, but fix requires architectural changes | Escalate to user |
-| **Fix would violate [USER] decision** | Any tier | STOP — escalate to user immediately |
-| **Fix would violate [SPEC] decision** | Any tier | Note the conflict, proceed with fix (specialist had authority) |
-| **Fix touches files outside build_report scope** | Any tier | Escalate to user (scope creep) |
+| Classification | Action |
+|---|---|
+| **Test bug** (wrong assertion, mock, import) | Fix autonomously — `intuition-code-writer` |
+| **Spec Violation** (code disagrees with clear spec) | Escalate: "expects [spec] per [source], got [actual]. Fix code / update spec / investigate?" |
+| **Spec Ambiguity** (SPEC_AMBIGUOUS or underspecified) | Escalate: "Spec unclear for [scenario]. Code does [X]. Correct? Lock in / change / skip?" |
+| **Impl bug, trivial** (1-3 lines, spec is clear) | Fix directly — `intuition-code-writer` |
+| **Impl bug, moderate** (one file, spec is clear) | Fix — `intuition-code-writer` with diagnosis |
+| **Impl bug, complex** (multi-file structural) | Escalate to user |
+| **Violates [USER] decision** | STOP — escalate immediately |
+| **Violates [SPEC] decision** | Note conflict, proceed with fix |
+| **Touches files outside build scope** | Escalate (scope creep) |
 
 ### Decision Boundary Checking
 
-Before ANY implementation fix (not test-only fixes):
-
-1. Read ALL `{context_path}/scratch/*-decisions.json` files + `docs/project_notes/decisions.md`
-2. Check: does the proposed fix contradict any `[USER]`-tier decision?
-   - If YES → STOP. Report the conflict to the user via AskUserQuestion: "Test failure in [file] requires changing [what], but this contradicts your decision on [D{N}: title] where you chose [chosen option]. How should I proceed?" Options: "Change my decision" / "Skip this test" / "I'll fix manually"
-3. Check: does the proposed fix contradict any `[SPEC]`-tier decision?
-   - If YES → note the conflict in the test report, proceed with the fix (specialist decisions are advisory)
-4. Check: does the fix modify files NOT listed in build_report's "Files Modified" section?
-   - If YES → escalate: "Fixing [test] requires modifying [file] which wasn't part of this build. Allow scope expansion?" Options: "Allow this file" / "Skip this test"
+Before ANY implementation fix (not test-only fixes), read all `{context_path}/scratch/*-decisions.json` + `docs/project_notes/decisions.md`. Check:
+1. **[USER] decision conflict** → STOP, escalate via AskUserQuestion with options: "Change decision" / "Skip test" / "Fix manually"
+2. **[SPEC] decision conflict** → note in report, proceed with fix
+3. **File outside build scope** → escalate: "Allow scope expansion?" / "Skip test"
 
 ### Fix Cycle
 
@@ -428,6 +406,29 @@ For each failure:
 5. Track all fixes applied (file, change, rationale)
 
 After all failures are addressed (fixed or escalated), run the full test suite one final time to verify no regressions.
+
+### Mutation Spot-Check (Post-Pass Gate)
+
+After the final test run passes, perform a lightweight mutation check to verify the tests can actually detect bugs. This is NOT full mutation testing — it's a targeted sanity check.
+
+1. Select **3 source files** with the most Tier 1/2 test coverage (highest test count targeting them).
+2. For each file, make ONE small, obvious mutation via an `intuition-code-writer` agent:
+   - Change a return value (e.g., `"running"` → `"stopped"`, `True` → `False`)
+   - Change a string literal (e.g., resource name, error message)
+   - Remove a function call (e.g., comment out a validation step)
+   - The mutation MUST break behavior that at least one test claims to verify
+3. Re-run ONLY the tests targeting that file.
+4. **Expected result:** At least one test fails per mutation. If a mutation causes zero test failures, the tests covering that file are hollow.
+5. **Revert every mutation immediately** after checking (use `git checkout -- {file}` or re-apply the original content).
+
+**If any mutation survives** (0 test failures):
+- Report via AskUserQuestion: "Mutation spot-check: changed [what] in [file] — zero tests caught it. The [N] tests covering this file may be testing mock wiring rather than real behavior. Options: strengthen tests / accept risk / skip"
+- If "strengthen tests": delegate to `intuition-code-writer` with the specific mutation that survived, and instructions to add a test that would catch it.
+
+**Track results** in the test report under a new "## Mutation Spot-Check" section:
+| File | Mutation | Tests Run | Caught? |
+|------|----------|-----------|---------|
+| [path] | [what was changed] | [N] | Yes/No |
 
 ## STEP 7: TEST REPORT
 
@@ -475,6 +476,24 @@ Write `{context_path}/test_report.md`:
 - Spec-traced: **[N]** (value found in outline, blueprint, process_flow, or test_advisory)
 - SPEC_AMBIGUOUS marked: **[N]** (spec underspecified, asserting implementation value)
 - Source-derived (untraced): **[N]** [if any — list examples and user disposition: "accepted as-is" / "fixed"]
+
+## Assertion Depth
+- Tier 1/2 files audited: **[N]**
+- Shallow-dominant files (>50% shallow assertions): **[N]** [list any]
+- User disposition: [fixed / accepted as-is / N/A]
+
+## Negative Test Coverage
+- Tier 1/2 negative tests: **[N]** of **[M]** total Tier 1/2 tests (**[X]%**, target: ≥30%)
+- Error paths tested: [list categories — invalid input, dependency failure, state violation, etc.]
+
+## Mutation Spot-Check
+| File | Mutation | Tests Run | Caught? |
+|------|----------|-----------|---------|
+| [path] | [what was changed] | [N] | Yes/No |
+
+- Mutations tested: **[N]**
+- Caught: **[N]**
+- Survived: **[N]** [list any — with disposition: strengthened / accepted risk]
 
 ## Decision Compliance
 - Checked **[N]** decisions across **[M]** specialist decision logs
