@@ -25,6 +25,8 @@ These are non-negotiable. Violating any of these means the protocol has failed.
 9. You MUST run the Exit Protocol after writing the test report. NEVER route to `/intuition-handoff`.
 10. You MUST update `.project-memory-state.json` as part of the Exit Protocol.
 11. You MUST NOT use `run_in_background` for subagents in Steps 2 and 5. All research and test-creation agents MUST complete before their next step begins.
+12. You MUST NOT create tests for non-code deliverables (SKILL.md files, markdown docs, JSON config, static HTML/CSS). Pattern-matching source content is not testing. Classify deliverables in Step 1.5 and skip non-code files entirely.
+13. You MUST design smoke tests for infrastructure scripts (install, deploy, build, publish scripts) that actually execute the script in an isolated temp environment. Do NOT grep infrastructure script source code.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -39,15 +41,16 @@ On startup, before reading any files:
 ## PROTOCOL: COMPLETE FLOW
 
 ```
-Step 1: Read context (state, build_report, blueprints, decisions, outline)
-Step 2: Analyze test infrastructure (2 parallel intuition-researcher agents)
-Step 3: Design test strategy (self-contained domain reasoning)
-Step 4: Confirm test plan with user
-Step 5: Create tests (delegate to sonnet code-writer subagents)
+Step 1:   Read context (state, build_report, blueprints, decisions, outline)
+Step 1.5: Classify deliverables (code / infrastructure-script / non-code)
+Step 2:   Analyze test infrastructure (2 parallel intuition-researcher agents)
+Step 3:   Design test strategy — code and infrastructure only (self-contained domain reasoning)
+Step 4:   Confirm test plan with user (including skipped non-code files)
+Step 5:   Create tests (delegate to sonnet code-writer subagents)
 Step 5.5: Spec compliance audit (assertion provenance + abstraction level coverage)
-Step 6: Run tests + fix cycle (debugger-style autonomy)
-Step 7: Write test_report.md
-Step 8: Exit Protocol (state update, completion)
+Step 6:   Run tests + fix cycle (debugger-style autonomy)
+Step 7:   Write test_report.md
+Step 8:   Exit Protocol (state update, completion)
 ```
 
 ## RESUME LOGIC
@@ -74,6 +77,33 @@ Read these files:
 8. `docs/project_notes/decisions.md` — project-level ADRs.
 
 From these files, extract: **build_report** → files modified (scope boundary), task results, deviations, decision compliance, deferred test deliverables. **Blueprints** → Section 5 behavioral contracts (signatures, return schemas, error conditions, naming), Section 6 AC mapping, Section 9 file paths. **test_advisory** → edge cases, critical paths, failure modes. **Decisions** → index of all [USER] and [SPEC] decisions with chosen options (used in Step 6 boundary checking).
+
+## STEP 1.5: DELIVERABLE CLASSIFICATION
+
+After reading the build report, classify every output file into one of three categories. This determines what gets tested and how. Files classified as `non-code` are excluded from test design entirely — no structural validation, no grep-based content tests.
+
+| Category | Examples | Test Approach |
+|----------|---------|---------------|
+| **Code** | .py, .js, .ts, .jsx, .tsx, .go, .rs, .java, .rb, .php modules | Unit/integration tests (Tiers 1-3) |
+| **Infrastructure script** | postinstall hooks, deploy scripts, build/publish scripts, CLI tools | Smoke tests (actually execute in isolated temp environment) |
+| **Non-code** | SKILL.md, .md docs, .json config/schema, static .html/.css, .yaml config | **Skip** — not executable, not meaningfully testable |
+
+**Classification rules:**
+1. Read the `Files Modified` section of build_report.md
+2. For each file, classify by extension AND purpose:
+   - SKILL.md files → **non-code** (prompt engineering artifacts — testing them via pattern matching is low-signal and expensive)
+   - Markdown documentation → **non-code**
+   - JSON schema definitions or config-only changes (e.g., adding `"private": true` to package.json) → **non-code**
+   - HTML templates rendered by a server framework (Jinja2, EJS, etc.) → **code** (tested indirectly via route tests, not directly)
+   - Static HTML/CSS with no server logic → **non-code**
+   - Python/JavaScript/TypeScript modules with functions, classes, or route handlers → **code**
+   - Scripts invoked via npm hooks, CLI, or build pipelines → **infrastructure script**
+3. Record the classification for use in Steps 3-5
+
+**If ALL deliverables are non-code**, present via AskUserQuestion:
+"All deliverables are non-code (prompt files, config, documentation). Standard testing does not apply. Options: Skip testing / Proceed anyway"
+
+Default recommendation: Skip testing. Write a minimal test_report.md noting no testable code was produced.
 
 ## STEP 2: RESEARCH (2 Parallel Research Agents)
 
@@ -138,14 +168,22 @@ If process_flow.md conflicts with actual implementation, check build_report.md f
 
 ### File-to-Tier Mapping
 
-| File Type | Primary Tier |
-|-----------|-------------|
-| Route / controller | Tier 1 (AC tests via HTTP) |
-| Engine / orchestrator | Tier 1 (AC tests of engine API) |
-| Service / provider | Tier 2 (blueprint contract) |
-| Model / schema | Tier 2 (blueprint contract) |
-| Utility / helper | Tier 3, or Tier 2 if blueprint specifies |
-| Configuration / Template | Skip (test indirectly via Tier 1) |
+Only files classified as `code` or `infrastructure-script` in Step 1.5 appear here. Non-code files are excluded entirely — do NOT create structural validation or grep-based tests for them.
+
+| File Type | Category | Test Approach |
+|-----------|----------|---------------|
+| Route / controller | Code | Tier 1 (AC tests via HTTP) |
+| Engine / orchestrator | Code | Tier 1 (AC tests of engine API) |
+| Service / provider | Code | Tier 2 (blueprint contract) |
+| Model / schema | Code | Tier 2 (blueprint contract) |
+| Utility / helper | Code | Tier 3, or Tier 2 if blueprint specifies |
+| Install / deploy / build script | Infrastructure | Smoke test (execute in temp env) |
+| CLI tool | Infrastructure | Smoke test (execute with test args) |
+| Server-rendered template (.html with server logic) | Code | Tested indirectly via Tier 1 route tests |
+| SKILL.md / prompt file | Non-code | **Skip** |
+| Markdown / documentation | Non-code | **Skip** |
+| JSON config / schema-only changes | Non-code | **Skip** |
+| Static HTML / CSS | Non-code | **Skip** |
 
 ### Tier Distribution Minimums
 
@@ -183,12 +221,36 @@ Before finalizing the test plan, review specialist domain knowledge from bluepri
 
 Incorporate specialist insights as advisory, not prescriptive — you own the test strategy.
 
+### Smoke Test Design (for infrastructure scripts)
+
+For files classified as `infrastructure-script` in Step 1.5, design smoke tests that **actually execute the script** in an isolated environment. Do NOT write structural validation tests that grep the script's source code — pattern-matching source code catches almost nothing useful and wastes tokens.
+
+**Isolation strategy:**
+- Set `HOME` (or equivalent) to a temp directory to avoid modifying real user data
+- Create required directory structures (source files, config) in the temp environment
+- Clean up after each test (or use the test framework's temp directory support)
+
+**What smoke tests MUST verify:**
+- Script runs without errors (exit code 0) under normal conditions
+- Script creates expected output files and directories
+- Script handles missing prerequisites gracefully (exit code non-zero, meaningful error message)
+- Script preserves data it should preserve (e.g., user config not overwritten on update)
+- Script output matches cross-domain contracts (e.g., generated manifest schema matches the consuming endpoint's expected format)
+
+**What smoke tests MUST NOT do:**
+- Grep source code for variable names, array contents, or string patterns
+- Test internal implementation details — test observable behavior only
+- Validate that specific lines of code exist — that is not testing
+
+Smoke tests count as **Tier 1** if they exercise an acceptance criterion's observable behavior, or **Tier 2** if they verify a blueprint behavioral contract. They follow the same tier distribution and negative test minimums as code tests.
+
 ### Output
 
 Write the test strategy to `{context_path}/scratch/test_strategy.md`. This serves as both an audit trail and a resume marker for crash recovery.
 
 The test strategy document MUST contain:
-- **AC coverage matrix**: For each acceptance criterion, which test(s) cover it, at what tier, and at what abstraction level. Every AC with observable behavior MUST have at least one Tier 1 test.
+- **Deliverable classification**: List every file from build_report, its category (code / infrastructure-script / non-code), and rationale. Non-code files are listed as skipped with brief reason.
+- **AC coverage matrix**: For each acceptance criterion, which test(s) cover it, at what tier, and at what abstraction level. Every AC with observable behavior MUST have at least one Tier 1 test. ACs that apply exclusively to non-code deliverables should be noted as "not testable — non-code deliverable."
 - **Tier distribution**: Total count per tier with percentages. Verify: Tier 1 ≥ 40%, Tier 3 ≤ 30%. If not met, adjust plan before proceeding.
 - **Negative test inventory**: List each negative/error-path test explicitly. Verify: ≥ 30% of Tier 1/2 tests are negative. If not met, add more error-path tests.
 - Test files to create (path, tier, target source file)
@@ -196,7 +258,7 @@ The test strategy document MUST contain:
 - Mock requirements per file (mock external deps only for Tier 1/2; Tier 3 may mock internal seams). For infra projects: flag files needing mock-depth assertions (call args, call order, call count).
 - Framework command to run tests
 - Estimated test count and distribution by tier
-- **Mutation spot-check candidates**: 3 source files with highest Tier 1/2 coverage, and one candidate mutation per file
+- **Mutation spot-check candidates**: 3 source files with highest Tier 1/2 coverage, and one candidate mutation per file (only `code` and `infrastructure-script` files are eligible)
 - Which specialist recommendations were incorporated (and which were skipped, with rationale)
 - Any acceptance criteria where the expected behavior is ambiguous (flagged for potential SPEC_AMBIGUOUS markers)
 
@@ -208,13 +270,14 @@ Present the test plan via AskUserQuestion:
 Question: "Test plan ready:
 
 **Framework:** [detected framework]
+**Deliverables:** [N] code files + [N] infrastructure scripts tested, [N] non-code files skipped
 **Test files:** [N] files
-**Test cases:** ~[total] tests covering [file count] modified files
-  - Tier 1 (AC tests): [N] tests ([X]% of total, min 40%) covering [M] of [P] acceptance criteria
+**Test cases:** ~[total] tests covering [file count] testable files
+  - Tier 1 (AC tests): [N] tests ([X]% of total, min 40%) covering [M] of [P] testable acceptance criteria
   - Tier 2 (blueprint contracts): [N] tests
   - Tier 3 (coverage): [N] tests ([X]% of total, max 30%)
 **Negative tests:** [N] of [M] Tier 1/2 tests ([X]%, min 30%)
-**AC coverage:** [M]/[P] acceptance criteria have Tier 1 tests [list any uncovered ACs]
+**Skipped (non-code):** [list skipped file types and count, e.g., '7 SKILL.md files, 2 config changes']
 **Coverage target:** [threshold]%
 **Post-pass:** Mutation spot-check on 3 files
 
@@ -291,6 +354,48 @@ You are a coverage test writer. Your job is to increase test coverage for code p
 
 Label every test with: `# Coverage test — not derived from spec`
 Write focused unit tests for uncovered code paths. Follow existing test style.
+```
+
+### Infrastructure Script Smoke Test Writer Prompt
+
+```
+You are a smoke test writer. Your tests actually EXECUTE the script and verify observable behavior. You do NOT grep source code.
+
+**Framework:** [detected framework + version]
+**Test conventions:** [naming pattern, directory structure, import style from Step 2]
+
+**Script under test:** [script file path]
+**Script purpose:** [what the script does — from build report]
+**Script invocation:** [how the script is run — npm hook, CLI command, etc.]
+
+**Spec oracle — what the script SHOULD do:**
+- Acceptance criteria: [paste relevant ACs]
+- Blueprint spec: Read [relevant blueprint path] — Section 5 for behavioral contracts
+- Cross-domain contracts: [any output schemas consumed by other components]
+
+**Test cases to implement:**
+[List each test case with: name, tier, what it validates, expected observable outcome, isolation requirements]
+
+## ISOLATION RULES
+- Create a temp directory for each test (use the framework's temp directory support)
+- Set HOME or equivalent env vars to temp directory before running the script
+- Create any prerequisite files/directories the script expects in the temp environment
+- NEVER run the script against real user directories (~/.claude/, etc.)
+- Clean up temp directories after each test
+
+## WHAT TO TEST
+- Script exit code under normal conditions (0 = success)
+- Files and directories created by the script (verify existence, verify contents match expected schema)
+- Script behavior when prerequisites are missing (non-zero exit, error message)
+- Data preservation (files that should survive re-runs are not overwritten)
+- Output format matches downstream consumer contracts
+
+## WHAT NOT TO TEST
+- Do NOT read the script's source code to validate its internal structure
+- Do NOT grep for variable names, array contents, or string patterns in source
+- Do NOT test that specific code constructs exist — test what the script DOES
+
+Write the complete test file. Follow existing test style.
 ```
 
 SYNCHRONIZATION GATE: After all subagents return, verify each test file exists on disk using Glob. If any file is missing, retry that subagent once (foreground) with error context. Do NOT proceed to Step 5.5 until every planned test file is confirmed on disk.
@@ -445,13 +550,19 @@ Write `{context_path}/test_report.md`:
 - **Tests created:** [N] (Tier 1: [N], Tier 2: [N], Tier 3: [N])
 - **Passing:** [N]
 - **Failing:** [N]
-- **AC coverage:** [M]/[P] acceptance criteria have Tier 1 tests
+- **AC coverage:** [M]/[P] testable acceptance criteria have Tier 1 tests
+- **Skipped deliverables:** [N] non-code files ([list types: SKILL.md, config, etc.])
 - **Coverage:** [X]% (target: [Y]%)
 
 ## Test Files Created
 | File | Tier | Tests | Covers |
 |------|------|-------|--------|
 | [path] | [1/2/3] | [count] | [what it tests — AC reference or blueprint section] |
+
+## Skipped Deliverables (Non-Code)
+| File | Type | Reason |
+|------|------|--------|
+| [path] | [SKILL.md / config / markdown / etc.] | Non-code — not executable, not testable |
 
 ## Failures & Resolutions
 
