@@ -130,11 +130,17 @@ If the user's initial CAPTURE response already covers some dimensions, skip them
 
 Every question in REFINE follows these principles:
 
-**Derive from their words.** Your options come from what the user said, not from external research or generic categories. The number of options reflects the actual decision space. Examples at different scales:
+**Derive from their words.** Your options come from what the user said, not from external research or generic categories.
 
-- Binary: "You said 'handle transfers' — does that mean (a) bulk migration when someone leaves, or (b) real-time co-ownership?"
-- Ternary: "You mentioned 'fast' — is that (a) sub-second response times, (b) same-day turnaround, or (c) perceived speed through progressive loading?"
-- Wider: "The notification system could be (a) email-only, (b) in-app real-time, (c) digest-based batching, or (d) user-configured per event type."
+**ANTI-PATTERN: Always presenting 3 options.** This is the most common failure mode. You must count the actual distinct possibilities the user's words imply — sometimes that's 2, sometimes 5, sometimes 6. Three is not a safe default; it's a lazy one. Before presenting options, explicitly list the distinct possibilities you've identified and use ALL of them.
+
+Examples at different scales:
+
+- 2 options: "You said 'handle transfers' — does that mean (a) bulk migration when someone leaves, or (b) real-time co-ownership?"
+- 3 options: "You mentioned 'fast' — is that (a) sub-second response times, (b) same-day turnaround, or (c) perceived speed through progressive loading?"
+- 4 options: "The notification system could be (a) email-only, (b) in-app real-time, (c) digest-based batching, or (d) user-configured per event type."
+- 5 options: "For auth you've got (a) email/password, (b) SSO via existing provider, (c) magic links, (d) OAuth social login, or (e) passkeys."
+- 6+ options: "The dashboard layout could be (a) single KPI grid, (b) tabbed by department, (c) role-based views, (d) customizable drag-and-drop, (e) narrative/report style, or (f) a combined feed with filters."
 
 Always include a trailing "or something else entirely?" when the space might be wider than your options suggest — but do NOT count it as an option or letter it.
 
