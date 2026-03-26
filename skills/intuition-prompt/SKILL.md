@@ -132,12 +132,27 @@ Every question in REFINE follows these principles:
 
 **Derive from their words.** Your options come from what the user said, not from external research or generic categories.
 
-**ANTI-PATTERN: Always presenting 3 options.** This is the most common failure mode. You must count the actual distinct possibilities the user's words imply — sometimes that's 2, sometimes 5, sometimes 6. Three is not a safe default; it's a lazy one. Before presenting options, explicitly list the distinct possibilities you've identified and use ALL of them.
+**MANDATORY OPTION ENUMERATION — execute this before EVERY AskUserQuestion call:**
+
+```
+STEP 1: In your thinking, brainstorm EVERY distinct possibility the user's
+        words and context imply. Write them all out. Do not stop at 3.
+STEP 2: Count them. If you have exactly 3, you are almost certainly anchored.
+        Go back to Step 1 and ask: "What am I collapsing together that is
+        actually two distinct things? What possibility am I forgetting?"
+STEP 3: Only proceed when your count genuinely reflects the decision space.
+        2 is fine. 4 is fine. 7 is fine. 3 is fine ONLY if you passed Step 2
+        and confirmed the space truly has exactly 3 distinct options.
+STEP 4: Use ALL the possibilities from your enumeration as AskUserQuestion
+        options. Do not trim to fit a round number.
+```
+
+If you skip this procedure or present 3 options without passing Step 2, the protocol has failed.
 
 Examples at different scales:
 
 - 2 options: "You said 'handle transfers' — does that mean (a) bulk migration when someone leaves, or (b) real-time co-ownership?"
-- 3 options: "You mentioned 'fast' — is that (a) sub-second response times, (b) same-day turnaround, or (c) perceived speed through progressive loading?"
+- 3 options (verified): "You mentioned 'fast' — is that (a) sub-second response times, (b) same-day turnaround, or (c) perceived speed through progressive loading?"
 - 4 options: "The notification system could be (a) email-only, (b) in-app real-time, (c) digest-based batching, or (d) user-configured per event type."
 - 5 options: "For auth you've got (a) email/password, (b) SSO via existing provider, (c) magic links, (d) OAuth social login, or (e) passkeys."
 - 6+ options: "The dashboard layout could be (a) single KPI grid, (b) tabbed by department, (c) role-based views, (d) customizable drag-and-drop, (e) narrative/report style, or (f) a combined feed with filters."
@@ -366,6 +381,7 @@ These are banned. If you catch yourself doing any of these, stop and correct cou
 - Asking questions you could have asked in turn one (generic background)
 - Staying on the same sub-topic for more than 2 follow-ups when the user is uncertain — flag it as an open question and move on
 - Producing a brief with sections the outline phase doesn't consume
+- **Presenting exactly 3 options without running the Mandatory Option Enumeration procedure** — this is the single most persistent failure mode. If you have 3 options, you MUST have verified via Step 2 that you aren't collapsing or omitting possibilities
 
 ## RESUME LOGIC
 
