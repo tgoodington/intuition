@@ -256,14 +256,33 @@ If no large data files are detected, skip this entirely.
 For each major decision domain identified from the prompt brief, orientation research, and dialogue:
 
 1. **Identify** the decision needed. State it clearly.
-2. **Research** (when needed): Launch 1-2 targeted research agents via Task tool.
-   - Use `intuition-researcher` for straightforward fact-gathering.
-   - Use `intuition-researcher` (model override: sonnet) for trade-off analysis against the existing codebase.
-   - Each agent prompt MUST reference the specific decision domain, return under 400 words.
-   - Write results to `{context_path}/.outline_research/decision_[domain].md` (snake_case).
-   - NEVER launch more than 2 agents simultaneously.
+2. **Research** (when needed): Launch research agents via Task tool. Agent count scales with the selected depth tier:
+
+   **Lightweight (1 agent):** Launch a single `intuition-researcher` agent for neutral fact-gathering.
+   "Research [decision domain] in the context of [project]. What are the viable approaches, key trade-offs, and relevant patterns in the codebase? Under 400 words."
+   Write results to `{context_path}/.outline_research/decision_[domain].md`.
+
+   **Standard (2 agents — Advocate/Challenger):** Launch 2 agents in parallel using divergent framing to combat confirmation bias.
+
+   **Agent A — Advocate** (subagent_type: `intuition-researcher`):
+   "Research [decision domain] in the context of [project]. Make the strongest case for the most natural approach given the existing codebase and constraints. What patterns already exist that support it? What makes it the obvious choice? Under 400 words."
+
+   **Agent B — Challenger** (subagent_type: `intuition-researcher`, model override: sonnet):
+   "Research [decision domain] in the context of [project]. Identify the strongest reasons NOT to take the obvious approach. What are the risks, overlooked alternatives, and counterarguments? What has gone wrong when similar projects made the default choice? Under 400 words."
+
+   Both agents MUST be launched in parallel in a single response. Write combined results to `{context_path}/.outline_research/decision_[domain].md`, clearly labeling the advocate and challenger findings.
+
+   **Comprehensive (3 agents — Advocate/Challenger/Lateral):** Launch all Standard agents plus:
+
+   **Agent C — Lateral** (subagent_type: `intuition-researcher`):
+   "Research how [decision domain] has been solved in different contexts — different frameworks, industries, or scales. What non-obvious approaches exist that the team might not have considered? Under 400 words."
+
+   - NEVER launch more than 3 agents simultaneously.
    - WAIT for all research agents to return and read their results before proceeding to step 3.
-3. **Present** 2-3 options with trade-offs. Include your recommendation and why. Incorporate the research findings.
+
+3. **Synthesize and present** 2-3 options with trade-offs. Synthesis rules scale with tier:
+   - **Lightweight**: Present findings directly with your recommendation.
+   - **Standard/Comprehensive**: You MUST incorporate findings from BOTH the advocate and challenger before forming your recommendation. If advocate and challenger agree, note that convergence — it strengthens confidence. If they disagree, the tension between them should directly shape the options you present. Do not simply pick the advocate's position.
 4. **Ask** the user to select via AskUserQuestion.
 5. **Record** the resolved decision to `{context_path}/.outline_research/decisions_log.md`:
 
@@ -658,14 +677,26 @@ Launch 2 `intuition-researcher` agents in parallel via Task tool. See Phase 1, S
 
 ## Tier 2: Decision Research (launched on demand in Phase 3)
 
-Launch 1-2 agents per decision domain when dialogue reveals unknowns needing investigation.
+Agent count scales with depth tier to balance token cost against confirmation bias risk.
 
-- Use `intuition-researcher` agents for fact-gathering (e.g., "What testing framework does this project use?").
-- Use `intuition-researcher` agents (model override: sonnet) for trade-off analysis (e.g., "Compare approaches X and Y given the current architecture").
+**Lightweight (1 agent):**
+- Single `intuition-researcher` for neutral fact-gathering. Low-stakes decisions don't justify the overhead of divergent framing.
+
+**Standard (2 agents — Advocate/Challenger):**
+- **Agent A — Advocate** (`intuition-researcher`): Makes the strongest case FOR the natural/obvious approach. Looks for supporting patterns in the codebase.
+- **Agent B — Challenger** (`intuition-researcher`, model: sonnet): Makes the strongest case AGAINST the obvious approach. Surfaces risks, alternatives, counterarguments.
+
+**Comprehensive (3 agents — Advocate/Challenger/Lateral):**
+- Advocate and Challenger as above, plus:
+- **Agent C — Lateral** (`intuition-researcher`): Explores how the problem has been solved in different contexts, frameworks, or industries.
+
+Rules:
+- Standard/Comprehensive: advocate and challenger MUST be launched in parallel in a single response.
 - Each prompt MUST specify the decision domain and a 400-word limit.
 - Reference specific files or directories when possible.
-- Write results to `{context_path}/.outline_research/decision_[domain].md`.
-- NEVER launch more than 2 simultaneously.
+- Write results to `{context_path}/.outline_research/decision_[domain].md`. Standard/Comprehensive: label advocate and challenger sections.
+- NEVER launch more than 3 simultaneously.
+- Standard/Comprehensive synthesis MUST incorporate tension between advocate and challenger findings. If you find yourself ignoring the challenger, stop and re-read its findings.
 
 # CONTEXT MANAGEMENT
 

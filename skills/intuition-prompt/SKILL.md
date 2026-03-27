@@ -92,17 +92,22 @@ This is the core of the skill. Each turn targets ONE gap using a dependency-orde
 ### Refinement Order
 
 ```
-1. SCOPE       → What is IN and what is OUT?
-2. INTENT      → What does the end-user experience when this is done and working?
-3. SUCCESS     → How do you know it worked? What's observable/testable?
-4. CONSTRAINTS → What can't change? Technology, team, timeline, budget?
-5. ASSUMPTIONS → What are we taking as given? How confident are we?
+1. SCOPE       → What is IN and what is OUT? Broad boundaries, not itemized feature lists.
+2. INTENT      → What does "done" look and feel like? The experiential outcome.
+3. BOUNDARIES  → What's fixed and what's flexible? Hard constraints and key givens.
 ```
+
+The prompt phase paints in broad strokes. Detailed success criteria, testable outcomes, assumption confidence ratings, and architectural constraints belong in outline — not here.
+
+**SCOPE sets the playing field** — enough to know what's in-bounds and out-of-bounds, not a requirements list.
 
 **INTENT captures the experiential outcome** — not metrics, but feel:
 - What the end-user experiences when interacting with the finished product
 - What the output/interface looks like and feels like in practice
 - Non-negotiable experiential qualities (fast, simple, invisible, delightful, etc.)
+- What "done" looks like at a high level — outline will sharpen this into testable criteria
+
+**BOUNDARIES merge constraints and assumptions into one pass** — what can't change, what we're taking as given, what's flexible. No confidence ratings or detailed analysis — just the lay of the land.
 
 INTENT grounds the brief in what success *feels like*, which downstream phases use to distinguish user-facing decisions from technical internals.
 
@@ -111,20 +116,18 @@ INTENT grounds the brief in what success *feels like*, which downstream phases u
 Before each question, run this internal check:
 
 ```
-Is SCOPE clear enough to plan against?
-  NO  → Ask a scope question
-  YES → Is INTENT defined (experiential outcome, look/feel, non-negotiable qualities)?
+Is SCOPE clear enough to know what's in-bounds and out-of-bounds?
+  NO  → Ask a scope question (broad boundaries, not feature lists)
+  YES → Is INTENT defined (experiential outcome, look/feel, what "done" looks like)?
     NO  → Ask an intent question
-    YES → Is SUCCESS defined with observable criteria?
-      NO  → Ask a success criteria question
-      YES → Are binding CONSTRAINTS surfaced?
-        NO  → Ask a constraints question
-        YES → Are key ASSUMPTIONS identified?
-          NO  → Ask an assumptions question
-          YES → Move to REFLECT
+    YES → Are BOUNDARIES clear (hard constraints, key givens, what's flexible)?
+      NO  → Ask a boundaries question
+      YES → Move to REFLECT
 ```
 
 If the user's initial CAPTURE response already covers some dimensions, skip them. Do not ask about what's already clear.
+
+**Stay at vision altitude.** If you catch yourself asking about specific metrics, implementation details, or testable acceptance criteria — stop. That's outline's job. The prompt phase asks "what are we building and why does it matter?" not "how will we verify it works?"
 
 ### Question Crafting Rules
 
@@ -170,9 +173,9 @@ Always include a trailing "or something else entirely?" when the space might be 
 **Aggressive skip rule:** After CAPTURE, check each dimension. If the user's initial response provides a clear, actionable answer for a dimension, mark it satisfied and skip it entirely. Do not ask confirmatory questions for dimensions that are already clear — that's ceremony, not refinement.
 
 **Convergence triggers — move to REFLECT when ANY of these are true:**
-- All 5 dimensions are satisfied (even if that's after 1 turn of REFINE)
-- You've asked 3+ REFINE questions and remaining gaps are minor enough to flag as open questions
-- By turn 3-4 you should be asking about what the solution DOES, not what the problem IS. If you're still gathering background context after turn 4, flag remaining unknowns as open questions and move to REFLECT.
+- All 3 dimensions are satisfied (even if that's after 1 turn of REFINE)
+- You've asked 2+ REFINE questions and remaining gaps are minor enough to flag as open questions for outline
+- By turn 3 you should have a clear enough picture to move toward REFLECT. If you're still gathering broad context after turn 3, flag remaining unknowns as open questions and move on.
 
 The goal is precision, not thoroughness. A 4-turn prompt session that nails the brief is better than a 9-turn session that asks about things the user already told you.
 
@@ -190,18 +193,14 @@ Question: "Here's what I've captured from our conversation:
 **Commander's Intent:**
 - Desired end state: [What success feels/looks like to the end user — experiential, not metrics]
 - Non-negotiables: [The 2-3 experiential qualities that would make the user reject the result]
-- Boundaries: [Constraints on the solution space, not prescribed solutions]
 
-**Success looks like:** [bullet list of observable outcomes]
+**In scope:** [list — broad boundaries]
+**Out of scope:** [list — broad boundaries]
 
-**In scope:** [list]
-**Out of scope:** [list]
+**What's fixed:** [hard constraints and key givens — brief list]
+**What's flexible:** [areas where outline has room to explore]
 
-**Constraints:** [list]
-
-**Assumptions:** [list with confidence notes]
-
-**Open questions for outlining:** [list]
+**Open questions for outlining:** [list — things outline should investigate]
 
 What needs adjusting?"
 
@@ -257,35 +256,29 @@ Write the output files and route to handoff.
 ## Commander's Intent
 **Desired end state:** [What success feels/looks like to the end user — experiential, not metrics]
 **Non-negotiables:** [The 2-3 experiential qualities that would make the user reject the result]
-**Boundaries:** [Constraints on the solution space, not prescribed solutions]
-
-## Success Criteria
-- [Observable, testable outcome 1]
-- [Observable, testable outcome 2]
-- [Observable, testable outcome 3]
 
 ## Scope
 **In scope:**
-- [Item 1]
-- [Item 2]
+- [Broad boundary 1]
+- [Broad boundary 2]
 
 **Out of scope:**
-- [Item 1]
-- [Item 2]
+- [Broad boundary 1]
+- [Broad boundary 2]
 
-## Constraints
-- [Non-negotiable limit 1]
-- [Non-negotiable limit 2]
+## Boundaries
+**What's fixed:**
+- [Hard constraint or key given 1]
+- [Hard constraint or key given 2]
 
-## Key Assumptions
-| Assumption | Confidence | Basis |
-|-----------|-----------|-------|
-| [statement] | High/Med/Low | [why we believe this] |
+**What's flexible:**
+- [Area where outline has room to explore 1]
+- [Area where outline has room to explore 2]
 
 ## Open Questions for Planning
-- [Build decision the outline phase should investigate]
-- [Technical unknown that affects architecture]
+- [Thing outline should investigate or decide]
 - [Assumption that needs validation]
+- [Area where the user was uncertain]
 
 ## Decision Posture
 | Area | Posture | Notes |
@@ -300,26 +293,23 @@ Write the output files and route to handoff.
   "summary": {
     "title": "...",
     "one_liner": "...",
-    "problem_statement": "...",
-    "success_criteria": "..."
+    "problem_statement": "..."
   },
   "commander_intent": {
     "desired_end_state": "...",
-    "non_negotiables": ["..."],
-    "boundaries": ["..."]
+    "non_negotiables": ["..."]
   },
   "scope": {
     "in": ["..."],
     "out": ["..."]
   },
-  "constraints": ["..."],
-  "assumptions": [
-    { "assumption": "...", "confidence": "high|medium|low", "basis": "..." }
-  ],
+  "boundaries": {
+    "fixed": ["..."],
+    "flexible": ["..."]
+  },
   "decision_posture": [
     { "area": "...", "posture": "i_decide|show_options|team_handles", "notes": "..." }
   ],
-  "research_performed": [],
   "open_questions": ["..."]
 }
 ```
@@ -381,6 +371,7 @@ These are banned. If you catch yourself doing any of these, stop and correct cou
 - Asking questions you could have asked in turn one (generic background)
 - Staying on the same sub-topic for more than 2 follow-ups when the user is uncertain — flag it as an open question and move on
 - Producing a brief with sections the outline phase doesn't consume
+- **Drilling into implementation-level detail** — observable/testable criteria, confidence-rated assumptions, architectural specifics. The prompt phase captures vision and boundaries; outline sharpens into specifications
 - **Presenting exactly 3 options without running the Mandatory Option Enumeration procedure** — this is the single most persistent failure mode. If you have 3 options, you MUST have verified via Step 2 that you aren't collapsing or omitting possibilities
 
 ## RESUME LOGIC
