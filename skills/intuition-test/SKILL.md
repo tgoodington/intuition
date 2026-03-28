@@ -490,6 +490,7 @@ For each failure, classify. The first question is always: **does the spec clearl
 | **Impl bug, trivial** (1-3 lines, spec is clear) | Fix directly — `intuition-code-writer` |
 | **Impl bug, moderate** (one file, spec is clear) | Fix — `intuition-code-writer` with diagnosis |
 | **Impl bug, complex** (multi-file structural) | Escalate to user |
+| **Integration-class failure** (missing dependency, unresolved import from outside build scope, missing entry point registration, env var not defined) | Defer to implement phase — note in test report under "Deferred to Integration." Do NOT attempt to fix. These are wiring gaps, not spec violations. |
 | **Violates [USER] decision** | STOP — escalate immediately |
 | **Violates [SPEC] decision** | Note conflict, proceed with fix |
 | **Touches files outside build scope** | Escalate (scope creep) |
@@ -582,6 +583,13 @@ Write `{context_path}/test_report.md`:
 |-------|--------|
 | [description] | [why not fixable: USER decision conflict / architectural / scope creep / max retries] |
 
+## Deferred to Integration
+| Issue | Category | Details |
+|-------|----------|---------|
+| [description] | [missing dependency / unresolved import / missing registration / env var] | [what's missing and which file needs it] |
+
+[If no integration-class failures were encountered, write "None — all test failures were spec or implementation issues."]
+
 ## Assertion Provenance
 - Value-assertions audited: **[N]**
 - Spec-traced: **[N]** (value found in outline, blueprint, process_flow, or test_advisory)
@@ -621,13 +629,11 @@ Write `{context_path}/test_report.md`:
 
 **8a. Extract to memory (inline).** Review the test report you just wrote. For test coverage insights, read `docs/project_notes/key_facts.md` and use Edit to append concise entries (2-3 lines each) if not already present. For implementation fixes applied, read `docs/project_notes/bugs.md` and append. For escalated issues, read `docs/project_notes/issues.md` and append. Do NOT spawn a subagent — write directly.
 
-**8b. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.test.completed` → `true`, `workflow.test.completed_at` → current ISO timestamp, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp (if not already set). Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"test_to_complete"`. Write back.
+**8b. Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"implementing"`, `workflow.test.completed` → `true`, `workflow.test.completed_at` → current ISO timestamp, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp (if not already set), `workflow.implement.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"test_to_implement"`. Write back. If `workflow.implement` object does not exist, initialize it first: `{ "started": true, "completed": false, "completed_at": null }`.
 
 **8c. Save generated specialists.** Check if `{context_path}/generated-specialists/` exists (Glob: `{context_path}generated-specialists/*/*.specialist.md`). For each found, use AskUserQuestion: "Save **[display_name]** to your personal specialist library?" Options: "Yes — save to ~/.claude/specialists/" / "No — discard". If yes, copy via Bash: `mkdir -p ~/.claude/specialists/{name} && cp "{source}" ~/.claude/specialists/{name}/{name}.specialist.md`.
 
-**8d. Git commit.** Check for `.git` directory. If present, use AskUserQuestion with header "Git Commit", options: "Yes — commit and push" / "Yes — commit only" / "No". If approved: `git add` files from build report + test files, commit with descriptive message, optionally push.
-
-**8e. Route.** "Workflow complete. Run `/clear` then `/intuition-start` to see project status and decide what's next."
+**8d. Route.** "Tests complete. Integration needed. Run `/clear` then `/intuition-implement`"
 
 ---
 

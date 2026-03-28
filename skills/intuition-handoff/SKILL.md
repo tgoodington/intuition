@@ -104,7 +104,7 @@ This is the authoritative schema for `.project-memory-state.json`:
   "version": "8.0",
   "active_context": "trunk",
   "trunk": {
-    "status": "none | prompt | outline | design | engineering | building | testing | detail | complete",
+    "status": "none | prompt | outline | design | engineering | building | testing | implementing | detail | complete",
     "workflow": {
       "prompt": { "started": false, "completed": false, "started_at": null, "completed_at": null, "output_files": [] },
       "outline": { "started": false, "completed": false, "completed_at": null, "approved": false },
@@ -112,6 +112,7 @@ This is the authoritative schema for `.project-memory-state.json`:
       "engineering": { "started": false, "completed": false, "completed_at": null },
       "build": { "started": false, "completed": false, "completed_at": null },
       "test": { "started": false, "completed": false, "completed_at": null, "skipped": false },
+      "implement": { "started": false, "completed": false, "completed_at": null },
       "detail": { "started": false, "completed": false, "completed_at": null, "team_assignment": null, "specialists": [], "current_specialist": null, "execution_phase": 1 }
     }
   },
@@ -123,7 +124,7 @@ This is the authoritative schema for `.project-memory-state.json`:
 
 ### Branch Entry Schema
 
-Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure (including `engineering`, `build`, `test`, and `detail` phases).
+Each branch in `branches` has: `display_name`, `created_from`, `created_at`, `purpose`, `status`, and a `workflow` object identical to trunk's workflow structure (including `engineering`, `build`, `test`, `implement`, and `detail` phases).
 
 ### Design Items Schema
 

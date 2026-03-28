@@ -41,6 +41,11 @@
         "completed_at": null,
         "skipped": false
       },
+      "implement": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
       "detail": {
         "started": false,
         "completed": false,

@@ -180,14 +180,22 @@ ELSE (a context is in-progress):
        AND workflow.test.started == false:
     → ready_for_test
 
+  ELSE IF workflow.implement exists AND workflow.implement.started == true
+       AND workflow.implement.completed == false:
+    → implement_in_progress
+
+  ELSE IF workflow.test exists AND workflow.test.completed == true
+       AND workflow.implement exists AND workflow.implement.started == false:
+    → ready_for_implement
+
   ELSE:
     → post_completion
 ```
 
 **"Any context is complete"** = trunk.status == "complete" OR any branch has status == "complete".
-**"No context is in-progress"** = no context has status in ["prompt","outline","design","engineering","building","testing","detail"].
+**"No context is in-progress"** = no context has status in ["prompt","outline","design","engineering","building","testing","implementing","detail"].
 
-**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), outline.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done), build_report.md (build done), test_report.md (test done). Ask user if ambiguous.
+**Fallback** (state corrupted): Infer from files under context_path — prompt_brief.md (prompt done), outline.md (planning done), team_assignment.json (assemble done), blueprints/ directory (detail in progress), code_specs.md (engineering done), build_report.md (build done), test_report.md (test done), implement_report.md (implement done). Ask user if ambiguous.
 
 ## ROUTING TABLE (Step 5)
 
@@ -208,6 +216,8 @@ Output one line of status, then the next command.
 | build_in_progress | "Build in progress." | `/intuition-build` |
 | ready_for_test | "Build complete, testing pending." | `/intuition-test` |
 | test_in_progress | "Test phase in progress." | `/intuition-test` |
+| ready_for_implement | "Tests complete, integration pending." | `/intuition-implement` |
+| implement_in_progress | "Integration in progress." | `/intuition-implement` |
 | post_completion | See POST-COMPLETION below | — |
 
 **DESIGN ROUTING (v8 only):** Read `context_workflow.workflow.design.items`. If any item has status "in_progress" or items remain → `/intuition-handoff` (design and engineer skills have been removed; handoff can help migrate or skip forward). If ambiguous, ask the user.
@@ -227,7 +237,7 @@ Project Status:
 ├── Branch: [display_name] (from [created_from]): [status label]
 ```
 
-Status labels: "Not started" | "Prompting..." | "Planning..." | "Assembling..." | "Detailing..." | "Designing..." | "Engineering..." | "Building..." | "Testing..." | "Complete"
+Status labels: "Not started" | "Prompting..." | "Planning..." | "Assembling..." | "Detailing..." | "Designing..." | "Engineering..." | "Building..." | "Testing..." | "Integrating..." | "Complete"
 
 **If any context is in-progress:** Route to that context's next skill instead of showing choices.
 
