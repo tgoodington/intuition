@@ -56,7 +56,8 @@ const skills = [
   'intuition-skill-guide',
   'intuition-update',
   'intuition-assemble',
-  'intuition-detail'
+  'intuition-detail',
+  'intuition-implement'
 ];
 
 // Domain specialist profiles to install (v9) — scanned dynamically
@@ -252,6 +253,7 @@ try {
     log(`  /intuition-initialize     - Project initialization (set up project memory)`);
     log(`  /intuition-agent-advisor  - Expert advisor on building custom agents`);
     log(`  /intuition-skill-guide    - Expert advisor on building custom skills`);
+    log(`  /intuition-implement      - Post-test project integration`);
     log(`  /intuition-update         - Check for and install package updates`);
     log(``);
     log(`Domain specialists (${specialists.length}):`);
