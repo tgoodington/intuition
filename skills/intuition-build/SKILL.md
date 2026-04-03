@@ -383,10 +383,9 @@ After reporting results:
 - Tell the user: "Build complete. Code was produced — test phase needed. Run `/clear` then `/intuition-test`"
 
 **If no code was produced** (no code-writer):
-- Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp, `workflow.test.skipped` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"build_to_complete"`. Write back.
+- Read `.project-memory-state.json`. Target active context. Set: `status` → `"implementing"`, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp, `workflow.test.skipped` → `true`, `workflow.implement.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"build_to_implement"`. Write back. If `workflow.implement` object does not exist, initialize it first: `{ "started": true, "completed": false, "completed_at": null }`.
 - Check for generated specialists in `{context_path}/generated-specialists/` (Glob: `*.specialist.md`). For each found, use AskUserQuestion: "Save **[display_name]** to your personal specialist library?" Options: "Yes — save to ~/.claude/specialists/" / "No — discard". If yes, copy via Bash.
-- Offer git commit via AskUserQuestion: "Commit changes?" Options: "Yes — commit and push" / "Yes — commit only" / "No". If approved, stage files from build report, commit with descriptive message.
-- Tell the user: "Workflow complete. Run `/clear` then `/intuition-start` to see project status."
+- Tell the user: "Build complete. No code produced — test phase not needed. Run `/clear` then `/intuition-implement`"
 
 ## FAST TRACK PROTOCOL
 
