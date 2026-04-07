@@ -42,6 +42,7 @@ function error(msg) {
 
 // All skills to install
 const skills = [
+  // Classic pipeline (v8-v10)
   'intuition-start',
   'intuition-prompt',
   'intuition-handoff',
@@ -57,7 +58,15 @@ const skills = [
   'intuition-update',
   'intuition-assemble',
   'intuition-detail',
-  'intuition-implement'
+  'intuition-implement',
+  // Enuncia pipeline (v11)
+  'intuition-enuncia-start',
+  'intuition-enuncia-discovery',
+  'intuition-enuncia-compose',
+  'intuition-enuncia-design',
+  'intuition-enuncia-execute',
+  'intuition-enuncia-verify',
+  'intuition-enuncia-handoff'
 ];
 
 // Domain specialist profiles to install (v9) — scanned dynamically
