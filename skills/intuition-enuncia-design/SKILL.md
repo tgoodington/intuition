@@ -214,6 +214,20 @@ Design may also refine existing fields:
 - **`acceptance_criteria`** — add technical specifics to the outcome-based criteria from compose
 - **`description`** — may be expanded with "what to build" detail (the deliverable and its behavior)
 
+### UI Task Enrichment (`ui/*` domains)
+
+When enriching `ui/*` tasks, the design fields describe **functional requirements and constraints** — not visual prescriptions. The UI producer owns aesthetic execution.
+
+**`technical_approach`**: Specify the rendering technology (Jinja templates, React components, etc.), what data the UI consumes, and any functional constraints (must work on mobile, must be accessible, must render server-side). Do NOT prescribe fonts, colors, spacing, or visual style.
+
+**`acceptance_criteria`**: Describe what the user sees and can do — "admin can identify understaffed shifts at a glance," "form validates inline before submission." Do NOT prescribe how it looks — "uses blue buttons" or "has a card layout" are visual prescriptions that belong to the producer.
+
+**`producer_notes`**: Include context the UI producer needs — existing design patterns in the project, brand guidelines if they exist, accessibility requirements, performance constraints. This is constraint context, not creative direction.
+
+**`files`**: Specify template/component file paths. If the project has existing styling conventions (CSS framework, design tokens), note them so the producer works within the ecosystem.
+
+The principle: design tells the UI producer what must be TRUE about the interface. The UI producer decides what it LOOKS like.
+
 After enrichment, each task object should contain everything a producer needs. No ambiguity, no open questions.
 
 ## PHASE 5: USER REVIEW

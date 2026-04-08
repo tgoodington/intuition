@@ -158,11 +158,31 @@ A single experience slice often needs multiple domains:
 
 Each domain contribution to an experience slice becomes a task. Then ask: "Is this task small enough?" If not, break it further within the same domain.
 
+### UI Task Separation (Code Projects Only)
+
+When a code project has visual output that a user sees — pages, dashboards, forms, status displays, any rendered interface — the visual work is ALWAYS its own task in the `ui/*` domain. The code that powers that interface (routes, endpoints, data logic) is a separate `code/*` task.
+
+This is not a judgment call. If users see it, it's a `ui/*` task. If it's logic that runs behind what users see, it's a `code/*` task. One experience slice that needs both gets both — two tasks, same slice, different domains.
+
+**`ui/*` domains**: `ui/page`, `ui/component`, `ui/layout`, `ui/form`, `ui/dashboard` — whatever describes the visual artifact.
+
+**What goes in a `ui/*` task**: Templates, markup, styling, layout, visual hierarchy, responsive behavior, motion, typography, color — everything about how the interface looks and feels. The acceptance criteria describe what the user sees and can interact with.
+
+**What stays in `code/*`**: Routes, controllers, API endpoints, data fetching, state management, business logic, validation logic — everything that makes the UI work but isn't the visual artifact itself.
+
+**Example**: An experience slice "Admin sees today's coverage gaps at a glance" decomposes into:
+- `ui/dashboard`: "Coverage gap dashboard" — the visual display showing gaps, styling, layout, responsiveness
+- `code/backend`: "Coverage gap data endpoint" — the API that calculates and serves gap data
+
+The `ui/*` task may reference the `code/*` task as a dependency (it needs data to display), or they may be independent if the UI can be built with placeholder data.
+
+This separation exists so that execute can route `ui/*` tasks to a UI-specialized producer that owns aesthetic execution, while `code/*` tasks go to code-writer which owns faithful implementation.
+
 ### Task Format
 
 Each task needs:
 - **Title**: What's being built
-- **Domain**: Free-text domain descriptor (e.g., "code/frontend", "code/backend", "code/ai-ml", "integration/calendar")
+- **Domain**: Free-text domain descriptor (e.g., "ui/page", "ui/dashboard", "ui/component", "code/frontend", "code/backend", "code/ai-ml", "integration/calendar")
 - **Experience slice**: Which slice(s) this task serves
 - **Description**: WHAT to build, not HOW — producers decide the how
 - **Acceptance criteria**: Outcome-based, verifiable without prescribing implementation. 2-4 per task. If you need more than 4, the task is too big — split it.

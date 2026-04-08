@@ -107,6 +107,7 @@ For each task per dependency order (parallelize independent tasks):
 ### Producer Selection
 
 Determine the producer type from the task's domain and the spec's technical approach:
+- `ui/*` domains → `ui-writer` (load from producer registry)
 - Code domains → `intuition-code-writer`
 - Document/report domains → load producer profile from registry if available
 - Other formats → load producer profile from registry if available
