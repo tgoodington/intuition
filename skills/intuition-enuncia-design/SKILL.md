@@ -50,9 +50,9 @@ You are the engineering brain. Outline decided what needs to exist. You decide h
 Phase 1:   Intake — read discovery brief, outline, project map
 Phase 2:   Slice grouping — organize tasks by experience slice
 Phase 2.5: Operational foundation — deployment, repo structure, dev workflow (code projects only)
-Phase 3:   Technical design — research + decisions per slice group
+Phase 3:   Technical design — research + decisions per slice group, present each group individually for user review
 Phase 4:   Spec writing — producer-ready specs per task
-Phase 5:   User review — surface decisions, confirm approach
+Phase 5:   Final confirmation — compact summary, approval gate
 Phase 6:   Write outputs — specs, updated map, state
 ```
 
@@ -174,6 +174,28 @@ Before moving to specs, verify this group's design against the discovery brief:
 
 If something drifts, flag it to the user before proceeding.
 
+### 3e. Present Group for Review
+
+After designing each group, present it to the user **before moving to the next group**. Do NOT batch all groups together. One group at a time keeps the review digestible.
+
+Present the group's design as plain text (not AskUserQuestion — that's reserved for the final gate):
+
+```
+**Group [N] of [total]: [Group Name] ([slice refs])**
+
+[Technical approach — tables, data models, algorithms, whatever this group needs]
+
+[Any decisions that need user input per decision posture]
+
+[Any questions about this group]
+
+When you're good with this group, say so and I'll move to the next one.
+```
+
+Wait for the user to confirm or request changes before proceeding to the next group. If the user asks for changes, revise and re-present the same group.
+
+This is the primary user interaction loop of the design phase. Each group gets the user's full attention.
+
 ## PHASE 4: SPEC WRITING
 
 After designing each slice group, write a spec for each task within the group.
@@ -223,24 +245,16 @@ Specs should be concise. A producer reads this and knows exactly what to build, 
 
 ## PHASE 5: USER REVIEW
 
-After all slice groups are designed and specs are written, present a summary via AskUserQuestion:
+Since each group was reviewed individually during Phase 3, this is a brief final confirmation — not a re-presentation. The user has already seen and approved every group.
+
+Present a compact summary via AskUserQuestion:
 
 ```
-Question: "Design complete. Here's the summary:
+Question: "Design complete — all [N] groups reviewed.
 
-**[Slice Group 1 name]**
-[1-2 sentence technical approach]
-Tasks: [T1, T2, ...] — specs written
-
-**[Slice Group 2 name]**
-[1-2 sentence technical approach]
-Tasks: [T3, T4, ...] — specs written
-
-...
-
-**Decisions made:** [count] — [count surfaced to you, count resolved autonomously]
-**Project map updated:** [list key additions]
-**Brief alignment:** All designs serve the North Star and respect constraints.
+Tasks specced: [T1, T2, ..., TN]
+Decisions made: [count] ([count] surfaced to you, [count] resolved autonomously)
+Project map updated: [key additions]
 
 Ready for build?"
 
