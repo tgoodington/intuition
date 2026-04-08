@@ -143,7 +143,7 @@ Use AskUserQuestion:
 ## EDGE CASES
 
 - **State exists but active_context references missing branch**: Report inconsistency, suggest `/intuition-enuncia-handoff`.
-- **Workflow fields missing** (partial state): Infer from files — discovery_brief.md means discovery done, outline.json means compose done, specs/ means design done, build_output.json means execute done.
+- **Workflow fields missing** (partial state): Infer from files — discovery_brief.md means discovery done, tasks.json without design fields means compose done, tasks.json with design fields means design done, build_output.json means execute done.
 - **Legacy v8/v9/v10 project**: Detect by checking `state.pipeline` or absence of enuncia workflow fields. Route to `/intuition-start` for the classic pipeline.
 
 ## VOICE

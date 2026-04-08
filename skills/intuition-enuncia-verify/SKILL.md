@@ -21,13 +21,13 @@ The discovery brief's North Star is the ultimate test: does the running system d
 ## CRITICAL RULES
 
 1. You MUST read `.project-memory-state.json` and resolve context_path before anything else.
-2. You MUST read `{context_path}/discovery_brief.md`, `{context_path}/outline.json`, `{context_path}/build_output.json`, and `{context_path}/project_map.md`.
+2. You MUST read `{context_path}/discovery_brief.md`, `{context_path}/tasks.json`, `{context_path}/build_output.json`, and `docs/project_notes/project_map.md`.
 3. You MUST integrate before testing. Code that isn't wired in can't be meaningfully tested.
 4. You MUST NOT write unit tests that test implementation internals. Tests exercise the system from the outside — smoke tests and experience-slice tests only.
 5. You MUST NOT fix failures that violate user decisions from the specs. Escalate immediately.
 6. You MUST delegate integration tasks and test writing to subagents. Do not write code yourself.
 7. You MUST verify against the discovery brief after all tests pass — does the system deliver the North Star?
-8. You MUST update `{context_path}/project_map.md` if integration reveals new information.
+8. You MUST update `docs/project_notes/project_map.md` if integration reveals new information.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -58,14 +58,13 @@ Step 8: Exit
 
 Read these files:
 1. `{context_path}/discovery_brief.md` — North Star, stakeholders, constraints
-2. `{context_path}/outline.json` — experience slices, tasks, acceptance criteria
+2. `{context_path}/tasks.json` — experience slices, tasks with design enrichment, acceptance criteria
 3. `{context_path}/build_output.json` — what was built, files created/modified, any deviations
-4. `{context_path}/specs/*.md` — design specs for technical context
-5. `{context_path}/project_map.md` — component landscape, interactions
+4. `docs/project_notes/project_map.md` — component landscape, interactions
 
 From build_output.json, extract: all files created and modified, task statuses, any escalated issues or deviations.
 
-From outline.json, extract: experience slices (these become the basis for experience-slice tests).
+From tasks.json, extract: experience slices (these become the basis for experience-slice tests).
 
 ### Gate Check
 
@@ -162,7 +161,7 @@ These are the highest-value tests in the system. They walk through each stakehol
 
 ### Deriving Tests from Experience Slices
 
-Read `outline.json` and extract the experience slices. For each slice that involves code behavior:
+Read `tasks.json` and extract the experience slices. For each slice that involves code behavior:
 
 - **What triggers it**: The test setup
 - **What the stakeholder does**: The test actions
@@ -185,7 +184,7 @@ Test conventions: [from existing tests]
 ### ES-[N]: [Title]
 Stakeholder: [who]
 Journey: [trigger → action → expected outcome]
-Acceptance criteria: [from outline.json]
+Acceptance criteria: [from tasks.json]
 
 ## Rules
 - Test the journey from the stakeholder's perspective
@@ -198,8 +197,7 @@ Acceptance criteria: [from outline.json]
 
 ## Spec Sources (read these for expected behavior)
 - Discovery brief: {context_path}/discovery_brief.md
-- Outline: {context_path}/outline.json
-- Specs: {context_path}/specs/*.md
+- Tasks: {context_path}/tasks.json
 ```
 
 Run the experience slice tests. Classify and fix failures (Step 6).
@@ -237,7 +235,7 @@ After all tests pass, check the running system against the discovery brief:
 
 If something drifts, flag it to the user: "Tests pass, but [specific concern about North Star alignment]."
 
-**Update project map** if integration or testing revealed anything new about how components connect.
+**Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new about how components connect.
 
 ## STEP 8: EXIT
 
@@ -275,7 +273,7 @@ If committing: stage files from build output + integration changes + tests, comm
 When verifying on a branch:
 - Run the FULL test suite (parent + branch tests) to catch compatibility issues
 - Integration must be compatible with parent architecture
-- Update the branch's project map, not the parent's
+- Update `docs/project_notes/project_map.md`
 
 ## RESUME LOGIC
 

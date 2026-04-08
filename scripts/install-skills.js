@@ -60,6 +60,7 @@ const skills = [
   'intuition-detail',
   'intuition-implement',
   // Enuncia pipeline (v11)
+  'intuition-enuncia-initialize',
   'intuition-enuncia-start',
   'intuition-enuncia-discovery',
   'intuition-enuncia-compose',

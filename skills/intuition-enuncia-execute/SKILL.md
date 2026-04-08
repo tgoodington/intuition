@@ -19,14 +19,14 @@ Execute the design specs. Delegate production to the right producers, verify wha
 ## CRITICAL RULES
 
 1. You MUST read `.project-memory-state.json` and resolve `context_path` before reading any other files.
-2. You MUST read `{context_path}/discovery_brief.md`, `{context_path}/outline.json`, and all `{context_path}/specs/*.md`. If specs are missing, stop: "No specs found. Run `/intuition-enuncia-design` first."
+2. You MUST read `{context_path}/discovery_brief.md` and `{context_path}/tasks.json`. If tasks.json is missing or tasks lack design fields, stop: "No design specs found. Run `/intuition-enuncia-design` first."
 3. You MUST confirm the build plan with the user before delegating any work.
 4. You MUST delegate all production to subagents via the Task tool. NEVER produce deliverables yourself.
 5. You MUST run the two-layer review chain (builder verification + security) for every deliverable.
 6. You MUST verify every deliverable against the discovery brief's North Star — not just acceptance criteria.
 7. You MUST NOT make design decisions. Specs are your authority. If a spec is ambiguous, escalate — don't improvise.
 8. You MUST route to the next phase after completion. NEVER to `/intuition-enuncia-handoff`.
-9. You MUST update `{context_path}/project_map.md` if implementation reveals anything the map didn't capture.
+9. You MUST update `docs/project_notes/project_map.md` if implementation reveals anything the map didn't capture.
 
 **TOOL DISTINCTION:**
 - `TaskCreate / TaskUpdate / TaskList / TaskGet` = YOUR internal task board for tracking items.
@@ -60,17 +60,16 @@ Step 7: Route to next phase
 
 Read these files:
 1. `{context_path}/discovery_brief.md` — North Star, decision posture, constraints, stakeholders
-2. `{context_path}/outline.json` — experience slices, tasks, acceptance criteria, dependencies
-3. ALL files in `{context_path}/specs/*.md` — design specs with technical approach, interfaces, file paths
-4. `{context_path}/project_map.md` — component landscape, interactions, what exists vs what's new
+2. `{context_path}/tasks.json` — experience slices, tasks with design enrichment (technical approach, interfaces, file paths, decisions)
+3. `docs/project_notes/project_map.md` — component landscape, interactions, what exists vs what's new
 
-Validate: every task in `outline.json` has a corresponding spec in `specs/`. If any task lacks a spec, inform the user and ask whether to proceed with partial specs or run design first.
+Validate: every task in `tasks.json` has a `technical_approach` field (indicating design enrichment). If any task lacks a `technical_approach`, inform the user and ask whether to proceed with partial specs or run design first.
 
-From the specs, extract per task:
-- Technical approach and file paths
-- Acceptance criteria (refined from outline)
-- Interfaces and dependencies
-- Decisions made during design
+From each task object, extract:
+- `task.technical_approach` and `task.files`
+- `task.acceptance_criteria` (refined from compose)
+- `task.interfaces` and `task.dependencies`
+- `task.design_decisions`
 
 ## STEP 2: CONFIRM BUILD PLAN
 
@@ -99,7 +98,7 @@ Options:
 
 ## STEP 3: CREATE TASK BOARD
 
-Use TaskCreate for each task from the outline. Set dependencies via TaskUpdate with addBlockedBy. Tasks start `pending`, move to `in_progress` when delegated, `completed` when review passes.
+Use TaskCreate for each task from tasks.json. Set dependencies via TaskUpdate with addBlockedBy. Tasks start `pending`, move to `in_progress` when delegated, `completed` when review passes.
 
 ## STEP 4: DELEGATE TO PRODUCERS
 
@@ -124,12 +123,34 @@ If no matching producer profile is found, default to `intuition-code-writer` wit
 ```
 You are building a deliverable from a design spec. Follow the spec exactly.
 
-## Your Spec
-Read the spec at {context_path}/specs/T{N}-{slug}.md
-The spec contains: what to build, technical approach, file paths, acceptance criteria, and interfaces.
+## Your Task
+Task ID: T{N}
+Title: {task.title}
+Domain: {task.domain}
+
+## What to Build
+{task.description}
+
+## Technical Approach
+{task.technical_approach}
+
+## Files
+{task.files}
+
+## Acceptance Criteria
+{task.acceptance_criteria}
+
+## Interfaces
+{task.interfaces}
+
+## Design Decisions
+{task.design_decisions}
+
+## Producer Notes
+{task.producer_notes}
 
 ## Project Context
-Read {context_path}/project_map.md for how this piece connects to the rest of the project.
+Read docs/project_notes/project_map.md for how this piece connects to the rest of the project.
 Read {context_path}/discovery_brief.md for the project's North Star and constraints.
 
 ## Rules
@@ -169,7 +190,7 @@ For every deliverable that produces code, configuration, or scripts, spawn an `i
 You are a security reviewer. Your job is to FIND PROBLEMS.
 
 Deliverable: Read [produced file paths]
-Spec: Read {context_path}/specs/T{N}-{slug}.md (for context)
+Spec: Review against the task spec in {context_path}/tasks.json, task {task.id}
 
 Check for: injection vulnerabilities, authentication/authorization gaps, secrets in code, unsafe data handling, dependency risks, configuration weaknesses.
 
@@ -225,7 +246,7 @@ Non-code deliverables (documents, spreadsheets, etc.) skip security review.
 }
 ```
 
-### Update `{context_path}/project_map.md`
+### Update `docs/project_notes/project_map.md`
 
 If implementation revealed anything not in the map — new components, changed interactions, unexpected dependencies — update the map. Add a Map History entry for the build phase.
 
@@ -242,9 +263,9 @@ Present a concise summary to the user: task count, pass/fail, files produced, an
 ## BRANCH MODE
 
 When building on a branch:
-- Read the parent's project map for architectural context
+- Read `docs/project_notes/project_map.md` for architectural context
 - Add branch-awareness to producer prompts (compatibility with parent)
-- Update the branch's project map, not the parent's
+- Update `docs/project_notes/project_map.md`
 
 ## PARALLEL EXECUTION
 

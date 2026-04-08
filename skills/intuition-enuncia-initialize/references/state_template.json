@@ -1,0 +1,39 @@
+{
+  "initialized": true,
+  "version": "11.0",
+  "pipeline": "enuncia",
+  "active_context": "trunk",
+  "trunk": {
+    "status": "none",
+    "workflow": {
+      "discovery": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "compose": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "design": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "execute": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      },
+      "verify": {
+        "started": false,
+        "completed": false,
+        "completed_at": null
+      }
+    }
+  },
+  "branches": {},
+  "last_handoff": null,
+  "last_handoff_transition": null
+}
