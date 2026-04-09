@@ -92,7 +92,7 @@ If user selected "No, skip for now":
 IMPORTANT: Restart Claude Code for changes to take effect.
 
 Changes will apply to:
-- All 9 intuition skills
+- All Intuition skills
 - New sessions only (current session uses old version)
 ```
 

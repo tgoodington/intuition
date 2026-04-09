@@ -24,7 +24,7 @@ The first cycle is the **trunk**. After trunk completes, create **branches** for
 | `/intuition-enuncia-compose` | Maps experience slices, decomposes into buildable tasks |
 | `/intuition-enuncia-design` | Technical design — enriches tasks with specs, updates project map |
 | `/intuition-enuncia-execute` | Delegates production to subagents, verifies outputs |
-| `/intuition-enuncia-verify` | Wires code into project, runs toolchain and tests |
+| `/intuition-enuncia-verify` | Wires code into project, gets it running, tests the live system |
 | `/intuition-enuncia-handoff` | Branch creation and context management |
 | `/intuition-initialize` | Sets up project memory (you already ran this) |
 | `/intuition-meander` | Thought partner — reason through problems collaboratively |
@@ -40,7 +40,7 @@ The first cycle is the **trunk**. After trunk completes, create **branches** for
 3. `/intuition-enuncia-compose` — decompose into experience slices and tasks
 4. `/intuition-enuncia-design` — technical design for each task group
 5. `/intuition-enuncia-execute` — build from specs
-6. `/intuition-enuncia-verify` — wire in, test, prove it works (code projects)
+6. `/intuition-enuncia-verify` — wire in, get it running, test the live system (code projects)
 
 Run `/clear` before each phase skill.
 
