@@ -85,7 +85,8 @@ const producers = [
   'spreadsheet-builder',
   'presentation-creator',
   'form-filler',
-  'data-file-writer'
+  'data-file-writer',
+  'ui-writer'
 ];
 
 // Reusable agent definitions (v9.4) — scanned dynamically
