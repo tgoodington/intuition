@@ -1,6 +1,6 @@
 {
   "name": "@tgoodington/intuition",
-  "version": "11.3.1",
+  "version": "11.4.0",
   "description": "Domain-adaptive workflow system for Claude Code. Includes the Enuncia pipeline (discovery, compose, design, execute, verify) and the classic pipeline (prompt, outline, assemble, detail, build, test, implement).",
   "keywords": [
     "claude-code",

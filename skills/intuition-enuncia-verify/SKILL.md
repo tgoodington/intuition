@@ -1,9 +1,9 @@
 ---
 name: intuition-enuncia-verify
-description: Integration and verification for code projects. Wires build output into the project, walks the user through getting it running for real, then tests the live system. Proves the code actually works. Only runs when code was produced.
+description: Integration and verification for code projects. Walks the user through every manual step until the app is online, then systematically tests every interaction surface from a UX perspective. Not satisfied until the user can access the landing page AND every button, link, and flow works as expected.
 model: opus
-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, Bash, mcp__ide__getDiagnostics
-allowed-tools: Read, Write, Edit, Glob, Grep, Task, Bash, mcp__ide__getDiagnostics
+tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, Bash, Agent, WebFetch, mcp__ide__getDiagnostics
+allowed-tools: Read, Write, Edit, Glob, Grep, Task, Bash, Agent, WebFetch, mcp__ide__getDiagnostics
 ---
 
 # Verify Protocol
@@ -14,21 +14,26 @@ Deliver something to the user through an experience that places them as creative
 
 ## SKILL GOAL
 
-Make the code work for real. Wire execute's output into the project, figure out everything the system needs to actually run — services, databases, environment, infrastructure — and walk the user through standing it up. Once they confirm it's live, test the running system against the discovery brief's North Star.
+Two jobs, done relentlessly:
 
-No mocks. No "verified against synthetic data." Either it works or it doesn't.
+1. **Get it online.** Wire the code in, figure out every prerequisite, walk the user through every manual step, and do not stop until the app is live and the user can access the landing page in their browser (or equivalent entry point). No "it compiles" — it must be RUNNING and REACHABLE.
+
+2. **Prove every interaction works.** Systematically navigate the live application as a real user would. Click every button. Follow every link. Submit every form. Walk every flow. Verify from a UX perspective — not just "does the endpoint return 200" but "does the user see what they should see and can they do what they should be able to do." Not satisfied until every implemented interaction surface works as expected.
+
+No mocks. No synthetic verification. The real system, used the way a real user uses it.
 
 ## CRITICAL RULES
 
 1. You MUST read `.project-memory-state.json` and resolve context_path before anything else.
 2. You MUST read `{context_path}/discovery_brief.md`, `{context_path}/tasks.json`, `{context_path}/build_output.json`, and `docs/project_notes/project_map.md`.
 3. You MUST integrate before anything else. Code that isn't wired in can't run.
-4. You MUST NOT write tests until the user confirms the system is running.
-5. You MUST NOT mock anything in tests. Tests hit the live system.
-6. You MUST NOT fix failures that violate user decisions from the specs. Escalate immediately.
-7. You MUST delegate integration tasks and test writing to subagents. Do not write code yourself.
-8. You MUST verify against the discovery brief after all tests pass — does the system deliver the North Star?
-9. You MUST update `docs/project_notes/project_map.md` if integration reveals new information.
+4. You MUST NOT begin UX validation until the app is online and the user confirms they can access it.
+5. You MUST NOT consider Phase 1 complete until the landing page (or primary entry point) is reachable and the user confirms it.
+6. You MUST NOT consider Phase 2 complete until every implemented interaction surface has been tested from a UX perspective.
+7. You MUST NOT fix failures that violate user decisions from the specs. Escalate immediately.
+8. You MUST delegate integration tasks and code fixes to subagents. Do not write code yourself.
+9. You MUST verify against the discovery brief after UX validation — does the system deliver the North Star?
+10. You MUST update `docs/project_notes/project_map.md` if integration reveals new information.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -45,24 +50,27 @@ No mocks. No "verified against synthetic data." Either it works or it doesn't.
 ## PROTOCOL
 
 ```
-Phase 1: Get it running
+Phase 1: Get it online
   Step 1: Read context
   Step 2: Integration — wire everything together
   Step 3: Toolchain — compile, type-check, lint
-  Step 4: Readiness checklist — what does the system need to actually start?
-  Step 5: Assisted setup — help the user stand it up
+  Step 4: Prerequisites — what does the system need to actually start?
+  Step 5: Assisted setup — work through every manual step with the user
+  Step 6: Go live — start the app and verify it's reachable
 
-Phase 2: Prove it works
-  Step 6: Smoke tests against the live system
-  Step 7: Experience slice tests against the live system
-  Step 8: Fix cycle
-  Step 9: Final verification against discovery brief
-  Step 10: Exit
+Phase 2: UX validation
+  Step 7: Build the interaction map
+  Step 8: Systematic walkthrough — test every interaction surface
+  Step 9: Fix cycle
+  Step 10: Final verification against discovery brief
+  Step 11: Exit
 ```
 
 ---
 
-## PHASE 1: GET IT RUNNING
+## PHASE 1: GET IT ONLINE
+
+The only acceptable outcome of Phase 1 is: the app is running and the user can access the landing page (or primary entry point) in their browser or client.
 
 ### STEP 1: READ CONTEXT
 
@@ -74,7 +82,7 @@ Read these files:
 
 From build_output.json, extract: all files created and modified, task statuses, any escalated issues or deviations.
 
-From tasks.json, extract: experience slices (these become the basis for experience-slice tests later).
+From tasks.json, extract: experience slices (these become the basis for the interaction map in Phase 2).
 
 #### Gate Check
 
@@ -129,9 +137,9 @@ Also run `mcp__ide__getDiagnostics` to catch IDE-visible issues.
 
 If any step fails, classify and fix before proceeding.
 
-### STEP 4: READINESS CHECKLIST
+### STEP 4: PREREQUISITES
 
-This is where you figure out everything the system needs to actually start and run — not just compile.
+Figure out everything the system needs to actually start and run — not just compile.
 
 #### 4a. Research Prerequisites
 
@@ -153,41 +161,19 @@ For each dependency, report: what it is, where in the code it's referenced, whet
 
 From the researcher's findings plus context from the discovery brief (which describes the deployment environment), build a concrete readiness checklist. Group items by category.
 
-Format:
-
-```
-## Readiness Checklist
-
-To get this system running, here's what needs to be set up:
-
-### [Category: e.g., Database]
-- [ ] [Specific action — e.g., "Create PostgreSQL database 'staff_coverage'"]
-- [ ] [Next action — e.g., "Run migrations: alembic upgrade head"]
-
-### [Category: e.g., External Services]
-- [ ] [Specific action]
-  - I can help with: [what you can assist with — e.g., "generating the config file, writing the migration"]
-  - You'll need to: [what requires human action — e.g., "create the Azure AD app registration, grant admin consent"]
-
-### [Category: e.g., Environment]
-- [ ] [Specific action]
-
-...
-```
-
 For each item, be specific about:
 - **What** needs to happen (exact commands, exact config values where known)
 - **Where** it's referenced in the code (so the user can verify)
-- **What you can help with** vs. **what requires their action** (admin portals, credentials, infrastructure access)
+- **What you can do** vs. **what requires their action** (admin portals, credentials, infrastructure access)
 
 #### 4c. Present to User
 
 Present the readiness checklist via AskUserQuestion:
 
 ```
-Question: "[The readiness checklist from 4b]
+Question: "[The readiness checklist]
 
-Let's work through these. Which would you like to tackle first, or is anything already set up?"
+Let's work through these one at a time. Which would you like to tackle first, or is anything already set up?"
 Header: "Getting It Running"
 ```
 
@@ -195,173 +181,214 @@ Header: "Getting It Running"
 
 Work through the checklist with the user interactively. For each item:
 
-- If you can do it (write config files, run migrations, generate boilerplate): offer to do it and execute when approved.
-- If it requires their action (portal configuration, credential creation, infrastructure provisioning): give them exact instructions and wait for confirmation.
-- If it requires both: do your part, then tell them what's left.
+- **If you can do it** (write config files, run migrations, generate boilerplate, set up .env): do it and confirm.
+- **If it requires their action** (portal configuration, credential creation, infrastructure provisioning): give exact step-by-step instructions and wait for confirmation.
+- **If it requires both**: do your part, then tell them exactly what's left.
 
-After each item is addressed, try to start the relevant component and verify it connects. For example:
+After each item is addressed, try to verify it works:
 - After database setup: try connecting and running a basic query
 - After API credentials: try a test request to the service
 - After environment config: try importing/starting the app
 
-When something fails, diagnose and help fix it before moving on.
+When something fails, diagnose and help fix it before moving on. Do NOT skip items and hope they work later.
 
-#### Completion Gate
+### STEP 6: GO LIVE
 
-When the user confirms the system is running (or you've verified it starts and connects to all services), present:
+This is the moment of truth. Start the application and verify it's actually reachable.
+
+#### 6a. Start the Application
+
+Run the start/dev command for the application. Monitor the output for errors.
+
+If the app fails to start:
+1. Read the error output carefully
+2. Diagnose the root cause
+3. Fix it (or help the user fix it if it requires their action)
+4. Try again
+5. Repeat until the app starts successfully
+
+#### 6b. Verify Reachability
+
+Once the app appears to be running:
+
+1. **Hit the landing page** — use WebFetch or curl to request the primary URL (e.g., `http://localhost:3000`). Verify you get a real response, not an error page.
+2. **Check for common startup issues** — port conflicts, missing environment variables that only matter at request time, lazy initialization failures.
+3. **Ask the user to confirm** — present via AskUserQuestion:
 
 ```
-Question: "System is up. Ready to run tests against the live application?"
-Header: "Ready for Testing"
+Question: "The app is running. Can you access it at [URL]? Can you see the landing page?
+
+If something looks wrong, describe what you see and I'll help fix it."
+Header: "Is It Online?"
 Options:
-- "Run tests"
-- "Not yet — still setting up [specify]"
+- "Yes — I can see the landing page"
+- "It loads but something is wrong"
+- "I can't access it"
 ```
 
-Do NOT proceed to Phase 2 until the user confirms.
+#### 6c. Resolve Until Online
+
+If the user reports issues, work through them. Common problems:
+- CORS issues (browser can reach it but API calls fail)
+- Missing static assets (page loads but looks broken)
+- Authentication redirects blocking access
+- Database connection failures on first real request
+- Missing seed data causing empty/error states
+
+Do NOT proceed to Phase 2 until the user confirms they can access the landing page and it looks right. This is a hard gate. If it takes 10 rounds of fixing, so be it.
 
 ---
 
-## PHASE 2: PROVE IT WORKS
+## PHASE 2: UX VALIDATION
 
-### STEP 6: SMOKE TESTS
+The app is online. Now systematically verify that every implemented interaction works from a real user's perspective.
 
-Smoke tests verify the live system responds correctly. They hit the real running application — no test servers, no mocks, no in-memory substitutes.
+This is NOT writing automated test files. This is YOU walking through the application as a user would — fetching pages, analyzing what's rendered, verifying links go where they should, checking that actions produce the expected results.
 
-#### What Smoke Tests Cover
+### STEP 7: BUILD THE INTERACTION MAP
 
-- **Liveness**: Does the running app respond to requests?
-- **Main entry points**: Do the primary routes/endpoints/commands return non-error responses?
-- **Core dependencies**: Does the app actually talk to its database, APIs, etc.? (Verify with a request that exercises a real dependency path)
-- **Happy path**: One simple request through the main flow — does it complete end-to-end?
+Before testing, build a complete map of every interaction surface that was implemented.
 
-#### Writing Smoke Tests
+#### 7a. Inventory from Specs
 
-Delegate to an `intuition-code-writer` subagent:
+Read the experience slices from `tasks.json` and the discovery brief. For each slice, extract:
+- **Pages/routes** the user visits
+- **Actions** the user takes (buttons clicked, forms submitted, links followed)
+- **Expected outcomes** (what the user should see after each action)
 
-```
-You are writing smoke tests against a LIVE, RUNNING system. The app is already up — you are testing it from the outside.
+#### 7b. Inventory from Code
 
-Test framework: [detected framework from Step 2a]
-Test conventions: [naming, directory from existing tests]
-App URL / entry point: [how to reach the running system]
+Spawn an `intuition-researcher` agent:
 
-What to test:
-- App responds to health/root requests
-- Main entry points return successful responses
-- At least one request that touches the database returns real data
-- One end-to-end request through the primary flow completes
+"Analyze the codebase to build a complete interaction map. Find:
+- Every route/page/screen defined in the app
+- Every navigation link (where it appears, where it points)
+- Every button and what it triggers
+- Every form and what it submits to
+- Every interactive element (dropdowns, modals, toggles, tabs, etc.)
+- Every API endpoint that backs a UI interaction
 
-Rules:
-- The system is ALREADY RUNNING. Tests make real requests to it.
-- NO mocks. NO in-memory databases. NO test servers. You hit the live app.
-- If a test needs data to exist, create it through the app's own API first (setup), then clean it up after (teardown).
-- Each test should take < 10 seconds.
-- If a test fails, it means the live system is broken — not that a mock is misconfigured.
-```
+Report as a structured list: [page/route] → [interaction element] → [expected behavior]"
 
-Run the smoke tests. If they fail, fix (Step 8) before proceeding.
+#### 7c. Merge and Present
 
-### STEP 7: EXPERIENCE SLICE TESTS
-
-These are the highest-value tests. They walk through each stakeholder's journey as defined in the compose phase and verify the live system delivers the experience end-to-end.
-
-#### Deriving Tests from Experience Slices
-
-Read `tasks.json` and extract the experience slices. For each slice that involves code behavior:
-
-- **What triggers it**: The test setup
-- **What the stakeholder does**: The test actions (real API calls to the live system)
-- **What should happen**: The test assertions (from acceptance criteria)
-
-#### Writing Experience Slice Tests
-
-Delegate to an `intuition-code-writer` subagent:
+Merge the spec-based inventory with the code-based inventory into a single interaction map. Present to the user via AskUserQuestion:
 
 ```
-You are writing experience-slice tests against a LIVE, RUNNING system. These tests verify that stakeholder journeys work end-to-end on the real application.
+Question: "Here's every interaction surface I'll be testing:
 
-Test framework: [detected framework]
-Test conventions: [from existing tests]
-App URL / entry point: [how to reach the running system]
+[The interaction map — organized by page/route, listing every link, button, form, and interactive element]
 
-## Experience Slices to Test
-
-[For each testable slice:]
-
-### ES-[N]: [Title]
-Stakeholder: [who]
-Journey: [trigger → action → expected outcome]
-Acceptance criteria: [from tasks.json]
-
-## Rules
-- The system is ALREADY RUNNING. Tests make real requests to it.
-- NO mocks of any kind. The app, database, and services are all live.
-- Test the journey from the stakeholder's perspective using real entry points (HTTP routes, CLI commands, public APIs).
-- If a test needs data, create it through the app's API first (setup), clean up after (teardown).
-- Assert against acceptance criteria from the spec, not implementation details.
-- Each test should tell a story: "the admin does X, the system does Y, the result is Z"
-- If a slice requires UI interaction you can't automate, test the API layer that backs it.
-- Do NOT read source code to determine expected behavior — the spec defines what should happen.
-
-## Spec Sources (read these for expected behavior)
-- Discovery brief: {context_path}/discovery_brief.md
-- Tasks: {context_path}/tasks.json
+Anything I should add or skip?"
+Header: "Interaction Map"
 ```
 
-Run the experience slice tests. Classify and fix failures (Step 8).
+### STEP 8: SYSTEMATIC WALKTHROUGH
 
-### STEP 8: FIX CYCLE
+Work through the interaction map methodically. For each page/route:
 
-For each failure, classify:
+#### 8a. Load the Page
+
+Use WebFetch to load the page. Analyze what comes back:
+- **Does the page render?** (non-error HTTP status, meaningful HTML content)
+- **Are key elements present?** (navigation, expected headings, expected content sections)
+- **Are there broken references?** (missing images, broken CSS/JS links, 404 resources)
+
+#### 8b. Test Every Link
+
+For every navigation link on the page:
+- Follow it (WebFetch the target URL)
+- Verify it resolves to the correct destination (not a 404, not a wrong page)
+- Verify the destination page renders correctly
+
+#### 8c. Test Every Button and Action
+
+For every button and interactive element:
+- Determine what it does (from the code analysis in Step 7)
+- If it triggers an API call: make that API call with appropriate test data and verify the response
+- If it submits a form: submit the form with valid test data and verify the result
+- If it toggles UI state: verify the underlying mechanism works (e.g., the API endpoint that backs a toggle)
+
+#### 8d. Test Every Form
+
+For every form on the page:
+- **Valid submission**: Submit with valid data. Verify success response, data persistence, and any expected side effects (emails, state changes, redirects).
+- **Required fields**: Verify that submitting with missing required fields produces appropriate validation feedback.
+- **Edge cases**: Test with boundary values if the spec defines constraints.
+
+#### 8e. Test User Flows End-to-End
+
+For each experience slice, walk through the complete user journey:
+1. Start where the user starts
+2. Navigate as the user would (following links, not jumping directly to URLs)
+3. Perform each action in the flow
+4. Verify each intermediate state
+5. Confirm the final outcome matches the acceptance criteria
+
+#### 8f. Report Progress
+
+After completing each page/route, briefly report status: what passed, what failed, what needs attention. Group issues for the fix cycle rather than interrupting the walkthrough for each problem (unless something is blocking further testing).
+
+### STEP 9: FIX CYCLE
+
+After the walkthrough, address every issue found.
+
+#### Issue Classification
 
 | Classification | Action |
 |---|---|
-| **Integration bug** (wrong import, missing config, typo in wiring) | Fix via `intuition-code-writer` |
-| **Missing dependency** | Install via Bash |
-| **Implementation bug, simple** (1-3 lines, spec is clear) | Fix via `intuition-code-writer` |
-| **Implementation bug, complex** (multi-file, architectural) | Escalate to user |
+| **Broken link** (404, wrong destination) | Fix via `intuition-code-writer` |
+| **Non-functional button** (click does nothing, wrong API call) | Fix via `intuition-code-writer` |
+| **Form submission failure** (validation error on valid data, wrong endpoint, missing handler) | Fix via `intuition-code-writer` |
+| **Missing page/route** (implemented in code but not accessible) | Fix via `intuition-code-writer` — likely a routing issue |
+| **Missing content** (page loads but expected elements are absent) | Fix via `intuition-code-writer` |
+| **Broken user flow** (individual steps work but the end-to-end journey breaks) | Diagnose where the flow breaks, fix the connection point |
+| **Visual/layout issue** (content renders but is clearly broken — overlapping elements, invisible text, unusable layout) | Fix via `intuition-code-writer` |
+| **Data issue** (correct behavior but empty/wrong data shown) | Check seeds, migrations, API responses — fix the data pipeline |
 | **Environment/config issue** (service not reachable, credentials wrong) | Help user diagnose and fix |
-| **Spec violation** (code disagrees with spec) | Escalate: "Spec says X, code does Y" |
-| **Test regression** (existing test broke) | Diagnose: is the test outdated or the new code wrong? Escalate if ambiguous |
+| **Spec violation** (interaction works but does the wrong thing per spec) | Escalate: "Spec says X, but the app does Y" |
 | **Violates user decision** | STOP — escalate immediately |
 
 #### Fix Process
 
-1. Classify the failure
-2. If fixable: delegate fix to `intuition-code-writer`
-3. If environment/config: work with user to resolve
-4. Re-run the failing test against the live system
-5. Max 3 fix cycles per failure — then escalate
-6. After all failures addressed, run FULL test suite one final time
+1. Present ALL found issues to the user, grouped by severity:
+   - **Blocking**: User flows that don't work at all
+   - **Broken**: Individual interactions that fail
+   - **Degraded**: Things that work but poorly (wrong content, bad layout, missing feedback)
+2. Fix blocking issues first, then broken, then degraded
+3. For each fix: delegate to `intuition-code-writer`, then re-test the specific interaction on the live system
+4. Max 3 fix attempts per issue — then escalate to user
+5. After all fixes: **re-run the full walkthrough** on affected pages to verify fixes didn't break other interactions
+6. Repeat until clean or all remaining issues are escalated
 
-### STEP 9: FINAL VERIFICATION
+### STEP 10: FINAL VERIFICATION
 
-After all tests pass against the live system, check against the discovery brief:
+After the walkthrough is clean (all interactions work):
 
-**North Star check**: Walk through the brief's North Star statement. For each stakeholder:
+**North Star check**: Walk through the discovery brief's North Star statement. For each stakeholder:
 - Can they do what the brief says they should be able to do — on the live system?
 - Does the system honor the constraints?
 - Would this satisfy the North Star as written?
 
-If something drifts, flag it: "Tests pass, but [specific concern about North Star alignment]."
+If something drifts, flag it: "All interactions work, but [specific concern about North Star alignment]."
 
 **Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new.
 
-### STEP 10: EXIT
+### STEP 11: EXIT
 
-**Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.verify.completed` → `true`, `workflow.verify.completed_at` → current ISO timestamp. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"verify_to_complete"`.  Write back.
+**Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.verify.completed` → `true`, `workflow.verify.completed_at` → current ISO timestamp. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"verify_to_complete"`. Write back.
 
 **Present results** via AskUserQuestion:
 
 ```
-Question: "Verification complete — tested against the live system.
+Question: "Verification complete — every interaction tested against the live system.
 
-**Integration**: [pass/issues]
-**Toolchain**: [builds, type-checks, lints]
-**Existing tests**: [N passed, N failed]
-**Smoke tests (live)**: [N passed, N failed]
-**Experience slice tests (live)**: [N passed, N failed]
+**Online**: [URL — confirmed accessible]
+**Pages tested**: [N pages/routes]
+**Links verified**: [N links — N working, N fixed, N escalated]
+**Buttons/actions verified**: [N — N working, N fixed, N escalated]
+**Forms verified**: [N — N working, N fixed, N escalated]
+**User flows verified**: [N experience slices — N working, N fixed, N escalated]
 **North Star alignment**: [met / concerns]
 
 [If escalated issues exist, list them]
@@ -375,7 +402,7 @@ Options:
 - "Done — no commit"
 ```
 
-If committing: stage files from build output + integration changes + tests, commit with descriptive message, optionally push.
+If committing: stage files from build output + integration changes + fixes, commit with descriptive message, optionally push.
 
 **Route.** "Workflow complete. Run `/clear` then `/intuition-enuncia-start` to see project status."
 
@@ -388,14 +415,14 @@ When verifying on a branch:
 
 ## RESUME LOGIC
 
-1. If Phase 1 completed (system running) but tests haven't run: skip to Step 6.
-2. If tests exist but verification not complete: "Found tests from a previous session. Re-running against live system."
+1. If Phase 1 completed (app confirmed online) but UX walkthrough hasn't started: skip to Step 7.
+2. If interaction map exists but walkthrough incomplete: "Found interaction map from a previous session. Resuming walkthrough."
 3. Otherwise fresh start from Step 1.
 
 ## VOICE
 
-- **Pragmatic** — make it work for real, prove it works for real, report what happened
-- **Evidence-driven** — every failure has a classification, every fix has a rationale
-- **Honest** — if tests pass but something feels off against the North Star, say so
-- **Concise** — status updates, not essays
+- **Relentless** — not satisfied until the app is online AND every interaction works
+- **User-perspective** — think like the person clicking, not the person who wrote the code
+- **Evidence-driven** — "I clicked X, expected Y, got Z" for every issue
+- **Pragmatic** — fix what's broken, escalate what's beyond scope, report clearly
 - **Brief-anchored** — the discovery foundation is the ultimate measure of success
