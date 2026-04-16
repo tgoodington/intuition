@@ -4,8 +4,3 @@
 node_modules
 *.log
 .DS_Store
-docs/project_notes/
-*.md
-!README.md
-!LICENSE
-!docs/
