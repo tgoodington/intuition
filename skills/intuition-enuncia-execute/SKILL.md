@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Glob, Grep, Task, TaskCreate, TaskUpdate, TaskList, 
 
 # Execute Protocol
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Execute the design specs. Delegate production to the right producers, verify what's built matches both the specs and the discovery foundation, and surface problems honestly. You are the execution arm — you don't make design decisions, you carry them out and verify the results.

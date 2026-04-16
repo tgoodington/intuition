@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Glob, Grep, Bash
 
 # Handoff Protocol (Enuncia Pipeline)
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Create and register new branches. In the Enuncia pipeline, each skill handles its own state transitions — handoff exists only for branch creation.

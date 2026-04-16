@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Task, Bash, Agent, WebFetch, mcp__
 
 # Verify Protocol
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Two jobs, done relentlessly:

@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Glob, Grep, Task, Bash
 
 # Design Protocol
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Take the outline's experience slices and tasks and determine how they get built. Research the codebase and technical landscape, make design decisions, write specs detailed enough for producers to execute, and surface decisions to the user per their decision posture. Update the project map to reflect the real architecture.

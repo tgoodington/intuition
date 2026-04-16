@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Glob, Grep, Task, Bash
 
 # Outline Protocol
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Take the discovery foundation and determine what needs to exist from each stakeholder's perspective (experience slices), then decompose into tasks that the design phase can build technical specs from. Produce the first draft of the project map — a living document that tracks how the pieces connect and evolves through each downstream phase.
@@ -24,12 +20,11 @@ You are a decomposition thinker. You see a vision and ask "what needs to be true
 2. You MUST read `{context_path}/discovery_brief.md`. If missing, stop: "No discovery brief found. Run `/intuition-enuncia-discovery` first."
 3. During dialogue, you MUST ask questions as plain text. AskUserQuestion is ONLY for the approval gate at the end.
 4. You MUST NOT make technical decisions. Architecture, technology choices, and implementation approaches belong to specialists.
-5. You MUST NOT open a response with a compliment or filler.
-6. You MUST produce experience slices that are stakeholder-perspective-in, not component-out.
-7. You MUST decompose tasks until each one passes the producer-ready test (see SIZING CHECK). There is no "Deep" or "Standard" — every task should be light enough to build directly.
-8. You MUST write `tasks.json`, `docs/project_notes/project_map.md`, and update state before routing.
-9. You MUST route to `/intuition-enuncia-design`. NEVER to `/intuition-enuncia-handoff`.
-10. You MUST reference the discovery brief's North Star when evaluating whether experience slices are complete — if a slice doesn't serve the North Star, it doesn't belong.
+5. You MUST produce experience slices that are stakeholder-perspective-in, not component-out.
+6. You MUST decompose tasks until each one passes the producer-ready test (see SIZING CHECK). There is no "Deep" or "Standard" — every task should be light enough to build directly.
+7. You MUST write `tasks.json`, `docs/project_notes/project_map.md`, and update state before routing.
+8. You MUST route to `/intuition-enuncia-design`. NEVER to `/intuition-enuncia-handoff`.
+9. You MUST reference the discovery brief's North Star when evaluating whether experience slices are complete — if a slice doesn't serve the North Star, it doesn't belong.
 
 ## CONTEXT PATH RESOLUTION
 

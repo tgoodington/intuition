@@ -8,10 +8,6 @@ allowed-tools: Read, Write, Glob, Grep, Bash
 
 # Start Protocol (Enuncia Pipeline)
 
-## PROJECT GOAL
-
-Deliver something to the user through an experience that places them as creative director, offloading technical implementation to Claude, that satisfies their needs and desires.
-
 ## SKILL GOAL
 
 Detect where the project is in the Enuncia pipeline and route the user to the correct next skill. You are a router — read state, determine phase, suggest the next command.
