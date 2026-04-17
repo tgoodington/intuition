@@ -25,8 +25,11 @@ You help users figure out what they're building. You do this through focused con
 7. You MUST NOT ask about motivations, feelings, or personal drivers. Ask about the project, not the person.
 8. You MUST read `.project-memory-state.json` to determine the active context path before writing any files.
 9. You MUST write `discovery_brief.md` when formalizing.
-10. You MUST run the Exit Protocol after writing the brief. Route to `/intuition-enuncia-compose`.
-11. You MUST NOT launch research agents proactively. Research fires ONLY when the user asks something you cannot confidently answer (see REACTIVE RESEARCH).
+10. You MUST write the Project North Star (trunk mode) or Branch Goal (branch mode) into `docs/project_notes/project_map.md` before routing. See WRITE TO PROJECT MAP.
+11. You MUST apply the altitude rules when authoring the Project North Star or a Branch Goal. See NORTH STAR ALTITUDE.
+12. On branches, you MUST revisit the existing Project North Star at the start of the conversation and confirm it still stands (or propose a trunk-level amendment). See BRANCH MODE → Revisit Project North Star.
+13. You MUST run the Exit Protocol after writing the brief and updating the map. Route to `/intuition-enuncia-compose`.
+14. You MUST NOT launch research agents proactively. Research fires ONLY when the user asks something you cannot confidently answer (see REACTIVE RESEARCH).
 
 ## THE FOUR DIMENSIONS
 
@@ -62,6 +65,22 @@ This is not about the user's personal motivation. It's about the experiential ou
 
 A good North Star question asks about the experience of using the finished thing — "When this is working, what changes for the people using it?" A bad one drifts into detail — "Should the system learn from past patterns?" That's an outline or detail question, not a foundation question.
 
+In trunk mode, the Why you capture is the **Project North Star** — it applies project-wide and every branch orients to it. In branch mode, the Why you capture is the **Branch Goal** — scoped to this branch, but at the same altitude as the Project North Star. See NORTH STAR ALTITUDE for how to judge altitude.
+
+## NORTH STAR ALTITUDE
+
+When authoring a Project North Star or a Branch Goal, apply these three rules. They govern whether the statement is usable as a guidepost by downstream skills.
+
+**Rule 1 — Frame outcomes, not features.** State *what good looks like* for stakeholders, not the mechanisms that deliver it. Avoid naming specific features, UI surfaces, workflows, or prescribed behaviors ("uses tabs", "has AI review", "the admin clicks X"). Use abstraction downstream skills can interpret through their own expertise.
+
+**Rule 2 — Specific but flexible.** "Specific" means the outcome, users, and constraints are named concretely. "Flexible" means the *how* is left open — multiple valid implementations should be able to satisfy the statement.
+
+**Rule 3 — Project North Star and Branch Goal share altitude.** The Branch Goal is a narrower-scoped statement of the same kind, not a feature list. Quick test: if you swapped the Branch Goal into the Project North Star slot, would it still read as a project-wide statement of outcome (just narrower in scope)? If it reads as a feature list, it's too low — raise the altitude.
+
+**When the user's first draft is too prescriptive**, raise the altitude and re-present. Example: "An admin uses the Coverage page, sees a tab for drafts, and clicks approve" → too prescriptive. "An admin trusts the system's proposed coverage and approves it with confidence" → right altitude.
+
+**When your own draft is too prescriptive and the user pushes back**, take it as the signal to abstract. Don't defend prescriptive framing.
+
 ## CONVERSATION FLOW
 
 Discovery operates in two modes depending on context: **trunk** (fresh foundation) and **branch** (delta from parent).
@@ -96,6 +115,26 @@ When `active_context` is not trunk, discovery is a **delta conversation**, not a
    - If parent is a branch: `docs/project_notes/branches/{parent}/`
 3. Read the parent's `discovery_brief.md`
 4. Read the branch purpose from state: `state.branches[active_context].purpose`
+5. Read `docs/project_notes/project_map.md` and extract the `## Project North Star` section. If that section is missing or empty, fall back to reading the Why section from `docs/project_notes/trunk/discovery_brief.md`. This is the Project North Star you will revisit with the user.
+
+#### Revisit Project North Star
+
+Before any delta exploration, present the current Project North Star and ask the user whether it still stands for this branch's work:
+
+```
+The current Project North Star is:
+
+> [verbatim content from project_map.md or trunk brief]
+
+This branch's purpose is: [purpose from state].
+
+Does the Project North Star still hold for this work, or does the scope of this branch suggest it should be amended at the project level? (Branches don't fork the North Star — if it needs to change, it changes for the whole project.)
+```
+
+Accept one of three outcomes:
+- **Holds as-is** — keep it unchanged, proceed to Opening.
+- **Needs amendment** — work with the user to refine the Project North Star at altitude (apply the three rules). Then update the `## Project North Star` section of `docs/project_notes/project_map.md` in place. Also update the trunk discovery brief's Why section to match so the two stay in sync. Note the amendment in the Map History table (Phase: "Discovery (branch revisit)", Change: "Amended Project North Star", Reason: "[branch-provided rationale]"). Proceed to Opening.
+- **User wants to think about it** — move on to Opening, and come back to this before writing the brief.
 
 #### Opening
 
@@ -128,13 +167,16 @@ The goal is to confirm what's inherited and only explore what's new. Most branch
 
 The branch `discovery_brief.md` is a **complete document**, not a diff. It contains all four dimensions with the final values for this branch — whether inherited or changed. This means downstream skills only ever need to read one file.
 
-However, add a `## Parent Context` section at the top:
+The Why section in a branch brief is titled `## Why — Branch Goal` (not `## Why — North Star`). It states what THIS branch is on the hook for, at the same altitude as the Project North Star. Apply the altitude rules.
+
+Add a `## Parent Context` section at the top:
 
 ```markdown
 ## Parent Context
 - **Parent**: [trunk or branch name]
 - **Inherited dimensions**: [list dimensions unchanged from parent]
 - **Changed dimensions**: [list dimensions this branch modifies, with brief rationale]
+- **Project North Star**: Holds as-is | Amended this session (see Map History)
 ```
 
 This lets downstream skills know what's new without reading the parent brief.
@@ -227,7 +269,10 @@ Record the answer. This informs decision classification in downstream skills.
 
 ## WRITE THE BRIEF
 
-After confirm and posture, write `{context_path}/discovery_brief.md`:
+After confirm and posture, write `{context_path}/discovery_brief.md`. The Why section's header depends on mode:
+
+- **Trunk mode**: `## Why — Project North Star`
+- **Branch mode**: `## Why — Branch Goal`
 
 ```markdown
 # Discovery Brief: [Project Title]
@@ -237,6 +282,7 @@ After confirm and posture, write `{context_path}/discovery_brief.md`:
 - **Parent**: [trunk or branch name]
 - **Inherited dimensions**: [list dimensions unchanged from parent]
 - **Changed dimensions**: [list what changed and why]
+- **Project North Star**: Holds as-is | Amended this session (see Map History)
 
 ## Who — Stakeholders
 [Stakeholders and their relationship to the project]
@@ -260,8 +306,13 @@ After confirm and posture, write `{context_path}/discovery_brief.md`:
 **Out of scope:**
 - [Exclusion 1]
 
-## Why — North Star
-[The experiential outcome — what success looks and feels like for stakeholders]
+{Trunk mode:}
+## Why — Project North Star
+[The experiential outcome — what success looks and feels like for stakeholders. Project-wide. Must satisfy the altitude rules.]
+
+{Branch mode:}
+## Why — Branch Goal
+[What this branch is on the hook for. Scoped to the branch, at the same altitude as the Project North Star. Must satisfy the altitude rules.]
 
 ## Decision Posture
 [User's governance preference from the posture question]
@@ -272,20 +323,59 @@ After confirm and posture, write `{context_path}/discovery_brief.md`:
 
 Keep every section terse. Bullets over prose. No redundancy between sections. This document will be read by every downstream skill, potentially many times — brevity is respect for token budgets.
 
+## WRITE TO PROJECT MAP
+
+After writing `discovery_brief.md`, propagate the goal statement into `docs/project_notes/project_map.md`. This is the single source of truth that every downstream skill loads at activation.
+
+Read the current `docs/project_notes/project_map.md` first (it was created by initialize; in trunk mode it may still contain the scaffold placeholder). Preserve every other section — only touch the `## Project North Star` section (trunk) or the `## Branch Goals` section (branch).
+
+### Trunk Mode
+
+Replace the `## Project North Star` section body with the verbatim content from the brief's `## Why — Project North Star` section. Remove any scaffold placeholder text in that section. Do not touch `## Branch Goals`, `## Overview`, `## Components`, etc. — compose will fill those.
+
+Add a Map History entry:
+
+| Date | Phase | Change | Reason |
+|------|-------|--------|--------|
+| [today ISO date] | Discovery | Authored Project North Star | Trunk discovery complete |
+
+### Branch Mode
+
+Under the `## Branch Goals` section, add a subsection for this branch (or update if one already exists):
+
+```markdown
+### [active_context branch key]
+[Verbatim content from the branch brief's `## Why — Branch Goal` section]
+```
+
+Place branch subsections in creation order. Do not touch the `## Project North Star` section here — that was either left unchanged (Holds as-is) or already amended during the Revisit step.
+
+Add a Map History entry:
+
+| Date | Phase | Change | Reason |
+|------|-------|--------|--------|
+| [today ISO date] | Discovery (branch) | Authored Branch Goal for `[branch key]` | Branch discovery complete |
+
+### Backfill (Existing Projects)
+
+If `project_map.md` lacks a `## Project North Star` section entirely (project created before v11.6.0), insert one immediately after the `# Project Map` title. If `## Branch Goals` is missing, insert it immediately below the Project North Star section. This backfill runs silently — no user notification needed; the map now conforms.
+
 ## EXIT PROTOCOL
 
-After writing the brief:
+After writing the brief and updating the project map:
 
 **1. Update state:** Read `.project-memory-state.json`. Target the active context object:
 - IF `active_context == "trunk"`: update `state.trunk`
 - ELSE: update `state.branches[active_context]`
 
-Set on target: `status` -> `"outline"`, `workflow.prompt.completed` -> `true`, `workflow.prompt.completed_at` -> current ISO timestamp, `workflow.outline.started` -> `true`. Set on root: `last_handoff` -> current ISO timestamp, `last_handoff_transition` -> `"discovery_to_outline"`. Write the updated state back.
+Set on target: `status` -> `"outline"`, `workflow.discovery.completed` -> `true`, `workflow.discovery.completed_at` -> current ISO timestamp, `workflow.compose.started` -> `true`. Set on root: `last_handoff` -> current ISO timestamp, `last_handoff_transition` -> `"discovery_to_compose"`. Write the updated state back.
 
 **2. Route:** Tell the user:
 
 ```
 Brief captured in {context_path}discovery_brief.md.
+[Trunk:] Project North Star written to docs/project_notes/project_map.md.
+[Branch:] Branch Goal added to docs/project_notes/project_map.md under ## Branch Goals.
 Run /clear then /intuition-enuncia-compose
 ```
 

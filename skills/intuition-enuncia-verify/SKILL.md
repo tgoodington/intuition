@@ -29,7 +29,9 @@ No mocks. No synthetic verification. The real system, used the way a real user u
 7. You MUST NOT fix failures that violate user decisions from the specs. Escalate immediately.
 8. You MUST delegate integration tasks and code fixes to subagents. Do not write code yourself.
 9. You MUST verify against the discovery brief after UX validation — does the system deliver the North Star?
-10. You MUST update `docs/project_notes/project_map.md` if integration reveals new information.
+10. You MUST update `docs/project_notes/project_map.md` if integration reveals new information — but NEVER touch `## Project North Star` or `## Branch Goals` (owned by discovery).
+11. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
+12. You MUST run the alignment check before presenting final verification results. See GOAL ALIGNMENT → Alignment Check.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -42,6 +44,38 @@ No mocks. No synthetic verification. The real system, used the way a real user u
      context_path = "docs/project_notes/branches/{active_context}/"
 4. Use context_path for ALL file reads and writes
 ```
+
+## GOAL ALIGNMENT
+
+Every Enuncia skill runs against three goals, loaded at activation and checked at exit.
+
+### Load Three Goals (at activation)
+
+**1. Project North Star** — Read `docs/project_notes/project_map.md`. Extract the content of the `## Project North Star` section.
+
+If missing or empty: read `docs/project_notes/trunk/discovery_brief.md` and extract the Why section (any header starting with `## Why`). Write that content into `project_map.md` as a `## Project North Star` section immediately after the `# Project Map` title. Transparent backfill.
+
+If neither source exists: STOP and tell the user: "No Project North Star found. Run `/intuition-enuncia-discovery` at trunk first."
+
+**2. Branch Goal** — If `active_context == "trunk"`, skip. Otherwise: from `project_map.md`, locate the `## Branch Goals` section and find the subsection keyed by `active_context`.
+
+If missing: read `{context_path}/discovery_brief.md`, extract the Why section, and write it into `project_map.md` under `## Branch Goals` as `### {active_context}`. If `## Branch Goals` itself doesn't exist, insert it directly below `## Project North Star`. Transparent backfill.
+
+If the branch's discovery_brief.md also lacks it: STOP and route the user to discovery.
+
+**3. Skill Goal** — Your own `## SKILL GOAL` section above. Load it as the third constraint.
+
+Hold all three in working memory throughout the run. Every integration fix, every UX test outcome, every escalation decision checks against all three.
+
+### Alignment Check (before presenting final results)
+
+Before presenting final verification results and committing:
+
+- **Project North Star**: Walking the live system as a real user, does it deliver the project's stated outcome? This is the ultimate test of the whole pipeline.
+- **Branch Goal** (if branch): Does the system, on this branch, advance what the branch is on the hook for?
+- **Skill Goal**: Is the system actually online and every interaction surface tested — not just compiling cleanly?
+
+If any check fails, keep fixing until it passes or flag the gap explicitly in the final results.
 
 ## PROTOCOL
 
@@ -368,7 +402,9 @@ After the walkthrough is clean (all interactions work):
 
 If something drifts, flag it: "All interactions work, but [specific concern about North Star alignment]."
 
-**Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new.
+**Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new. **Do not touch `## Project North Star` or `## Branch Goals`.**
+
+**Run the GOAL ALIGNMENT → Alignment Check** against the three loaded goals. Any failures must be fixed or explicitly flagged in the final results.
 
 ### STEP 11: EXIT
 

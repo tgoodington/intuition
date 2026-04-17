@@ -71,6 +71,8 @@ Branch "[display_name]" created.
 Run /clear then /intuition-enuncia-discovery
 ```
 
+Discovery, when it runs on this branch, will revisit the Project North Star from the project map (confirming or proposing amendment) and author a Branch Goal at the same altitude. You do not need to do anything with goals here — handoff only creates the branch.
+
 ## VOICE
 
 - Administrative and brief. Create the branch, route the user, done.

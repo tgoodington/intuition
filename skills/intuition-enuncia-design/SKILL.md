@@ -26,6 +26,9 @@ You are the engineering brain. Outline decided what needs to exist. You decide h
 8. You MUST enrich task objects in `{context_path}/tasks.json` with design fields and update `docs/project_notes/project_map.md`.
 9. You MUST route to `/intuition-enuncia-execute` after completion. NEVER to `/intuition-enuncia-handoff`.
 10. You MUST NOT write code. You write specs that describe what code to write. Producers write code.
+11. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
+12. You MUST NOT overwrite the `## Project North Star` or `## Branch Goals` sections in `project_map.md`. Those are owned by discovery. Update only your own sections (Operational Foundation, Components, Component Interactions, Map History).
+13. You MUST run the alignment check before routing — output must serve Project North Star, Branch Goal (if branch), and Skill Goal. See GOAL ALIGNMENT → Alignment Check.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -39,6 +42,38 @@ You are the engineering brain. Outline decided what needs to exist. You decide h
      branch = state.branches[active_context]
 4. Use context_path for ALL file reads and writes
 ```
+
+## GOAL ALIGNMENT
+
+Every Enuncia skill runs against three goals, loaded at activation and checked at exit.
+
+### Load Three Goals (at activation)
+
+**1. Project North Star** — Read `docs/project_notes/project_map.md`. Extract the content of the `## Project North Star` section.
+
+If that section is missing or empty: read `docs/project_notes/trunk/discovery_brief.md` and extract the Why section (any section whose header starts with `## Why`). Write that content into `project_map.md` as a `## Project North Star` section placed immediately after the `# Project Map` title. Transparent backfill.
+
+If neither source exists: STOP and tell the user: "No Project North Star found. Run `/intuition-enuncia-discovery` at trunk first."
+
+**2. Branch Goal** — If `active_context == "trunk"`, skip. Otherwise: from `project_map.md`, locate the `## Branch Goals` section and find the subsection keyed by `active_context`. Extract its body.
+
+If missing: read `{context_path}/discovery_brief.md` and extract the Why section (any header starting with `## Why`). Write that content into `project_map.md` under `## Branch Goals` as a subsection `### {active_context}`. If the `## Branch Goals` section itself doesn't exist, insert it directly below `## Project North Star`. Transparent backfill.
+
+If the branch's discovery_brief.md also lacks it: STOP and tell the user: "No Branch Goal found for `{active_context}`. Run `/intuition-enuncia-discovery` on this branch first."
+
+**3. Skill Goal** — Your own `## SKILL GOAL` section above. Load it as the third constraint.
+
+Hold all three in working memory throughout the run. Every technical decision — stack choices, architectural patterns, interface shapes — checks against all three.
+
+### Alignment Check (before presenting output or routing)
+
+Before writing outputs or routing, run the last-stop check:
+
+- **Project North Star**: Does the technical approach serve the project's stated outcome? Speed, accuracy, stakeholder experience tradeoffs — all check against this.
+- **Branch Goal** (if branch): Does the design advance what this branch is on the hook for? Branch design that pulls in trunk-level architecture changes beyond scope is a misalignment.
+- **Skill Goal**: Is the output design-level specs — not code (that's producers), not decomposition (that's compose), not implementation (that's execute)?
+
+If any check fails, correct before proceeding. If you cannot correct within this skill, flag it explicitly to the user.
 
 ## PROTOCOL
 
@@ -255,19 +290,23 @@ Write the enriched `{context_path}/tasks.json` back to disk with all design fiel
 
 ### Update `docs/project_notes/project_map.md`
 
-Refine the map with real architecture from the design phase:
-- Add **Operational Foundation** section (for code projects): deployment model, repository structure, environment management, developer workflow — from Phase 2.5
-- Update component descriptions with actual technology and patterns chosen
-- Add concrete interfaces between components
-- Update Component Interactions with data formats and protocols
-- Update status fields if applicable
-- Add Map History entry for the design phase
+Refine the map with real architecture from the design phase. **Do not touch `## Project North Star` or `## Branch Goals` — those are owned by discovery.**
+
+Sections you own (write/update these):
+- `## Operational Foundation` (new section for code projects): deployment model, repository structure, environment management, developer workflow — from Phase 2.5
+- `## Components` — update descriptions with actual technology and patterns chosen, add concrete interfaces between components
+- `## Component Interactions` — update with data formats and protocols
+- `## Map History` — append a row for this design phase
+
+### Alignment Check
+
+Before writing state and routing, run the GOAL ALIGNMENT → Alignment Check against the three loaded goals. If any check fails, correct before proceeding.
 
 ### Update State
 
 Read `.project-memory-state.json`. Target active context.
 
-Set: `status` → `"building"`, `workflow.outline.completed` → `true` (if not already), design phase tracking as appropriate. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"design_to_build"`. Write back.
+Set: `status` → `"execute"`, `workflow.design.completed` → `true`, `workflow.design.completed_at` → current ISO timestamp, `workflow.execute.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"design_to_execute"`. Write back.
 
 ### Route
 

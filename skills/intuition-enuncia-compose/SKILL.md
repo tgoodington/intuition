@@ -24,7 +24,9 @@ You are a decomposition thinker. You see a vision and ask "what needs to be true
 6. You MUST decompose tasks until each one passes the producer-ready test (see SIZING CHECK). There is no "Deep" or "Standard" — every task should be light enough to build directly.
 7. You MUST write `tasks.json`, `docs/project_notes/project_map.md`, and update state before routing.
 8. You MUST route to `/intuition-enuncia-design`. NEVER to `/intuition-enuncia-handoff`.
-9. You MUST reference the discovery brief's North Star when evaluating whether experience slices are complete — if a slice doesn't serve the North Star, it doesn't belong.
+9. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
+10. You MUST NOT overwrite the `## Project North Star` or `## Branch Goals` sections in `project_map.md`. Those are owned by discovery. Update only your own sections (Overview, Components, Component Interactions, What Exists vs What's New, Map History).
+11. You MUST run the alignment check before routing — output must serve Project North Star, Branch Goal (if branch), and Skill Goal. See GOAL ALIGNMENT → Alignment Check.
 
 ## CONTEXT PATH RESOLUTION
 
@@ -40,6 +42,38 @@ Before doing anything else:
      branch = state.branches[active_context]
 4. Use context_path for ALL file reads and writes
 ```
+
+## GOAL ALIGNMENT
+
+Every Enuncia skill runs against three goals, loaded at activation and checked at exit.
+
+### Load Three Goals (at activation)
+
+**1. Project North Star** — Read `docs/project_notes/project_map.md`. Extract the content of the `## Project North Star` section.
+
+If that section is missing or empty (project predates v11.6.0 or discovery didn't populate it): read `docs/project_notes/trunk/discovery_brief.md` and extract the Why section (any section whose header starts with `## Why`). Write that content into `project_map.md` as a `## Project North Star` section placed immediately after the `# Project Map` title. This is transparent backfill — no user notification needed.
+
+If neither source exists: STOP and tell the user: "No Project North Star found. Run `/intuition-enuncia-discovery` at trunk first."
+
+**2. Branch Goal** — If `active_context == "trunk"`, skip. Otherwise: from `project_map.md`, locate the `## Branch Goals` section and find the subsection keyed by `active_context`. Extract its body.
+
+If missing: read `{context_path}/discovery_brief.md` and extract the Why section (any header starting with `## Why`). Write that content into `project_map.md` under `## Branch Goals` as a subsection `### {active_context}`. If the `## Branch Goals` section itself doesn't exist, insert it directly below `## Project North Star`. Transparent backfill.
+
+If the branch's discovery_brief.md also lacks it: STOP and tell the user: "No Branch Goal found for `{active_context}`. Run `/intuition-enuncia-discovery` on this branch first."
+
+**3. Skill Goal** — Your own `## SKILL GOAL` section above. Load it as the third constraint.
+
+Hold all three in working memory throughout the run. Every decision — which experience slices to include, how to decompose tasks, what to push back on — checks against all three.
+
+### Alignment Check (before presenting output or routing)
+
+Before writing outputs or routing, run the last-stop check:
+
+- **Project North Star**: Does the outline's set of experience slices, taken together, serve the Project North Star? If a slice doesn't trace to it, it doesn't belong.
+- **Branch Goal** (if branch): Does the outline advance what this branch is on the hook for, at altitude? Branch work that drifts into trunk-level concerns is a misalignment.
+- **Skill Goal**: Is the output decomposition-level work (experience slices, producer-ready tasks, project map updates) — not technical decisions that belong to design, not specs that belong to producers?
+
+If any check fails, correct the output before presenting. If you cannot correct it within this skill (e.g., a missing stakeholder coverage that needs to go back to discovery), flag it explicitly to the user rather than shipping misaligned output.
 
 ## PROTOCOL
 
@@ -324,11 +358,22 @@ The `decisions` array on each task is optional — only include when decisions a
 
 ### Update `docs/project_notes/project_map.md`
 
-The project map scaffold was created by initialize. Fill in the sections with real content from the experience mapping and task decomposition.
+The project map scaffold was created by initialize. Discovery authored the `## Project North Star` section (trunk) and/or `## Branch Goals` subsection (branch). **You do not touch those sections.** Fill in only the sections below with real content from the experience mapping and task decomposition, and append a Map History row.
+
+Sections you own (write/update these):
+- `## Overview`
+- `## Components`
+- `## Component Interactions`
+- `## What Exists vs What's New`
+- `## Map History` (append a row — never rewrite existing rows)
+
+Sections you do NOT touch (owned by discovery):
+- `## Project North Star`
+- `## Branch Goals`
+
+Format for the sections you own:
 
 ```markdown
-# Project Map: [Project Title]
-
 ## Overview
 [2-3 sentences: what this project is, who it's for, how it's delivered]
 
@@ -350,20 +395,25 @@ The project map scaffold was created by initialize. Fill in the sections with re
 **Existing**: [list of things already in place]
 **New**: [list of things being built]
 **Modified**: [list of existing things being changed]
-
-## Map History
-| Date | Phase | Change | Reason |
-|------|-------|--------|--------|
-| [today] | Outline | Initial draft | Created from experience mapping |
 ```
 
+Append to `## Map History`:
+
+| Date | Phase | Change | Reason |
+|------|-------|--------|--------|
+| [today ISO date] | Compose | Initial outline draft | Created from experience mapping |
+
 For greenfield projects, "What Exists" will be minimal or empty. That's fine — the map grows as specialists fill it in.
+
+### Alignment Check
+
+Before writing state and routing, run the GOAL ALIGNMENT → Alignment Check against the three loaded goals. If any check fails, correct before proceeding. Do not ship misaligned output.
 
 ### Update State
 
 Read `.project-memory-state.json`. Target the active context object.
 
-Set on target: `status` -> `"outline"`, `workflow.outline.completed` -> `true`, `workflow.outline.completed_at` -> current ISO timestamp, `workflow.outline.approved` -> `true`. Set on root: `last_handoff` -> current ISO timestamp, `last_handoff_transition` -> `"outline_complete"`. Write back.
+Set on target: `status` -> `"design"`, `workflow.compose.completed` -> `true`, `workflow.compose.completed_at` -> current ISO timestamp, `workflow.design.started` -> `true`. Set on root: `last_handoff` -> current ISO timestamp, `last_handoff_transition` -> `"compose_to_design"`. Write back.
 
 ### Route
 

@@ -22,7 +22,9 @@ Execute the design specs. Delegate production to the right producers, verify wha
 6. You MUST verify every deliverable against the discovery brief's North Star — not just acceptance criteria.
 7. You MUST NOT make design decisions. Specs are your authority. If a spec is ambiguous, escalate — don't improvise.
 8. You MUST route to the next phase after completion. NEVER to `/intuition-enuncia-handoff`.
-9. You MUST update `docs/project_notes/project_map.md` if implementation reveals anything the map didn't capture.
+9. You MUST update `docs/project_notes/project_map.md` if implementation reveals anything the map didn't capture — but NEVER touch `## Project North Star` or `## Branch Goals` (owned by discovery).
+10. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
+11. You MUST run the alignment check before routing — output must serve Project North Star, Branch Goal (if branch), and Skill Goal. See GOAL ALIGNMENT → Alignment Check.
 
 **TOOL DISTINCTION:**
 - `TaskCreate / TaskUpdate / TaskList / TaskGet` = YOUR internal task board for tracking items.
@@ -39,6 +41,38 @@ Execute the design specs. Delegate production to the right producers, verify wha
      context_path = "docs/project_notes/branches/{active_context}/"
 4. Use context_path for ALL file reads and writes
 ```
+
+## GOAL ALIGNMENT
+
+Every Enuncia skill runs against three goals, loaded at activation and checked at exit.
+
+### Load Three Goals (at activation)
+
+**1. Project North Star** — Read `docs/project_notes/project_map.md`. Extract the content of the `## Project North Star` section.
+
+If missing or empty: read `docs/project_notes/trunk/discovery_brief.md` and extract the Why section (any header starting with `## Why`). Write that content into `project_map.md` as a `## Project North Star` section immediately after the `# Project Map` title. Transparent backfill.
+
+If neither source exists: STOP and tell the user: "No Project North Star found. Run `/intuition-enuncia-discovery` at trunk first."
+
+**2. Branch Goal** — If `active_context == "trunk"`, skip. Otherwise: from `project_map.md`, locate the `## Branch Goals` section and find the subsection keyed by `active_context`.
+
+If missing: read `{context_path}/discovery_brief.md`, extract the Why section, and write it into `project_map.md` under `## Branch Goals` as `### {active_context}`. If `## Branch Goals` itself doesn't exist, insert it directly below `## Project North Star`. Transparent backfill.
+
+If the branch's discovery_brief.md also lacks it: STOP and route the user to discovery.
+
+**3. Skill Goal** — Your own `## SKILL GOAL` section above. Load it as the third constraint.
+
+Hold all three in working memory throughout the run. Every delegation, every verification, every escalation decision checks against all three.
+
+### Alignment Check (before presenting output or routing)
+
+Before writing build outputs or routing:
+
+- **Project North Star**: Do the produced deliverables, taken together, advance the project's stated outcome? The brief_alignment.north_star field in build_output.json reflects this check.
+- **Branch Goal** (if branch): Do the deliverables advance what this branch is on the hook for? Branch work that inadvertently affects trunk scope is a misalignment.
+- **Skill Goal**: Is the output built-and-verified artifacts — not new design decisions, not unreviewed code?
+
+If any check fails, re-delegate, escalate, or flag to the user. Do not ship misaligned output.
 
 ## PROTOCOL
 
@@ -245,7 +279,7 @@ Non-code deliverables (documents, spreadsheets, etc.) skip security review.
 
 ### Update `docs/project_notes/project_map.md`
 
-If implementation revealed anything not in the map — new components, changed interactions, unexpected dependencies — update the map. Add a Map History entry for the build phase.
+If implementation revealed anything not in the map — new components, changed interactions, unexpected dependencies — update the map. Add a Map History entry for the build phase. **Do not touch `## Project North Star` or `## Branch Goals`.**
 
 ### Display Summary
 
@@ -253,9 +287,11 @@ Present a concise summary to the user: task count, pass/fail, files produced, an
 
 ## STEP 7: EXIT PROTOCOL
 
-**Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → next phase, `workflow.build.completed` → `true`, `workflow.build.completed_at` → current ISO timestamp. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"build_to_implement"`. Write back.
+**Alignment Check.** Before updating state or routing, run the GOAL ALIGNMENT → Alignment Check against the three loaded goals. If any check fails, re-delegate, escalate, or flag. Do not ship misaligned output.
 
-**Route.** Tell the user the next step. If code was produced, route to implementation. If only non-code deliverables, workflow may be complete — ask the user.
+**Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"verify"`, `workflow.execute.completed` → `true`, `workflow.execute.completed_at` → current ISO timestamp, `workflow.verify.started` → `true`. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"execute_to_verify"`. Write back.
+
+**Route.** Tell the user the next step. If code was produced, route to `/intuition-enuncia-verify`. If only non-code deliverables, workflow may be complete — ask the user.
 
 ## BRANCH MODE
 
