@@ -94,6 +94,7 @@ docs/
     ├── trunk/
     ├── branches/
     ├── project_map.md
+    ├── map_history.md
     ├── bugs.md
     ├── decisions.md
     ├── key_facts.md
@@ -112,6 +113,7 @@ For each file, use the Read tool to read the template, then use Write to create 
 | `references/key_facts_template.md` | `docs/project_notes/key_facts.md` |
 | `references/issues_template.md` | `docs/project_notes/issues.md` |
 | `references/project_map_template.md` | `docs/project_notes/project_map.md` |
+| `references/project_map_history_template.md` | `docs/project_notes/map_history.md` |
 
 The project map template is a scaffold — compose and design fill it with real content during the workflow.
 
@@ -237,7 +239,7 @@ or /intuition-enuncia-start to check project status.
 These template files are in the `references/` directory. Use Read tool to access them:
 
 **Memory file templates** (Step 2):
-- `bugs_template.md`, `decisions_template.md`, `key_facts_template.md`, `issues_template.md`, `project_map_template.md`
+- `bugs_template.md`, `decisions_template.md`, `key_facts_template.md`, `issues_template.md`, `project_map_template.md`, `project_map_history_template.md`
 
 **State template** (Step 3):
 - `state_template.json` — Enuncia v11 workflow state

@@ -133,7 +133,7 @@ Does the Project North Star still hold for this work, or does the scope of this 
 
 Accept one of three outcomes:
 - **Holds as-is** — keep it unchanged, proceed to Opening.
-- **Needs amendment** — work with the user to refine the Project North Star at altitude (apply the three rules). Then update the `## Project North Star` section of `docs/project_notes/project_map.md` in place. Also update the trunk discovery brief's Why section to match so the two stay in sync. Note the amendment in the Map History table (Phase: "Discovery (branch revisit)", Change: "Amended Project North Star", Reason: "[branch-provided rationale]"). Proceed to Opening.
+- **Needs amendment** — work with the user to refine the Project North Star at altitude (apply the three rules). Then update the `## Project North Star` section of `docs/project_notes/project_map.md` in place. Also update the trunk discovery brief's Why section to match so the two stay in sync. Append a row to `docs/project_notes/map_history.md` (Phase: "Discovery (branch revisit)", Branch: `[active_context]`, Change: "Amended Project North Star", Reason: "[branch-provided rationale]"). Proceed to Opening.
 - **User wants to think about it** — move on to Opening, and come back to this before writing the brief.
 
 #### Opening
@@ -331,13 +331,13 @@ Read the current `docs/project_notes/project_map.md` first (it was created by in
 
 ### Trunk Mode
 
-Replace the `## Project North Star` section body with the verbatim content from the brief's `## Why — Project North Star` section. Remove any scaffold placeholder text in that section. Do not touch `## Branch Goals`, `## Overview`, `## Components`, etc. — compose will fill those.
+Replace the `## Project North Star` section body with the verbatim content from the brief's `## Why — Project North Star` section. Remove any scaffold placeholder text in that section. Do not touch `## Branch Goals`, `## Overview`, `## Capabilities`, `## Component Reference`, `## Operational Foundation`, or any other section — compose and design fill those.
 
-Add a Map History entry:
+Append a row to `docs/project_notes/map_history.md` (see Backfill below if the file doesn't exist yet):
 
-| Date | Phase | Change | Reason |
-|------|-------|--------|--------|
-| [today ISO date] | Discovery | Authored Project North Star | Trunk discovery complete |
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Discovery | trunk | Authored Project North Star | Trunk discovery complete |
 
 ### Branch Mode
 
@@ -350,15 +350,19 @@ Under the `## Branch Goals` section, add a subsection for this branch (or update
 
 Place branch subsections in creation order. Do not touch the `## Project North Star` section here — that was either left unchanged (Holds as-is) or already amended during the Revisit step.
 
-Add a Map History entry:
+Append a row to `docs/project_notes/map_history.md`:
 
-| Date | Phase | Change | Reason |
-|------|-------|--------|--------|
-| [today ISO date] | Discovery (branch) | Authored Branch Goal for `[branch key]` | Branch discovery complete |
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Discovery (branch) | [active_context] | Authored Branch Goal | Branch discovery complete |
 
 ### Backfill (Existing Projects)
 
-If `project_map.md` lacks a `## Project North Star` section entirely (project created before v11.6.0), insert one immediately after the `# Project Map` title. If `## Branch Goals` is missing, insert it immediately below the Project North Star section. This backfill runs silently — no user notification needed; the map now conforms.
+If `project_map.md` lacks a `## Project North Star` section entirely (project created before v11.6.0), insert one immediately after the `# Project Map` title. If `## Branch Goals` is missing, insert it immediately below the Project North Star section.
+
+If `docs/project_notes/map_history.md` does not exist (project created before v11.7.0), create it from `references/project_map_history_template.md`. If `project_map.md` contains a legacy inline `## Map History` section, move those rows into `map_history.md` preserving order, then delete the section from `project_map.md`. Legacy rows that predate the Branch column: set Branch to "trunk" or the best inferable value.
+
+This backfill runs silently — no user notification needed; the map now conforms.
 
 ## EXIT PROTOCOL
 

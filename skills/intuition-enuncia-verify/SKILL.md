@@ -93,7 +93,8 @@ Phase 2: UX validation
   Step 8: Systematic walkthrough — test every interaction surface
   Step 9: Fix cycle
   Step 10: Final verification against discovery brief
-  Step 11: Exit
+  Step 11: Consolidate into trunk architecture (branch mode only)
+  Step 12: Exit
 ```
 
 ---
@@ -108,7 +109,7 @@ Read these files:
 1. `{context_path}/discovery_brief.md` — North Star, stakeholders, constraints
 2. `{context_path}/tasks.json` — experience slices, tasks with design enrichment, acceptance criteria
 3. `{context_path}/build_output.json` — what was built, files created/modified, any deviations
-4. `docs/project_notes/project_map.md` — component landscape, interactions
+4. `docs/project_notes/project_map.md` — operational foundation, capabilities (by slice), component reference
 
 From build_output.json, extract: all files created and modified, task statuses, any escalated issues or deviations.
 
@@ -402,11 +403,29 @@ After the walkthrough is clean (all interactions work):
 
 If something drifts, flag it: "All interactions work, but [specific concern about North Star alignment]."
 
-**Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new. **Do not touch `## Project North Star` or `## Branch Goals`.**
+**Update `docs/project_notes/project_map.md`** if integration or testing revealed anything new — refine `## Capabilities` slices or `## Component Reference` entries. Keep the shape and terseness. **Do not touch `## Project North Star` or `## Branch Goals`.**
 
 **Run the GOAL ALIGNMENT → Alignment Check** against the three loaded goals. Any failures must be fixed or explicitly flagged in the final results.
 
-### STEP 11: EXIT
+### STEP 11: CONSOLIDATE INTO TRUNK ARCHITECTURE (branch mode only)
+
+Skip this step on trunk — there's nothing to consolidate.
+
+On a branch, before marking the branch complete, consolidate this branch's additions into trunk architecture in `docs/project_notes/project_map.md`:
+
+1. **`## Capabilities`**: Drop any branch-scoped phrasing from slices this branch added or modified. A slice present in Capabilities is understood to be part of the product — no "(new in X branch)" tags, no status markers, no branch attribution.
+2. **`## Component Reference`**: Remove any branch markers (e.g., "(school-org branch)", "(new)") from component entries. Components belong to the product, not to the branch that delivered them.
+3. **`## Operational Foundation`**: Fold any branch-specific language into the main prose. If the branch added auth/deployment/tech-stack detail, it's now just the way the system works.
+
+Do not touch `## Project North Star`. Leave `## Branch Goals` alone — the historical record of what each branch was for stays put; it's small and explains why slices exist.
+
+Append a row to `docs/project_notes/map_history.md` (create from template if missing; migrate any legacy inline `## Map History` out of `project_map.md` if present):
+
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Verify | [active_context] | Consolidated into trunk | [one sentence — what this branch delivered] |
+
+### STEP 12: EXIT
 
 **Update state.** Read `.project-memory-state.json`. Target active context. Set: `status` → `"complete"`, `workflow.verify.completed` → `true`, `workflow.verify.completed_at` → current ISO timestamp. Set on root: `last_handoff` → current ISO timestamp, `last_handoff_transition` → `"verify_to_complete"`. Write back.
 

@@ -17,17 +17,31 @@ Altitude rules for this section:
 -->
 
 ## Overview
-[Filled by compose — what this project is, who it's for, how it's delivered]
+[Filled by compose — 2–3 sentences: what this project is, who it's for, how it's delivered. No tech here; that lives in Operational Foundation.]
 
-## Components
-[Filled by compose — components identified during task decomposition]
+## Operational Foundation
+[Filled by design. Tech stack, deployment, auth pattern, repo structure, developer workflow. Each facet: short paragraph or bullet group. Point to code for anything that would otherwise be verbose (e.g., "Authoritative schema: `app/models/`"). Do not list class names, method signatures, enum values, or config keys here — those live in code.]
 
-## Component Interactions
-[Filled by compose — how components connect]
+## Capabilities
+[Filled by compose; refined by design. Organized by experience slice — this is the stakeholder-value spine of the map. Each slice is a subsection. A slice present in this section is understood to be part of the current product; no status tagging needed.]
 
-## What Exists vs What's New
-[Filled by compose — existing, new, and modified items]
+<!-- Per-slice subsections go here, e.g.:
+### [Slice name — stakeholder-facing phrasing]
+- **What stakeholders can do:** [one sentence]
+- **Components:** [Component A], [Component B]
+- **Key connections:** [concise flow — A→B summary, B→external summary]
+-->
 
-## Map History
-| Date | Phase | Change | Reason |
-|------|-------|--------|--------|
+## Component Reference
+[Filled by compose; refined by design. Flat lookup list — one sentence per component. No tech detail, no task IDs, no slice tags. If you're tempted to expand an entry, expand the slice narrative instead or point to code. A component present here is understood to be in use.]
+
+<!-- Per-component entries, e.g.:
+- **[Component name]** — [one sentence: what it does; where it lives in code if non-obvious]
+-->
+
+## Pointers
+- Bugs → `docs/project_notes/bugs.md`
+- Decisions → `docs/project_notes/decisions.md`
+- Config, credentials, URLs → `docs/project_notes/key_facts.md`
+- Work log → `docs/project_notes/issues.md`
+- Map evolution by phase → `docs/project_notes/map_history.md`

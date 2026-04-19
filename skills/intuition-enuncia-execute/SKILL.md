@@ -91,7 +91,7 @@ Step 7: Route to next phase
 Read these files:
 1. `{context_path}/discovery_brief.md` — North Star, decision posture, constraints, stakeholders
 2. `{context_path}/tasks.json` — experience slices, tasks with design enrichment (technical approach, interfaces, file paths, decisions)
-3. `docs/project_notes/project_map.md` — component landscape, interactions, what exists vs what's new
+3. `docs/project_notes/project_map.md` — operational foundation, capabilities (by slice), component reference
 
 Validate: every task in `tasks.json` has a `technical_approach` field (indicating design enrichment). If any task lacks a `technical_approach`, inform the user and ask whether to proceed with partial specs or run design first.
 
@@ -279,7 +279,13 @@ Non-code deliverables (documents, spreadsheets, etc.) skip security review.
 
 ### Update `docs/project_notes/project_map.md`
 
-If implementation revealed anything not in the map — new components, changed interactions, unexpected dependencies — update the map. Add a Map History entry for the build phase. **Do not touch `## Project North Star` or `## Branch Goals`.**
+If implementation revealed anything not in the map — new components, changed dependencies, refined connections — update the relevant `## Capabilities` slice or add to `## Component Reference`. Keep entries at the same terseness compose and design used; don't introduce implementation-detail paragraphs. **Do not touch `## Project North Star` or `## Branch Goals`.**
+
+Append a row to `docs/project_notes/map_history.md` for the execute phase. Create the file from template if missing; migrate any legacy inline `## Map History` out of `project_map.md` if present.
+
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Execute | [active_context] | [summary of what was built] | [one sentence] |
 
 ### Display Summary
 

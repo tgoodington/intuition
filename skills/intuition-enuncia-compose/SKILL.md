@@ -25,7 +25,7 @@ You are a decomposition thinker. You see a vision and ask "what needs to be true
 7. You MUST write `tasks.json`, `docs/project_notes/project_map.md`, and update state before routing.
 8. You MUST route to `/intuition-enuncia-design`. NEVER to `/intuition-enuncia-handoff`.
 9. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
-10. You MUST NOT overwrite the `## Project North Star` or `## Branch Goals` sections in `project_map.md`. Those are owned by discovery. Update only your own sections (Overview, Components, Component Interactions, What Exists vs What's New, Map History).
+10. You MUST NOT overwrite the `## Project North Star`, `## Branch Goals`, or `## Operational Foundation` sections in `project_map.md`. The first two are owned by discovery; the third is owned by design. You own `## Overview`, `## Capabilities`, and `## Component Reference`. Append history rows to `docs/project_notes/map_history.md`, not inside `project_map.md`.
 11. You MUST run the alignment check before routing — output must serve Project North Star, Branch Goal (if branch), and Skill Goal. See GOAL ALIGNMENT → Alignment Check.
 
 ## CONTEXT PATH RESOLUTION
@@ -358,52 +358,56 @@ The `decisions` array on each task is optional — only include when decisions a
 
 ### Update `docs/project_notes/project_map.md`
 
-The project map scaffold was created by initialize. Discovery authored the `## Project North Star` section (trunk) and/or `## Branch Goals` subsection (branch). **You do not touch those sections.** Fill in only the sections below with real content from the experience mapping and task decomposition, and append a Map History row.
+The project map scaffold was created by initialize. Discovery authored the `## Project North Star` section (trunk) and/or `## Branch Goals` subsection (branch). **You do not touch those sections.** Fill in only the sections below with real content from the experience mapping and task decomposition.
 
-Sections you own (write/update these):
+Sections you own:
 - `## Overview`
-- `## Components`
-- `## Component Interactions`
-- `## What Exists vs What's New`
-- `## Map History` (append a row — never rewrite existing rows)
+- `## Capabilities` — slice-organized narrative, the stakeholder spine of the map
+- `## Component Reference` — flat lookup list, one sentence per component
 
-Sections you do NOT touch (owned by discovery):
-- `## Project North Star`
-- `## Branch Goals`
+Sections you do NOT touch:
+- `## Project North Star` (owned by discovery)
+- `## Branch Goals` (owned by discovery)
+- `## Operational Foundation` (owned by design — leave it alone, even if empty)
 
 Format for the sections you own:
 
 ```markdown
 ## Overview
-[2-3 sentences: what this project is, who it's for, how it's delivered]
+[2–3 sentences: what this project is, who it's for, how it's delivered. No tech here.]
 
-## Components
-[For each distinct component identified during task decomposition:]
+## Capabilities
+[One subsection per experience slice from tasks.json. Phrase slice names stakeholder-facing. Body is the three fixed fields — nothing else.]
 
-### [Component Name]
-- **Purpose**: [what it does in plain language]
-- **Status**: New | Exists | Modifying existing
-- **Stakeholder touchpoints**: [which experience slices it serves]
-- **Connects to**: [other components it interacts with]
+### [Slice name — stakeholder-facing phrasing]
+- **What stakeholders can do:** [one sentence]
+- **Components:** [Component A], [Component B], [Component C]
+- **Key connections:** [concise flow — A→B summary, B→external summary]
 
-## Component Interactions
-[How components connect — plain language, not technical specs]
-- [Component A] sends [what] to [Component B]
-- [Component C] reads from [Component D]
+## Component Reference
+[Flat list — one line per component. Body is ONE sentence.]
 
-## What Exists vs What's New
-**Existing**: [list of things already in place]
-**New**: [list of things being built]
-**Modified**: [list of existing things being changed]
+- **[Component name]** — [one sentence: what it does; where in code if non-obvious]
 ```
 
-Append to `## Map History`:
+Anti-bloat rules:
+- No task IDs (T1, T2…) in `project_map.md` — they belong in `tasks.json`.
+- No stakeholder-touchpoint tags (ES-1, ES-2…) on components — the `## Capabilities` section IS the slice view.
+- No status fields on slices or components — presence in the map means in use.
+- No class names, method names, enum values, file paths, or CSS selectors — those live in code.
+- Component Reference entries are ONE sentence. If you can't fit it, the component is doing too much or you're describing at the wrong level.
 
-| Date | Phase | Change | Reason |
-|------|-------|--------|--------|
-| [today ISO date] | Compose | Initial outline draft | Created from experience mapping |
+Append a row to `docs/project_notes/map_history.md` (NOT to `project_map.md`):
 
-For greenfield projects, "What Exists" will be minimal or empty. That's fine — the map grows as specialists fill it in.
+- If `map_history.md` does not exist, create it from `references/project_map_history_template.md`.
+- If `project_map.md` contains a legacy `## Map History` section (pre-v11.7 scaffold), move its rows into `map_history.md` preserving order, then delete the section from `project_map.md`.
+- Then append:
+
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Compose | [active_context] | Initial outline | Created from experience mapping |
+
+Legacy section cleanup (one-time, transparent): if `project_map.md` still contains `## Components`, `## Component Interactions`, or `## What Exists vs What's New` from a pre-v11.7 scaffold, delete those sections and write the new shape above in their place. This backfill runs silently.
 
 ### Alignment Check
 
@@ -452,7 +456,7 @@ The branch `tasks.json` is a complete document (not a diff) but includes a `pare
 }
 ```
 
-Update `docs/project_notes/project_map.md` with the branch's changes. Update the Map History table with the branch entry.
+Update `docs/project_notes/project_map.md` — add new slices to `## Capabilities` in place, refine existing slices if the branch modifies them, and add any new components to `## Component Reference`. Do not tag slices or components with the branch name; presence in the map means in use. Append the branch's entry to `docs/project_notes/map_history.md` per the format above.
 
 Branch outlines should be faster — most of the experience mapping is inherited. Focus the conversation on what's new.
 

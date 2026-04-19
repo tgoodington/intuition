@@ -27,7 +27,7 @@ You are the engineering brain. Outline decided what needs to exist. You decide h
 9. You MUST route to `/intuition-enuncia-execute` after completion. NEVER to `/intuition-enuncia-handoff`.
 10. You MUST NOT write code. You write specs that describe what code to write. Producers write code.
 11. You MUST load three goals at activation (Project North Star, Branch Goal if on a branch, and your own Skill Goal) and hold them in working memory throughout the skill's run. See GOAL ALIGNMENT.
-12. You MUST NOT overwrite the `## Project North Star` or `## Branch Goals` sections in `project_map.md`. Those are owned by discovery. Update only your own sections (Operational Foundation, Components, Component Interactions, Map History).
+12. You own `## Operational Foundation` in `project_map.md`. You may refine compose's `## Capabilities` and `## Component Reference` sections with real architecture detail, but keep their shape and terseness. You MUST NOT touch `## Project North Star` or `## Branch Goals` — those are owned by discovery. Append history rows to `docs/project_notes/map_history.md`, not inside `project_map.md`.
 13. You MUST run the alignment check before routing — output must serve Project North Star, Branch Goal (if branch), and Skill Goal. See GOAL ALIGNMENT → Alignment Check.
 
 ## CONTEXT PATH RESOLUTION
@@ -292,11 +292,21 @@ Write the enriched `{context_path}/tasks.json` back to disk with all design fiel
 
 Refine the map with real architecture from the design phase. **Do not touch `## Project North Star` or `## Branch Goals` — those are owned by discovery.**
 
-Sections you own (write/update these):
-- `## Operational Foundation` (new section for code projects): deployment model, repository structure, environment management, developer workflow — from Phase 2.5
-- `## Components` — update descriptions with actual technology and patterns chosen, add concrete interfaces between components
-- `## Component Interactions` — update with data formats and protocols
-- `## Map History` — append a row for this design phase
+Sections you own:
+- `## Operational Foundation` — tech stack, deployment, auth pattern, repo structure, developer workflow. Each facet: a short paragraph or bullet group. Point to code for anything that would otherwise be verbose (e.g., "Authoritative schema: `app/models/`").
+- `## Capabilities` — refine per-slice "Components" and "Key connections" fields based on real architecture. Keep the three-field shape; do not add fields. Do not add status tags.
+- `## Component Reference` — keep one-sentence entries. If design surfaces a new component, add it here and wire it into the relevant slice's Components list.
+
+Anti-bloat rules:
+- Operational Foundation names WHAT, not HOW. "`SchoolContextMiddleware` resolves school_id from `X-Auth-User`" is fine. Listing fallback chains, header names, exception types is not.
+- Never expand a Component Reference entry past one sentence. If the architectural detail is important, point to code.
+- No task IDs, no status fields, no stakeholder-touchpoint tags. If a decision or tradeoff is worth recording, write to `docs/project_notes/decisions.md`, not the map.
+
+Append a row to `docs/project_notes/map_history.md`. Create the file from `references/project_map_history_template.md` if missing; migrate any legacy inline `## Map History` section out of `project_map.md` and delete it.
+
+| Date | Phase | Branch | Change | Reason |
+|------|-------|--------|--------|--------|
+| [today ISO date] | Design | [active_context] | Architecture finalized | [one sentence] |
 
 ### Alignment Check
 
