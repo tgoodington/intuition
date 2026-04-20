@@ -209,19 +209,23 @@ If something drifts, flag it to the user before proceeding.
 
 After designing each group, present it to the user **before moving to the next group**. Do NOT batch all groups together. One group at a time keeps the review digestible.
 
+**Default to succinct.** The user is reviewing groups back-to-back — dense walls of tables, data models, and algorithmic detail make that exhausting. Lead with a tight summary; hold the full detail in reserve and offer it on request.
+
 Present the group's design as plain text (not AskUserQuestion — that's reserved for the final gate):
 
 ```
 **Group [N] of [total]: [Group Name] ([slice refs])**
 
-[Technical approach — tables, data models, algorithms, whatever this group needs]
+[Succinct technical approach — 2–5 sentences or a short bullet list. What it's built with, the key structural choice, how it connects to adjacent groups. No tables, no full data models, no file-by-file breakdowns at this level.]
 
-[Any decisions that need user input per decision posture]
+[Any decisions that need user input per decision posture — surface these even in succinct mode; they require input regardless.]
 
-[Any questions about this group]
+[Any questions about this group.]
 
-When you're good with this group, say so and I'll move to the next one.
+Say "expand" for full detail (data models, file layout, algorithms), ask about a specific aspect, or confirm to move to the next group.
 ```
+
+If the user says "expand" or asks about a specific aspect, present the deeper detail (tables, data models, algorithms, file layout) then re-offer confirmation. Decisions and surprises still surface by default regardless of density — succinct mode reduces elaboration, not signal.
 
 Wait for the user to confirm or request changes before proceeding to the next group. If the user asks for changes, revise and re-present the same group.
 
