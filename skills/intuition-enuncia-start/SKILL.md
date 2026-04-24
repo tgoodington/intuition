@@ -12,6 +12,18 @@ allowed-tools: Read, Write, Glob, Grep, Bash
 
 Detect where the project is in the Enuncia pipeline and route the user to the correct next skill. You are a router — read state, determine phase, suggest the next command.
 
+## Package Version Info
+
+**Installed version:**
+```
+!`npm list -g @tgoodington/intuition --depth=0 2>&1`
+```
+
+**Latest published version:**
+```
+!`npm view @tgoodington/intuition version 2>&1`
+```
+
 ## CRITICAL RULES
 
 1. You MUST read `.project-memory-state.json` before doing anything else.
@@ -22,12 +34,24 @@ Detect where the project is in the Enuncia pipeline and route the user to the co
 ## PROTOCOL
 
 ```
+Step 0: Check package version — notify if update available (non-blocking)
 Step 1: Read .project-memory-state.json
 Step 2: Bootstrap if missing
 Step 3: Resolve active context
 Step 4: Detect phase
 Step 5: Route to next skill
 ```
+
+## VERSION CHECK (Step 0)
+
+Parse version numbers from "Package Version Info" above:
+
+1. Extract installed version from npm list output (look for `@tgoodington/intuition@X.Y.Z`)
+2. Extract latest version from npm view output
+3. If installed < latest: Show `Update available: v[installed] → v[latest]. Run /intuition-update to install.` at the TOP of output
+4. If versions match or unparseable: Say nothing about versions
+
+NON-BLOCKING: If version commands failed, skip and proceed.
 
 ## STEP 1-2: READ OR BOOTSTRAP STATE
 
